@@ -1,0 +1,22 @@
+{
+  "name": "p3-automation-hub",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Reusable GitHub -> Cloudflare deployment/verification hub for P1/P2/future projects.",
+  "type": "module",
+  "scripts": {
+    "check": "node --check src/index.js && node --check scripts/preflight.mjs && node --check scripts/security-check.mjs && node --check scripts/e2e.mjs && node --check scripts/parse-deploy-url.mjs",
+    "security": "node scripts/security-check.mjs",
+    "preflight": "node scripts/preflight.mjs",
+    "test": "node scripts/selftest.mjs",
+    "dry-run": "wrangler deploy --dry-run --outdir dist",
+    "deploy": "wrangler deploy",
+    "verify": "node scripts/e2e.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "4.130.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
