@@ -1,0 +1,55 @@
+P3 AUTOMATION HUB V0.1 — RELEASE QUALIFICATION
+Date: 2026-09-11
+Status: GITHUB SKELETON COMMITTED / LIVE DEPLOY PENDING
+
+PURPOSE
+- Reusable automation/deployment hub for P1 K Stella Way, P2 My Life Room, and future projects.
+- Deployment channel first; major feature work starts only after live deployment succeeds.
+
+LOCKED SAFETY RULES
+1. Do not modify existing P1/P2 Workers.
+2. P3 uses new dedicated Worker: p3-automation-hub.
+3. One error => inspect same error family => batch repair => rerun from the beginning.
+4. Deploy text alone is not success; real URL must pass health/preflight E2E.
+5. Post-deploy verification retries to tolerate Cloudflare propagation delay.
+6. D1/R2/Workers AI bindings are phase 2, after V0.1 live URL passes.
+
+PIPELINE INCLUDED
+Checkout
+-> dependency install
+-> syntax check
+-> security scan
+-> selftest
+-> preflight
+-> Wrangler deploy --dry-run
+-> actual Wrangler deploy
+-> workers.dev URL extraction
+-> /health and /preflight E2E with retry
+
+LOCAL QUALIFICATION
+- Worker JS syntax: PASS
+- All automation script syntax: PASS
+- Security secret-pattern scan: PASS
+- Worker selftest: 5/5 PASS
+- Preflight invariants: PASS
+- GitHub Actions YAML structure: PASS
+- 10 consecutive full local qualification runs: 10/10 PASS
+
+GITHUB STATE
+- Repository created: starpoint9083-dotcom/p3-automation-hub-
+- Connector access: PASS
+- P3 V0.1 source/config/scripts/workflow committed to main: PASS
+- Existing P1/P2 repository not modified: PASS
+
+CURRENT EXTERNAL GATE
+- GitHub Repository Secrets are required before actual Cloudflare deployment:
+  CLOUDFLARE_API_TOKEN
+  CLOUDFLARE_ACCOUNT_ID
+
+LIVE-ONLY CHECKS NOT CLAIMED YET
+- Actual Cloudflare deployment
+- workers.dev URL E2E
+- D1/R2/Workers AI binding verification
+
+Wrangler target pinned for V0.1: 4.130.0
+Compatibility date: 2026-09-11
