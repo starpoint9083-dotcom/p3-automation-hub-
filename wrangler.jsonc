@@ -1,0 +1,12 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "p3-automation-hub",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-11",
+  "workers_dev": true,
+  "observability": { "enabled": true },
+  "vars": {
+    "P3_VERSION": "0.1.0",
+    "P3_MODE": "skeleton"
+  }
+}
