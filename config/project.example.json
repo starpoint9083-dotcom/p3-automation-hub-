@@ -1,0 +1,17 @@
+{
+  "projectId": "example-project",
+  "repository": "owner/repository",
+  "worker": "new-dedicated-worker-name",
+  "deployUrl": null,
+  "resources": {
+    "d1": null,
+    "r2": null,
+    "workersAI": false
+  },
+  "safety": {
+    "neverModifyExistingWorker": true,
+    "fullFamilyInspectionOnError": true,
+    "rerunFromStartAfterRepair": true,
+    "e2eRetryAfterDeploy": true
+  }
+}
