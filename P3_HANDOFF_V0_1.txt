@@ -1,0 +1,22 @@
+P3 AUTOMATION HUB V0.1 HANDOFF
+
+Purpose: reusable automation hub for P1/P2/future projects.
+Repository: starpoint9083-dotcom/p3-automation-hub-
+Worker target: p3-automation-hub (new dedicated Worker)
+
+Current gate:
+1 GitHub repo exists and ChatGPT GitHub connector has access
+2 P3 V0.1 skeleton committed to main
+3 GitHub Actions pipeline installed
+4 syntax/security/selftest/preflight run before deploy
+5 Wrangler dry-run before live deploy
+6 actual Cloudflare deploy requires repository secrets
+7 deployment log auto-extracts workers.dev URL
+8 /health and /preflight pass real E2E with propagation retry
+9 only after 1-8: add D1/R2/Workers AI automation layer
+
+Required GitHub repository secrets:
+CLOUDFLARE_API_TOKEN
+CLOUDFLARE_ACCOUNT_ID
+
+Do not touch P1/P2 existing Workers during V0.1.
