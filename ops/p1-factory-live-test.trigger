@@ -1,4 +1,4 @@
-first-live-test-retry-12
+first-live-test-retry-13
 kst_date=2026-09-12
 mode=resume-today
-reason=p1-rebuild-missing-scenes-without-active-assets
+reason=p1-reconcile-stale-missing-scene-state
