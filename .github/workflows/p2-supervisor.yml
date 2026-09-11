@@ -102,13 +102,9 @@ jobs:
           set -euo pipefail
           for i in 1 2 3 4 5; do
             if curl -fsSL --max-time 15 -H 'cache-control: no-cache' "$P2_URL/api/health" > health.json; then
-              if node - <<'NODE'
-              const fs=require('fs'); const b=JSON.parse(fs.readFileSync('health.json','utf8'));
-              const ok=b.ok===true && b.d1===true && b.r2===true && b.ai===true && b.cinemaBackground===true;
-              if(!ok){console.error(b);process.exit(1)}
-              console.log(`P2 HEALTH PASS cinema=${b.cinemaEngine} model=${b.model}`);
-              NODE
-              then break; fi
+              if node -e 'const fs=require("fs");const b=JSON.parse(fs.readFileSync("health.json","utf8"));const ok=b.ok===true&&b.d1===true&&b.r2===true&&b.ai===true&&b.cinemaBackground===true;if(!ok){console.error(b);process.exit(1)}console.log(`P2 HEALTH PASS cinema=${b.cinemaEngine} model=${b.model}`);'; then
+                break
+              fi
             fi
             if [ "$i" = 5 ]; then echo "P2 real URL health verification failed" >&2; exit 10; fi
             sleep 5
