@@ -19,6 +19,7 @@ on:
       - 'scripts/p1-browser-factory.mjs'
       - 'scripts/p1-live-queue-inspector.mjs'
       - 'scripts/p1-process-waiting-queues.mjs'
+      - 'scripts/p1-quality-gate.mjs'
       - '.github/workflows/p1-browser-factory.yml'
 
 permissions:
@@ -55,6 +56,7 @@ jobs:
       P1_BASE_URL: https://k-stella-shorts-factory.k-stella-p1.workers.dev
       P1_TARGET_DURATION: ${{ inputs.target_duration || '60' }}
       P1_FACTORY_SUMMARY: p1_factory_summary.json
+      P1_QUALITY_GATE_REPORT: p1_quality_gate.json
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -98,11 +100,17 @@ jobs:
       - name: Run P1 end-to-end factory
         run: node scripts/p1-browser-factory.mjs
 
-      - name: Upload factory summary
+      - name: P1 zero-cost quality gate
+        if: always()
+        run: npm run p1:quality
+
+      - name: Upload factory summary and quality gate
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: p1-factory-summary-${{ github.run_number }}
-          path: p1_factory_summary.json
+          path: |
+            p1_factory_summary.json
+            p1_quality_gate.json
           if-no-files-found: ignore
           retention-days: 14
