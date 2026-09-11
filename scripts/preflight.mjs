@@ -53,6 +53,9 @@ for (const expected of [
   "/api/session",
   "credentials: 'same-origin'",
   "puppeteer-core",
+  "BROWSER_PROTOCOL_TIMEOUT = 20 * 60 * 1000",
+  "protocolTimeout: BROWSER_PROTOCOL_TIMEOUT",
+  "page.setDefaultTimeout(BROWSER_PROTOCOL_TIMEOUT)",
   "/api/lineups/generate",
   "/api/lineups/plan-all",
   "/api/production/start",
@@ -85,4 +88,4 @@ if (failures.length) {
   for (const f of failures) console.error(`- ${f}`);
   process.exit(1);
 }
-console.log(`PREFLIGHT PASS (${required.length} required files + P1 bridge + secretless GitHub OIDC browser factory + deployment pipeline invariants)`);
+console.log(`PREFLIGHT PASS (${required.length} required files + P1 bridge + secretless GitHub OIDC browser factory + 20-minute CDP timeout + deployment pipeline invariants)`);
