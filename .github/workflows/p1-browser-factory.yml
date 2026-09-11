@@ -1,0 +1,93 @@
+name: P1 Browser Factory
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_duration:
+        description: 'Target duration per short in seconds (50-70)'
+        required: false
+        default: '60'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'scripts/p1-browser-factory.mjs'
+      - '.github/workflows/p1-browser-factory.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p1-browser-factory-production
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax check browser factory
+        run: node --check scripts/p1-browser-factory.mjs
+      - name: Repository security check
+        run: node scripts/security-check.mjs
+
+  factory:
+    if: github.event_name == 'workflow_dispatch'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      P1_BASE_URL: https://k-stella-shorts-factory.k-stella-p1.workers.dev
+      P1_ADMIN_TOKEN: ${{ secrets.P1_ADMIN_TOKEN }}
+      P1_TARGET_DURATION: ${{ inputs.target_duration || '60' }}
+      P1_FACTORY_SUMMARY: p1_factory_summary.json
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Require P1 admin secret
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${P1_ADMIN_TOKEN:-}" ]; then
+            echo "P1_ADMIN_TOKEN repository secret is missing." >&2
+            exit 1
+          fi
+          echo "P1 admin credential is configured."
+
+      - name: Install browser controller
+        run: npm install --no-audit --no-fund --no-save puppeteer-core@24.16.0
+
+      - name: Locate Chrome
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [ -z "$CHROME_PATH" ]; then
+            echo "Chrome/Chromium was not found on the runner." >&2
+            exit 1
+          fi
+          echo "CHROME_PATH=$CHROME_PATH" >> "$GITHUB_ENV"
+          "$CHROME_PATH" --version
+
+      - name: Run P1 end-to-end factory
+        run: node scripts/p1-browser-factory.mjs
+
+      - name: Upload factory summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p1-factory-summary-${{ github.run_number }}
+          path: p1_factory_summary.json
+          if-no-files-found: ignore
+          retention-days: 14
