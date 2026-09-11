@@ -281,13 +281,20 @@ async function p2VisualQc(env) {
     const upstream = await upstreamJson(p2BaseUrl(env), "/api/cinema/batch/visual-qc/latest-public");
     const connected = upstream.ok && upstream.body?.ok === true;
     const b = upstream.body || {};
-    const clips = Array.isArray(b.clips) ? b.clips.map(c => ({
-      slot: String(c?.slot || ""),
-      score: Number(c?.score || 0),
-      pass: Boolean(c?.pass),
-      regenerationCandidate: Boolean(c?.regenerationCandidate),
-      issues: Array.isArray(c?.issues) ? c.issues.map(x=>String(x).slice(0,180)).slice(0,5) : []
-    })) : [];
+    const clips = Array.isArray(b.clips) ? b.clips.map(c => {
+      const scored = c?.scored === true;
+      return {
+        slot: String(c?.slot || ""),
+        scored,
+        score: scored && c?.score !== null && c?.score !== undefined ? Number(c.score) : null,
+        pass: scored && Boolean(c?.pass),
+        regenerationCandidate: scored && Boolean(c?.regenerationCandidate),
+        issues: Array.isArray(c?.issues) ? c.issues.map(x=>String(x).slice(0,180)).slice(0,5) : [],
+        error: scored ? null : (c?.error ? String(c.error).slice(0,180) : null)
+      };
+    }) : [];
+    const scoredCount = Number.isFinite(Number(b.scoredCount)) ? Number(b.scoredCount) : clips.filter(c=>c.scored).length;
+    const visualScore = b.visualScore === null || b.visualScore === undefined ? null : Number(b.visualScore);
     return json({
       ok: connected,
       project: "P2",
@@ -297,10 +304,12 @@ async function p2VisualQc(env) {
       visualQc: connected ? {
         status: b.status ?? "unknown",
         ready: Number(b.ready || 0),
+        scoredCount,
         total: Number(b.total || 9),
         complete: Boolean(b.complete),
-        visualScore: Number(b.visualScore || 0),
+        visualScore,
         pass: Boolean(b.pass),
+        error: b.error ?? null,
         model: b.model ?? null,
         candidates: Array.isArray(b.candidates) ? b.candidates.map(String).slice(0,9) : [],
         clips,
