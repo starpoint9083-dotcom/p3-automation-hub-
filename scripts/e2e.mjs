@@ -36,4 +36,10 @@ await check("/projects/p2", b => b?.ok === true && b?.project === "P2" && b?.bri
 await check("/projects/p2/health", b => b?.ok === true && b?.project === "P2" && b?.connected === true && b?.safe === true && b?.p2?.d1 === true && b?.p2?.r2 === true && b?.p2?.ai === true && b?.p2?.cinemaBackground === true);
 await check("/projects/p2/cinema", b => b?.ok === true && b?.project === "P2" && b?.connected === true && b?.cinema?.total === 9 && b?.paid_generation_triggered === false);
 await check("/projects/p2/quality", b => b?.ok === true && b?.project === "P2" && b?.connected === true && b?.quality?.total === 9 && Array.isArray(b?.quality?.clips) && b?.gate?.autoRegeneration === false && b?.gate?.paid_visual_ai_triggered === false && b?.gate?.paid_generation_triggered === false);
-console.log(`E2E COMPLETE ${base} P1_BRIDGE=CONNECTED P2_SUPERVISOR=CONNECTED P2_TECHNICAL_QC=CONNECTED PAID_CINEMA_TRIGGER=DISABLED PAID_VISUAL_AI_TRIGGER=DISABLED`);
+const visual = await check("/projects/p2/visual-qc", b => b?.ok === true && b?.project === "P2" && b?.connected === true && b?.visualQc?.total === 9 && Array.isArray(b?.visualQc?.clips) && b?.safety?.p3TriggeredPaidVisualAI === false && b?.safety?.p3TriggeredRegeneration === false);
+console.log(`P2 VISUAL QC SNAPSHOT status=${visual.visualQc.status} ready=${visual.visualQc.ready}/9 score=${visual.visualQc.visualScore} pass=${visual.visualQc.pass} candidates=${visual.visualQc.candidates.length}`);
+for (const clip of visual.visualQc.clips || []) {
+  const issues = Array.isArray(clip.issues) ? clip.issues.join(" | ") : "";
+  console.log(`P2 VISUAL QC CLIP slot=${clip.slot} score=${clip.score} pass=${clip.pass} candidate=${clip.regenerationCandidate} issues=${issues}`);
+}
+console.log(`E2E COMPLETE ${base} P1_BRIDGE=CONNECTED P2_SUPERVISOR=CONNECTED P2_TECHNICAL_QC=CONNECTED P2_VISUAL_QC=OBSERVED PAID_CINEMA_TRIGGER=DISABLED PAID_VISUAL_AI_TRIGGER=DISABLED`);
