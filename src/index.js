@@ -266,6 +266,7 @@ async function p2Quality(env) {
         visual: b.visualReview ?? "pending",
         visualCriteria: ["face-consistency","hands-limbs","pet-count-form","room-continuity","camera-motion","morphing-flicker"],
         autoRegeneration: false,
+        paid_visual_ai_triggered: false,
         paid_visual_ai_triggered_by_p3: false,
         paid_generation_triggered: false
       }
