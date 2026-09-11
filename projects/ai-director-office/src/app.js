@@ -5,6 +5,11 @@ import {addMetric,briefing,createLead,createStudent,growthReport,listLeads,listR
 import {appHtml} from './ui.js';
 
 const match=(path,re)=>path.match(re);
+function securedAppHtml(csrf){
+  const token=JSON.stringify(csrf||'');
+  const bridge=`<script>(function(){const csrf=${token};const raw=window.fetch.bind(window);window.fetch=function(input,init={}){const src=typeof input==='string'?input:input.url;const u=new URL(src,location.href);const method=String(init.method||(input instanceof Request?input.method:'GET')).toUpperCase();if(u.origin===location.origin&&!['GET','HEAD','OPTIONS'].includes(method)){const h=new Headers(init.headers||(input instanceof Request?input.headers:undefined));h.set('x-csrf-token',csrf);init={...init,headers:h};}return raw(input,init);};})();</script>`;
+  return appHtml().replace('</head>',`${bridge}</head>`);
+}
 
 export default {async fetch(request,env){
   try{
@@ -24,7 +29,7 @@ export default {async fetch(request,env){
       const state=await authState(request,env);
       if(!state.configured)return html(loginHtml(false),503);
       if(!state.authenticated)return html(loginHtml(true));
-      return html(appHtml());
+      return html(securedAppHtml(state.csrf));
     }
 
     if(!env.DB)throw new HttpError(503,'DB_NOT_BOUND');
