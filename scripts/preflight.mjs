@@ -54,8 +54,14 @@ for (const expected of [
   "credentials: 'same-origin'",
   "puppeteer-core",
   "BROWSER_PROTOCOL_TIMEOUT = 20 * 60 * 1000",
+  "API_REQUEST_TIMEOUT = 8 * 60 * 1000",
+  "RENDER_ITEM_TIMEOUT = 15 * 60 * 1000",
   "protocolTimeout: BROWSER_PROTOCOL_TIMEOUT",
   "page.setDefaultTimeout(BROWSER_PROTOCOL_TIMEOUT)",
+  "page.cookies(P1_BASE_URL)",
+  "cookie: sessionCookieHeader",
+  "new AbortController()",
+  "api_transport: 'node-fetch-with-session-cookie'",
   "/api/lineups/generate",
   "/api/lineups/plan-all",
   "/api/production/start",
@@ -65,7 +71,7 @@ for (const expected of [
   if (!factory.includes(expected)) failures.push(`factory:${expected}`);
 }
 if (factory.includes("P1_ADMIN_TOKEN")) failures.push("factory:legacy-admin-secret-dependency");
-if (/console\.log\([^\n]*(?:ACTIONS_ID_TOKEN_REQUEST_TOKEN|oidcToken)/.test(factory)) failures.push("factory:oidc-secret-log-risk");
+if (/console\.log\([^\n]*(?:ACTIONS_ID_TOKEN_REQUEST_TOKEN|oidcToken|sessionCookieHeader)/.test(factory)) failures.push("factory:secret-log-risk");
 
 const factoryWorkflow = await readFile(new URL("../.github/workflows/p1-browser-factory.yml", import.meta.url), "utf8");
 for (const expected of [
@@ -76,7 +82,8 @@ for (const expected of [
   "puppeteer-core",
   "Locate Chrome",
   "scripts/p1-browser-factory.mjs",
-  "actions/upload-artifact@v4"
+  "actions/upload-artifact@v4",
+  "cancel-in-progress: true"
 ]) {
   if (!factoryWorkflow.includes(expected)) failures.push(`factory-workflow:${expected}`);
 }
@@ -88,4 +95,4 @@ if (failures.length) {
   for (const f of failures) console.error(`- ${f}`);
   process.exit(1);
 }
-console.log(`PREFLIGHT PASS (${required.length} required files + P1 bridge + secretless GitHub OIDC browser factory + 20-minute CDP timeout + deployment pipeline invariants)`);
+console.log(`PREFLIGHT PASS (${required.length} required files + P1 bridge + secretless GitHub OIDC browser factory + bounded Node API transport + stale-run cancellation + deployment pipeline invariants)`);

@@ -8,6 +8,8 @@ const TARGET_DURATION = Math.max(50, Math.min(70, Number(process.env.P1_TARGET_D
 const SUMMARY_PATH = process.env.P1_FACTORY_SUMMARY || 'p1_factory_summary.json';
 const OIDC_AUDIENCE = 'k-stella-p1-p3-bridge';
 const BROWSER_PROTOCOL_TIMEOUT = 20 * 60 * 1000;
+const API_REQUEST_TIMEOUT = 8 * 60 * 1000;
+const RENDER_ITEM_TIMEOUT = 15 * 60 * 1000;
 
 if (!CHROME_PATH) throw new Error('CHROME_PATH is required. The workflow must locate Chrome/Chromium first.');
 if (new URL(P1_BASE_URL).hostname !== 'k-stella-shorts-factory.k-stella-p1.workers.dev') {
@@ -47,6 +49,7 @@ const summary = {
   kst_date: kstDate(),
   p1: P1_BASE_URL,
   auth: 'github-actions-oidc-to-p1-session',
+  api_transport: 'node-fetch-with-session-cookie',
   target_duration: TARGET_DURATION,
   lineup_id: null,
   production_run_id: null,
@@ -59,6 +62,20 @@ const summary = {
 async function saveSummary() {
   summary.finished_at = new Date().toISOString();
   await fs.writeFile(SUMMARY_PATH, JSON.stringify(summary, null, 2));
+}
+
+async function withDeadline(promise, timeoutMs, label) {
+  let timer;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`${label} timed out after ${Math.round(timeoutMs / 1000)}s`)), timeoutMs);
+      })
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 const oidcToken = await requestGitHubOidcToken();
@@ -115,27 +132,43 @@ try {
   }
   console.log('P1 GitHub OIDC session exchange PASS');
 
-  async function api(path, { method = 'GET', body } = {}) {
-    const result = await page.evaluate(async ({ path, method, body }) => {
-      const headers = { accept: 'application/json' };
+  const sessionCookies = await page.cookies(P1_BASE_URL);
+  const sessionCookie = sessionCookies.find((cookie) => cookie.name === 'kstella_session');
+  if (!sessionCookie?.value) throw new Error('P1 session cookie was not issued after OIDC exchange.');
+  const sessionCookieHeader = `kstella_session=${sessionCookie.value}`;
+
+  async function api(path, { method = 'GET', body, timeoutMs = API_REQUEST_TIMEOUT } = {}) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+    try {
+      const headers = {
+        accept: 'application/json',
+        cookie: sessionCookieHeader
+      };
       if (body !== undefined) headers['content-type'] = 'application/json';
-      const res = await fetch(path, {
+      const response = await fetch(new URL(path, `${P1_BASE_URL}/`), {
         method,
         headers,
-        credentials: 'same-origin',
         cache: 'no-store',
-        body: body === undefined ? undefined : JSON.stringify(body)
+        body: body === undefined ? undefined : JSON.stringify(body),
+        signal: controller.signal
       });
-      const text = await res.text();
+      const text = await response.text();
       let data;
       try { data = JSON.parse(text); } catch { data = { raw: text.slice(0, 1000) }; }
-      return { ok: res.ok, status: res.status, data };
-    }, { path, method, body });
-    if (!result.ok) throw new Error(`${method} ${path} failed (${result.status}): ${result.data?.error || JSON.stringify(result.data)}`);
-    return result.data;
+      if (!response.ok) throw new Error(`${method} ${path} failed (${response.status}): ${data?.error || JSON.stringify(data)}`);
+      return data;
+    } catch (error) {
+      if (error?.name === 'AbortError') {
+        throw new Error(`${method} ${path} timed out after ${Math.round(timeoutMs / 1000)}s`);
+      }
+      throw error;
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
-  const health = await api('/api/health');
+  const health = await api('/api/health', { timeoutMs: 60 * 1000 });
   if (!health?.ok || !health?.db || !health?.r2 || !health?.ai) {
     throw new Error(`P1 authenticated health check failed: ${JSON.stringify({ ok: health?.ok, db: health?.db, r2: health?.r2, ai: health?.ai })}`);
   }
@@ -149,19 +182,34 @@ try {
     tracking_base: '@kstellaway',
     platform: 'youtube_shorts'
   };
-  const lineupResponse = await api('/api/lineups/generate', { method: 'POST', body: lineupBody });
+  console.log(`Generating lineup with explicit ${Math.round(API_REQUEST_TIMEOUT / 60000)}m API deadline`);
+  const lineupResponse = await api('/api/lineups/generate', {
+    method: 'POST',
+    body: lineupBody,
+    timeoutMs: API_REQUEST_TIMEOUT
+  });
   const lineupId = String(lineupResponse?.lineup?.id || lineupResponse?.lineup_id || '');
   if (!lineupId) throw new Error(`P1 did not return a lineup id: ${JSON.stringify(lineupResponse).slice(0, 1500)}`);
   summary.lineup_id = lineupId;
+  await saveSummary();
   console.log(`Lineup ready: ${lineupId}`);
 
-  const planned = await api('/api/lineups/plan-all', { method: 'POST', body: { lineup_id: lineupId } });
+  const planned = await api('/api/lineups/plan-all', {
+    method: 'POST',
+    body: { lineup_id: lineupId },
+    timeoutMs: API_REQUEST_TIMEOUT
+  });
   console.log(`Planning PASS: ${Array.isArray(planned?.planned) ? planned.planned.length : 0} projects`);
 
-  const production = await api('/api/production/start', { method: 'POST', body: { lineup_id: lineupId } });
+  const production = await api('/api/production/start', {
+    method: 'POST',
+    body: { lineup_id: lineupId },
+    timeoutMs: 2 * 60 * 1000
+  });
   const runId = String(production?.run?.id || production?.id || '');
   summary.production_run_id = runId || null;
   const todo = (production?.items || []).filter((x) => x.status !== 'done');
+  await saveSummary();
   console.log(`Production run ${runId || '(unknown)'}: ${todo.length} item(s) to process`);
 
   await page.waitForFunction(() => typeof processProductionItem === 'function' && typeof renderOnDevice === 'function' && !!document.querySelector('#renderCanvas'));
@@ -173,7 +221,7 @@ try {
   for (let i = 0; i < todo.length; i++) {
     const item = todo[i];
     console.log(`Item ${i + 1}/${todo.length}, slot=${item.slot_no}, project=${item.project_id}`);
-    const result = await page.evaluate(async ({ item, index, total }) => {
+    const result = await withDeadline(page.evaluate(async ({ item, index, total }) => {
       try {
         const r = await processProductionItem(item, index, total);
         if (r?.error) return { ok: false, error: r.error?.message || String(r.error) };
@@ -187,7 +235,7 @@ try {
       } catch (e) {
         return { ok: false, error: e?.message || String(e) };
       }
-    }, { item, index: i, total: todo.length });
+    }, { item, index: i, total: todo.length }), RENDER_ITEM_TIMEOUT, `production item ${item.slot_no}`);
 
     summary.items.push({ slot_no: item.slot_no, project_id: item.project_id, ...result });
     if (result.ok) summary.completed += 1;
@@ -196,7 +244,9 @@ try {
     console.log(result.ok ? `Item ${item.slot_no} PASS` : `Item ${item.slot_no} FAIL: ${result.error}`);
   }
 
-  const latest = runId ? await api(`/api/production?run_id=${encodeURIComponent(runId)}`) : await api(`/api/production?lineup_id=${encodeURIComponent(lineupId)}`);
+  const latest = runId
+    ? await api(`/api/production?run_id=${encodeURIComponent(runId)}`, { timeoutMs: 60 * 1000 })
+    : await api(`/api/production?lineup_id=${encodeURIComponent(lineupId)}`, { timeoutMs: 60 * 1000 });
   summary.production = latest?.run ? {
     status: latest.run.status,
     total_items: latest.run.total_items,
@@ -204,7 +254,11 @@ try {
     failed_items: latest.run.failed_items
   } : null;
 
-  summary.release = await api('/api/release/daily', { method: 'POST', body: { lineup_id: lineupId } });
+  summary.release = await api('/api/release/daily', {
+    method: 'POST',
+    body: { lineup_id: lineupId },
+    timeoutMs: 2 * 60 * 1000
+  });
   summary.ok = summary.failed === 0 && Number(summary.release?.hold || 0) === 0;
   await saveSummary();
 

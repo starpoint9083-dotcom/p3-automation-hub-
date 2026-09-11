@@ -23,10 +23,6 @@ permissions:
   contents: read
   id-token: write
 
-concurrency:
-  group: p1-browser-factory-production
-  cancel-in-progress: false
-
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -50,6 +46,9 @@ jobs:
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 60
+    concurrency:
+      group: p1-browser-factory-production
+      cancel-in-progress: true
     env:
       P1_BASE_URL: https://k-stella-shorts-factory.k-stella-p1.workers.dev
       P1_TARGET_DURATION: ${{ inputs.target_duration || '60' }}
