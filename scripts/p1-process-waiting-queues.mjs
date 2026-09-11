@@ -73,11 +73,23 @@ if (!lineup?.id || items.length !== 10) {
   throw new Error(`P1 latest lineup is not ready for queue processing: lineup=${lineup?.id || 'none'} items=${items.length}`);
 }
 
-await api('/api/lineups/plan-all', {
+const planned = await api('/api/lineups/plan-all', {
   method: 'POST',
   body: { lineup_id: String(lineup.id) },
   timeoutMs: 8 * 60 * 1000
 });
+console.log(`QUEUE_PROCESS planned lineup=${lineup.id} projects=${Array.isArray(planned?.planned) ? planned.planned.length : 0}`);
+
+const recovery = await api('/api/maintenance/recover-lineup-queues', {
+  method: 'POST',
+  body: { lineup_id: String(lineup.id) },
+  timeoutMs: 4 * 60 * 1000
+});
+const recoveryProjects = Array.isArray(recovery?.projects) ? recovery.projects : [];
+if (!recovery?.ok || Number(recovery?.project_count || recoveryProjects.length) !== 10) {
+  throw new Error(`P1 explicit lineup recovery returned an invalid project count: ${recovery?.project_count ?? recoveryProjects.length}`);
+}
+console.log(`QUEUE_RECOVERY lineup=${lineup.id} projects=${recoveryProjects.length} rebuilt=${Number(recovery?.rebuilt || 0)} reconciled=${Number(recovery?.reconciled || 0)} detail=${JSON.stringify(recoveryProjects).slice(0, 6000)}`);
 
 const production = await api('/api/production/start', {
   method: 'POST',
