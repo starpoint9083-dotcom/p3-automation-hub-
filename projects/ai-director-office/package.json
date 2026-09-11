@@ -1,0 +1,21 @@
+{
+  "name": "ai-director-office",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --check src/index.js && node --check scripts/selftest.mjs && node --check scripts/preflight.mjs && node --check scripts/e2e.mjs && node --check scripts/prepare-wrangler.mjs",
+    "test": "node scripts/selftest.mjs",
+    "preflight": "node scripts/preflight.mjs",
+    "prepare:wrangler": "node scripts/prepare-wrangler.mjs",
+    "dry-run": "wrangler deploy --config wrangler.generated.jsonc --dry-run --outdir dist",
+    "deploy": "wrangler deploy --config wrangler.generated.jsonc",
+    "verify": "node scripts/e2e.mjs"
+  },
+  "devDependencies": {
+    "wrangler": "4.130.0"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
