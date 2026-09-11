@@ -8,7 +8,13 @@ const scanRoots = [
   new URL("../src/", import.meta.url)
 ];
 
-const skippedBasenames = new Set(["safety-gate.mjs"]);
+// These files only inspect text/config and never execute shell/process commands.
+// They intentionally contain forbidden-command signatures as detection rules.
+const skippedBasenames = new Set([
+  "safety-gate.mjs",
+  "security-check.mjs",
+  "preflight.mjs"
+]);
 const textExt = /\.(?:mjs|js|cjs|ts|tsx|json|jsonc|ya?ml|sh)$/i;
 
 // P3 validated-self-development rule: destructive production operations are never
