@@ -26,7 +26,7 @@ async function waitUntilReady(){
         timedFetch(`${base}/auth/status`,{cache:"no-store"},10000)
       ]);
       const root=await rootRes.text(), h=await parseResponse(hRes), p=await parseResponse(pRes), status=await parseResponse(statusRes);
-      const ready=rootRes.ok&&root.includes("관리자 로그인")&&h.ok&&p.ok&&status.ok&&h.body?.ok&&p.body?.ok&&status.body?.ok&&h.body?.db&&h.body?.ai&&h.body?.auth&&h.body?.version==="0.3.0"&&status.body?.data?.configured===true&&status.body?.data?.authenticated===false;
+      const ready=rootRes.ok&&root.includes("관리자 로그인")&&h.ok&&p.ok&&status.ok&&h.body?.ok&&p.body?.ok&&status.body?.ok&&h.body?.db&&h.body?.ai&&h.body?.auth&&h.body?.version==="0.4.0"&&p.body?.version==="0.4.0"&&status.body?.data?.configured===true&&status.body?.data?.authenticated===false;
       if(ready)return {attempt:i,health:h.body,preflight:p.body};
       last=JSON.stringify({root:rootRes.status,h:h.body,p:p.body,status:status.body});
     }catch(e){last=e?.message||String(e);}
@@ -70,7 +70,6 @@ const loginCheck=await retryCheck('LOGIN_FAILED',async()=>{
   const csrf=parsed.body?.data?.csrf||'';
   return {pass:parsed.ok&&parsed.body?.ok&&cookie.startsWith('__Host-aiod_session=')&&Boolean(csrf),parsed,cookie,csrf};
 });
-const login=loginCheck.parsed;
 const cookie=loginCheck.cookie;
 const csrf=loginCheck.csrf;
 
@@ -82,7 +81,10 @@ if(!(status.ok&&status.body?.data?.authenticated&&status.body?.data?.csrf===csrf
 
 const appRes=await timedFetch(`${base}/`,{headers:authHeaders,cache:"no-store"},10000);
 const appText=await appRes.text();
-if(!(appRes.ok&&appText.includes("오늘 가장 먼저 할 일 3가지")&&appText.includes("x-csrf-token")))throw new Error(`AUTH_UI_FAILED:${appRes.status}`);
+if(!(appRes.ok&&appText.includes("오늘 가장 먼저 할 일 3가지")&&appText.includes('script src="/app.js"')&&appText.includes('meta name="csrf-token" content="'+csrf+'"')))throw new Error(`AUTH_UI_FAILED:${appRes.status}`);
+const jsRes=await timedFetch(`${base}/app.js`,{headers:authHeaders,cache:"no-store"},10000);
+const jsText=await jsRes.text();
+if(!(jsRes.ok&&jsText.includes('__AI_OFFICE_READY__')&&jsText.includes('x-csrf-token')))throw new Error(`CLIENT_JS_FAILED:${jsRes.status}`);
 
 const briefing=await parseResponse(await timedFetch(`${base}/api/briefing`,{headers:authHeaders,cache:"no-store"},15000));
 if(!(briefing.ok&&briefing.body?.ok))throw new Error(`BRIEFING_FAILED:${JSON.stringify({status:briefing.status,body:briefing.body,text:briefing.text})}`);
@@ -122,7 +124,7 @@ console.log(JSON.stringify({
   readiness_attempt:ready.attempt,
   base,
   security:{admin_auth:true,unauth_blocked:true,bad_password_blocked:true,signed_session:true,csrf_blocked:true},
-  ui:{ok:true,title:"AI 원장실",authenticated:true},
+  ui:{ok:true,title:"AI 원장실",authenticated:true,external_client:true},
   health:ready.health,
   preflight:ready.preflight,
   database_briefing:{ok:true,counts:briefing.body?.data?.counts??null},
