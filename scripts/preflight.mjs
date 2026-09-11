@@ -8,6 +8,7 @@ const required = [
   "scripts/safety-gate.mjs",
   "scripts/deployment-receipt.mjs",
   "scripts/operations-report.mjs",
+  "scripts/failure-triage.mjs",
   "scripts/e2e.mjs",
   "scripts/p1-browser-factory.mjs",
   "scripts/p1-quality-gate.mjs",
@@ -41,6 +42,8 @@ for (const route of ["/health", "/healthz", "/preflight", "/projects/p1", "/proj
 for (const guard of ["ALLOWED_P1_HOST", "P1_BASE_URL_NOT_ALLOWED", "ALLOWED_P2_HOST", "P2_BASE_URL_NOT_ALLOWED", "AbortController", "paidVisualAIFromP3", "autoCinemaRegenerationFromP3", "p3TriggeredPaidVisualAI", "p3TriggeredRegeneration"]) {
   if (!worker.includes(guard)) failures.push(`bridge-guard:${guard}`);
 }
+if (!worker.includes("paid_visual_ai_triggered: false")) failures.push("p2-quality:canonical-paid-visual-ai-guard-field");
+if (!worker.includes("paid_visual_ai_triggered_by_p3: false")) failures.push("p2-quality:backward-compatible-paid-visual-ai-guard-field");
 if (worker.includes("/api/bootstrap/status")) failures.push("slow-probe:bootstrap-status");
 if (worker.includes('method: "POST"') || worker.includes("method: 'POST'")) failures.push("p3-worker-must-remain-get-only");
 
@@ -55,6 +58,12 @@ for (const expected of [
   "scripts/e2e.mjs",
   "scripts/deployment-receipt.mjs",
   "scripts/operations-report.mjs",
+  "npm run triage",
+  "p3-repair-packet.json",
+  "p3-repair-packet.md",
+  "p3-repair-packet-",
+  "STEP_E2E",
+  "if: failure()",
   "p3-operations-report.json",
   "p3-operations-report.md",
   "GITHUB_STEP_SUMMARY",
@@ -68,7 +77,23 @@ const packageJson = JSON.parse(await readFile(new URL("../package.json", import.
 if (packageJson.scripts?.safety !== "node scripts/safety-gate.mjs") failures.push("package:safety-script");
 if (packageJson.scripts?.receipt !== "node scripts/deployment-receipt.mjs") failures.push("package:receipt-script");
 if (packageJson.scripts?.report !== "node scripts/operations-report.mjs") failures.push("package:report-script");
+if (packageJson.scripts?.triage !== "node scripts/failure-triage.mjs") failures.push("package:triage-script");
 if (packageJson.scripts?.["p1:quality"] !== "node scripts/p1-quality-gate.mjs") failures.push("package:p1-quality-script");
+
+const failureTriage = await readFile(new URL("../scripts/failure-triage.mjs", import.meta.url), "utf8");
+for (const expected of [
+  "validated-self-development",
+  "automaticCodeMutation: false",
+  "automaticProductionRollback: false",
+  "destructiveResourceMutation: false",
+  "secretMutation: false",
+  "p3-repair-packet.json",
+  "p3-repair-packet.md"
+]) {
+  if (!failureTriage.includes(expected)) failures.push(`failure-triage:${expected}`);
+}
+if (failureTriage.includes("automaticCodeMutation: true")) failures.push("failure-triage:auto-code-mutation-must-remain-disabled");
+if (failureTriage.includes("automaticProductionRollback: true")) failures.push("failure-triage:auto-production-rollback-must-remain-disabled");
 
 const p1Config = JSON.parse(await readFile(new URL("../config/p1-k-stella.json", import.meta.url), "utf8"));
 if (p1Config.repository !== "starpoint9083-dotcom/k-stella-way-p1") failures.push("p1-config:repository");
@@ -199,4 +224,4 @@ if (failures.length) {
   for (const f of failures) console.error(`- ${f}`);
   process.exit(1);
 }
-console.log(`PREFLIGHT PASS (${required.length} required files + global destructive-operation safety gate + last-known-good deployment receipt + automatic operations report + independent P1/P2 protected project configs + P1 zero-cost quality gate/regeneration-candidate classification + P2 technical/visual QC observation + protected-resource guards + no-paid-Cinema/no-paid-visual-AI/no-auto-regeneration CI + deployment pipeline invariants)`);
+console.log(`PREFLIGHT PASS (${required.length} required files + global destructive-operation safety gate + last-known-good deployment receipt + automatic operations report + validated failure-triage repair packets + independent P1/P2 protected project configs + P1 zero-cost quality gate/regeneration-candidate classification + P2 technical/visual QC observation + protected-resource guards + no-paid-Cinema/no-paid-visual-AI/no-auto-regeneration/no-auto-code-mutation CI + deployment pipeline invariants)`);
