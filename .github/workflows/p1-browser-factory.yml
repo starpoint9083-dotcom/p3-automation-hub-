@@ -10,6 +10,8 @@ on:
   pull_request:
     branches: [main]
     paths:
+      - 'package.json'
+      - 'scripts/preflight.mjs'
       - 'scripts/p1-browser-factory.mjs'
       - '.github/workflows/p1-browser-factory.yml'
 
@@ -31,10 +33,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Syntax check browser factory
-        run: node --check scripts/p1-browser-factory.mjs
+      - name: Syntax checks
+        run: npm run check
       - name: Repository security check
-        run: node scripts/security-check.mjs
+        run: npm run security
+      - name: P3 preflight
+        run: npm run preflight
 
   factory:
     if: github.event_name == 'workflow_dispatch'
