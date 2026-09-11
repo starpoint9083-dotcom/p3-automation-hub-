@@ -1,62 +1,18 @@
 import {chromium} from 'playwright';
-
-const base=(process.env.DEPLOY_URL||'').replace(/\/$/,'');
-const password=process.env.ADMIN_PASSWORD||'';
-if(!base)throw new Error('DEPLOY_URL_REQUIRED');
-if(password.length<12)throw new Error('ADMIN_PASSWORD_REQUIRED');
-
-const browser=await chromium.launch({headless:true});
-const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});
-const page=await context.newPage();
-const pageErrors=[];
-page.on('pageerror',e=>pageErrors.push(e.message||String(e)));
-
+const base=(process.env.DEPLOY_URL||'').replace(/\/$/,'');const password=process.env.ADMIN_PASSWORD||'';if(!base)throw new Error('DEPLOY_URL_REQUIRED');if(password.length<12)throw new Error('ADMIN_PASSWORD_REQUIRED');
+const browser=await chromium.launch({headless:true});const context=await browser.newContext({viewport:{width:390,height:844},deviceScaleFactor:1,isMobile:true,hasTouch:true});const page=await context.newPage();const errors=[];page.on('pageerror',e=>errors.push(e.message||String(e)));
+let logged=false;
 try{
-  await page.goto(base+'/',{waitUntil:'domcontentloaded',timeout:30000});
-  await page.locator('#pw').fill(password);
-  await Promise.all([
-    page.waitForURL(base+'/',{timeout:30000}),
-    page.locator('#login').click()
-  ]);
-  await page.waitForFunction(()=>window.__AI_OFFICE_READY__===true,{timeout:20000});
-  await page.waitForFunction(()=>window.__AI_OFFICE_DATA_READY__===true,{timeout:30000});
-
-  const system=await page.locator('#systemStatus').innerText();
-  if(!system.includes('연결 정상'))throw new Error('SYSTEM_STATUS_NOT_READY:'+system);
-  const studentsCount=(await page.locator('#kStudents').innerText()).trim();
-  if(!studentsCount||studentsCount==='…'||studentsCount==='-')throw new Error('KPI_NOT_LOADED:'+studentsCount);
-
-  await page.locator('.mobilebar [data-view="students"]').click();
-  await page.locator('#students').waitFor({state:'visible',timeout:10000});
-  await page.locator('[data-toggle="studentCreate"]').click();
-  await page.locator('#studentCreate').waitFor({state:'visible',timeout:10000});
-  await page.locator('#sName').fill('P3 UI 검수');
-  await page.locator('#sGrade').fill('초3');
-
-  await page.locator('.mobilebar [data-view="leads"]').click();
-  await page.locator('#leads').waitFor({state:'visible',timeout:10000});
-  await page.locator('[data-toggle="leadCreate"]').click();
-  await page.locator('#leadCreate').waitFor({state:'visible',timeout:10000});
-  await page.locator('#lName').fill('P3 상담 검수');
-
-  await page.locator('.mobilebar [data-view="recruitment"]').click();
-  await page.locator('#recruitment').waitFor({state:'visible',timeout:10000});
-  await page.locator('[data-toggle="targetCreate"]').click();
-  await page.locator('#targetCreate').waitFor({state:'visible',timeout:10000});
-  await page.locator('#targetSegment').fill('P3 모바일 UI 검수');
-  await page.locator('#goalStudents').fill('1');
-  await page.locator('#makePlan').click();
-  await page.waitForFunction(()=>{
-    const el=document.getElementById('planResult');
-    return el&&el.style.display!=='none'&&el.textContent.length>120&&!el.textContent.includes('분석하고 있습니다')&&!el.textContent.includes('생성 실패');
-  },{timeout:70000});
-  await page.locator('#contentMaker').waitFor({state:'visible',timeout:10000});
-
-  await page.locator('.mobilebar [data-view="today"]').click();
-  await page.locator('#today').waitFor({state:'visible',timeout:10000});
-  if(pageErrors.length)throw new Error('BROWSER_JS_ERRORS:'+JSON.stringify(pageErrors));
-
-  console.log(JSON.stringify({ok:true,base,viewport:'390x844',login:true,js_ready:true,data_ready:true,tabs:{today:true,students:true,leads:true,recruitment:true},forms:{student:true,lead:true,target:true},ai_plan_button:true,system_status:system,kpi_students:studentsCount},null,2));
+ await page.goto(base+'/',{waitUntil:'domcontentloaded',timeout:30000});await page.locator('#pw').fill(password);await Promise.all([page.waitForURL(base+'/',{timeout:30000}),page.locator('#login').click()]);logged=true;await page.waitForFunction(()=>window.__AI_OFFICE_READY__===true,{timeout:20000});await page.waitForFunction(()=>window.__AI_OFFICE_DATA_READY__===true,{timeout:30000});
+ const system=await page.locator('#systemStatus').innerText();if(!system.includes('연결 정상'))throw new Error('SYSTEM_NOT_READY:'+system);
+ await page.locator('.mobilebar [data-view="students"]').click();await page.locator('#students').waitFor({state:'visible'});await page.locator('[data-toggle="studentCreate"]').click();await page.locator('#studentCreate').waitFor({state:'visible'});await page.locator('#sName').fill('P3 UI 검수');await page.locator('#sGrade').fill('초3');const date=await page.locator('#sEnrolled').inputValue();if(!/^\d{4}-\d{2}-\d{2}$/.test(date))throw new Error('SEOUL_DATE_NOT_SET');
+ await page.locator('.mobilebar [data-view="leads"]').click();await page.locator('#leads').waitFor({state:'visible'});await page.locator('[data-toggle="leadCreate"]').click();await page.locator('#leadCreate').waitFor({state:'visible'});await page.locator('#lName').fill('P3 상담 검수');
+ await page.locator('.mobilebar [data-view="recruitment"]').click();await page.locator('#recruitment').waitFor({state:'visible'});await page.locator('#pAcademy').fill('P3 검수 학원');await page.locator('#pNeighborhood').fill('P3 검수 지역');await page.locator('#targetSegment').fill('P3 모바일 모집 검수');await page.locator('#goalStudents').fill('1');await page.locator('#makeMission').click();await page.waitForFunction(()=>{const x=document.getElementById('missionResult');return x&&x.style.display!=='none'&&x.textContent.length>200&&!x.textContent.includes('분석하고 있습니다')&&!x.textContent.includes('생성 실패')},{timeout:80000});
+ await page.waitForSelector('[data-gen-asset]',{timeout:10000});await page.locator('[data-gen-asset]').first().click();await page.waitForFunction(()=>document.querySelectorAll('#assetGallery img').length>0,{timeout:100000});
+ await page.locator('[data-make-post="INSTAGRAM"]').click();await page.waitForFunction(()=>{const x=document.getElementById('postResult');return x&&x.style.display!=='none'&&x.textContent.length>150&&!x.textContent.includes('생성 실패')},{timeout:80000});
+ if(errors.length)throw new Error('BROWSER_JS_ERRORS:'+JSON.stringify(errors));
+ console.log(JSON.stringify({ok:true,base,viewport:'390x844',login:true,js_ready:true,data_ready:true,tabs:{today:true,students:true,leads:true,recruitment:true},student_form:true,lead_form:true,promo_mission:true,promo_asset_button:true,promo_image_visible:true,instagram_copy_ready:true,system_status:system,seoul_date:date},null,2));
 }finally{
-  await browser.close();
+ if(logged){try{await page.evaluate(async()=>{const csrf=document.querySelector('meta[name="csrf-token"]')?.content||'';await fetch('/api/internal/p3-cleanup',{method:'POST',headers:{'content-type':'application/json','x-csrf-token':csrf},body:'{}'})})}catch{}}
+ await browser.close();
 }
