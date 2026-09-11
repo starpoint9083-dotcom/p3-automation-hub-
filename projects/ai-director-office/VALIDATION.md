@@ -6,6 +6,8 @@
 - Multi-signal decline sample -> RED with explainable reasons
 - Product preflight: PASS
 - Wrangler version pinned: 4.130.0
-- Full npm install in the local execution sandbox exceeded its 120s network/install window; no syntax/test failure was observed.
+- P3 pull-request safety gate: PASS
+- Dedicated AI Office PR deployment gate: ENABLED
+- Existing P1/P2/P3 production Workers are not modified by this project.
 
-Deployment workflow is prepared on the feature branch and intentionally does not modify P1/P2/P3 production Workers.
+Deployment target is a new Worker named `ai-director-office` with a dedicated D1 database `ai-director-office-db` and Workers AI binding.
