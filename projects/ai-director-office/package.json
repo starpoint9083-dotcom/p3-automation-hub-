@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node --check src/lib.js && node --check src/auth.js && node --check src/auth-ui.js && node --check src/services.js && node --check src/promo.js && node --check src/promo-engine.js && node --check src/cleanup.js && node --check src/ui-v3.js && node --check src/client-v3.js && node --check src/app.js && node --check scripts/selftest.mjs && node --check scripts/preflight.mjs && node --check scripts/e2e.mjs && node --check scripts/browser-e2e.mjs && node --check scripts/prepare-wrangler.mjs",
+    "check": "node --check src/lib.js && node --check src/auth.js && node --check src/auth-ui.js && node --check src/services.js && node --check src/promo.js && node --check src/promo-v2.js && node --check src/promo-engine.js && node --check src/cleanup.js && node --check src/ui-v3.js && node --check src/ui-v4.js && node --check src/client-v3.js && node --check src/client-v4.js && node --check src/app.js && node --check scripts/selftest.mjs && node --check scripts/preflight.mjs && node --check scripts/e2e.mjs && node --check scripts/browser-e2e.mjs && node --check scripts/prepare-wrangler.mjs",
     "test": "node scripts/selftest.mjs",
     "preflight": "node scripts/preflight.mjs",
     "prepare:wrangler": "node scripts/prepare-wrangler.mjs",
