@@ -1,12 +1,11 @@
-import {academyId,HttpError,numeric,optionalString,requiredString,uid} from './lib.js';
+import {academyId,bodyJson,HttpError,numeric,optionalString,requiredString,uid} from './lib.js';
 import {ensureAcademy,recruitmentPerformance,recruitmentTargets,runAI} from './services.js';
-import {getAcademyProfile,saveAcademyProfile,listPromoAssets,promoAssetObject,listPromoPosts,promoDashboard as basePromoDashboard} from './promo.js';
+import {listPromoAssets,promoAssetObject,listPromoPosts,promoDashboard as basePromoDashboard} from './promo.js';
 
-export {getAcademyProfile,saveAcademyProfile,listPromoAssets,promoAssetObject,listPromoPosts};
+export {listPromoAssets,promoAssetObject,listPromoPosts};
 
 const CHANNELS=['YOUTUBE','NAVER_BLOG','INSTAGRAM','DAANGN'];
 const CHANNEL_LABEL={YOUTUBE:'유튜브 쇼츠',NAVER_BLOG:'네이버 블로그',INSTAGRAM:'인스타그램',DAANGN:'당근'};
-function safeJson(text,fallback={}){try{return JSON.parse(text||'');}catch{return fallback;}}
 function normalizeChannels(value){
   const raw=Array.isArray(value)?value:[];
   const mapped=raw.map(v=>String(v).trim().toUpperCase().replace(/\s+/g,'_')).map(v=>{
@@ -23,6 +22,7 @@ function profileMissing(profile){
   if(!profile?.academy_name)out.push('학원명');
   if(!profile?.neighborhood)out.push('동네/상권');
   if(!profile?.consultation_cta)out.push('상담 연결 방법(전화·톡톡·DM 등)');
+  if(!profile?.youtube_channel_url)out.push('유튜브 채널 주소');
   if(!profile?.instagram_handle)out.push('인스타그램 계정');
   if(!profile?.naver_blog_url)out.push('네이버 블로그 주소');
   return out;
@@ -46,9 +46,20 @@ function assetNeedsFor(channels,target){
   return needs;
 }
 
+export async function getAcademyProfile(env){
+  await ensureAcademy(env);
+  return await env.DB.prepare(`SELECT academy_name,neighborhood,consultation_cta,youtube_channel_url,naver_blog_url,instagram_handle,daangn_profile,logo_asset_id,updated_at FROM academy_profile WHERE academy_id=?`).bind(academyId(env)).first()||{};
+}
+export async function saveAcademyProfile(env,request){
+  const b=await bodyJson(request);await ensureAcademy(env);
+  const data={academy_name:optionalString(b.academy_name,100),neighborhood:optionalString(b.neighborhood,120),consultation_cta:optionalString(b.consultation_cta,300),youtube_channel_url:optionalString(b.youtube_channel_url,500),naver_blog_url:optionalString(b.naver_blog_url,500),instagram_handle:optionalString(b.instagram_handle,120),daangn_profile:optionalString(b.daangn_profile,300)};
+  await env.DB.prepare(`INSERT INTO academy_profile (academy_id,academy_name,neighborhood,consultation_cta,youtube_channel_url,naver_blog_url,instagram_handle,daangn_profile,updated_at) VALUES (?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP) ON CONFLICT(academy_id) DO UPDATE SET academy_name=excluded.academy_name,neighborhood=excluded.neighborhood,consultation_cta=excluded.consultation_cta,youtube_channel_url=excluded.youtube_channel_url,naver_blog_url=excluded.naver_blog_url,instagram_handle=excluded.instagram_handle,daangn_profile=excluded.daangn_profile,updated_at=CURRENT_TIMESTAMP`).bind(academyId(env),data.academy_name,data.neighborhood,data.consultation_cta,data.youtube_channel_url,data.naver_blog_url,data.instagram_handle,data.daangn_profile).run();
+  return {...data,missing:profileMissing(data)};
+}
+
 export async function promoDashboard(env){
-  const base=await basePromoDashboard(env);
-  return {...base,engine:{name:'AI 원장실 내장형 P1 콘텐츠 엔진',version:'0.6.0',asset_reuse:true,resumable_queue:true,image_timeout_seconds:180},channel_capabilities:{YOUTUBE:{content_package:true,auto_publish:'OAUTH_CONNECTOR_REQUIRED'},INSTAGRAM:{content_package:true,auto_publish:'CONNECTOR_REQUIRED'},NAVER_BLOG:{content_package:true,auto_publish:false,reason:'공식 블로그 글쓰기 API 종료로 승인형 게시 패키지 제공'},DAANGN:{content_package:true,auto_publish:false,reason:'공식 자동 게시 연결 전 승인형 게시 패키지 제공'}}};
+  const [base,profile]=await Promise.all([basePromoDashboard(env),getAcademyProfile(env)]);
+  return {...base,profile,missing_profile:profileMissing(profile),engine:{name:'AI 원장실 내장형 P1 콘텐츠 엔진',version:'0.6.0',asset_reuse:true,resumable_queue:true,image_timeout_seconds:180},channel_capabilities:{YOUTUBE:{content_package:true,auto_publish:'OAUTH_CONNECTOR_REQUIRED'},INSTAGRAM:{content_package:true,auto_publish:'CONNECTOR_REQUIRED'},NAVER_BLOG:{content_package:true,auto_publish:false,reason:'공식 블로그 글쓰기 API 종료로 승인형 게시 패키지 제공'},DAANGN:{content_package:true,auto_publish:false,reason:'공식 자동 게시 연결 전 승인형 게시 패키지 제공'}}};
 }
 
 export async function createPromoMission(env,payload){
@@ -79,7 +90,7 @@ export async function createPromoPost(env,payload){
   if(!mission)throw new HttpError(404,'PROMO_MISSION_NOT_FOUND');
   const profile=await getAcademyProfile(env),targets=await recruitmentTargets(env),assets=await listPromoAssets(env);
   const system=`당신은 실제 등록 전환을 만드는 영어학원 AI 모집·홍보실장이다. 원장이 거의 수정 없이 사용할 수 있는 완성 결과물만 준다. 확인되지 않은 뮤엠영어·노피곰 기능이나 교육효과를 만들지 않는다. 성적보장, 경쟁학원 비방, 공포마케팅, 가짜 후기, 가짜 희소성은 금지한다. 연락처나 주소가 없으면 임시 플레이스홀더를 쓰지 말고 메시지 상담 CTA로 자연스럽게 마무리한다. ${channelRules(channel)}`;
-  const user=`학원 프로필 ${JSON.stringify(profile)}. 모집작전 ${mission.mission_text}. 목표 ${mission.goal_students}명 / 대상 ${mission.target_segment}. 현재 자리 ${JSON.stringify(targets.slice(0,10))}. 사용 가능한 홍보 이미지 ${JSON.stringify(assets.filter(a=>a.mission_id===missionId||a.reused).slice(0,12))}. ${CHANNEL_LABEL[channel]}에 바로 사용할 완성 패키지를 작성하라.`;
+  const user=`학원 프로필 ${JSON.stringify(profile)}. 모집작전 ${mission.mission_text}. 목표 ${mission.goal_students}명 / 대상 ${mission.target_segment}. 현재 자리 ${JSON.stringify(targets.slice(0,10))}. 사용 가능한 홍보 이미지 ${JSON.stringify(assets.filter(a=>a.mission_id===missionId).slice(0,12))}. ${CHANNEL_LABEL[channel]}에 바로 사용할 완성 패키지를 작성하라.`;
   const body=await runAI(env,system,user,channel==='YOUTUBE'?2400:2100),id=uid('post');
   const format=channel==='YOUTUBE'?'SHORTS_PACKAGE':channel==='INSTAGRAM'?'REELS_CAROUSEL':channel==='NAVER_BLOG'?'BLOG':'LOCAL_POST';
   const assetIds=assets.filter(a=>a.mission_id===missionId&&(!a.channel||a.channel===channel||a.channel==='GENERAL')).slice(0,8).map(a=>a.id);
