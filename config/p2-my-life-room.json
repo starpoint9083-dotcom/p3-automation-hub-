@@ -15,7 +15,15 @@
   },
   "health": {
     "app": "/api/health",
-    "cinemaPublic": "/api/cinema/batch/latest-public"
+    "cinemaPublic": "/api/cinema/batch/latest-public",
+    "cinemaQualityPublic": "/api/cinema/batch/quality-public"
+  },
+  "qualityPolicy": {
+    "technicalManifest": true,
+    "technicalScoreRequired": 100,
+    "visualReview": "separate-explicit-cost-gate",
+    "autoRegeneration": false,
+    "paidVisualAIInCI": false
   },
   "protected": {
     "neverDeleteOrRename": [
