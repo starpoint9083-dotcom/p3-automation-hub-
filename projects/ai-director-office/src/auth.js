@@ -2,16 +2,18 @@ import {bodyJson,HttpError,JSON_HEADERS} from './lib.js';
 
 const COOKIE_NAME='__Host-aiod_session';
 const SESSION_SECONDS=12*60*60;
+const MAX_SECRET_INPUT=512;
 const enc=new TextEncoder();
 
 export const isAuthConfigured=(env)=>typeof env.ADMIN_PASSWORD==='string'&&env.ADMIN_PASSWORD.length>=12;
 
-async function digest(value){return new Uint8Array(await crypto.subtle.digest('SHA-256',enc.encode(String(value))));}
-async function secureEqual(a,b){
-  const [aa,bb]=await Promise.all([digest(a),digest(b)]);
+function secureEqual(a,b){
+  const left=String(a??''),right=String(b??'');
+  if(left.length>MAX_SECRET_INPUT||right.length>MAX_SECRET_INPUT)return false;
+  const aa=enc.encode(left),bb=enc.encode(right);
   let diff=aa.length^bb.length;
-  const n=Math.max(aa.length,bb.length);
-  for(let i=0;i<n;i++)diff|=(aa[i%aa.length]??0)^(bb[i%bb.length]??0);
+  const n=Math.max(aa.length,bb.length,1);
+  for(let i=0;i<n;i++)diff|=(aa[i]??0)^(bb[i]??0);
   return diff===0;
 }
 function b64u(bytes){let s='';for(const b of bytes)s+=String.fromCharCode(b);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
@@ -60,7 +62,7 @@ export async function login(request,env){
   if(!sameOrigin(request))throw new HttpError(403,'ORIGIN_REJECTED');
   const body=await bodyJson(request);
   const supplied=typeof body.password==='string'?body.password:'';
-  if(!(await secureEqual(supplied,env.ADMIN_PASSWORD)))throw new HttpError(401,'INVALID_CREDENTIALS','비밀번호를 확인해주세요.');
+  if(supplied.length>MAX_SECRET_INPUT||!secureEqual(supplied,env.ADMIN_PASSWORD))throw new HttpError(401,'INVALID_CREDENTIALS','비밀번호를 확인해주세요.');
   const {token,payload}=await createSessionToken(env);
   const cookie=`${COOKIE_NAME}=${token}; Path=/; Max-Age=${SESSION_SECONDS}; HttpOnly; Secure; SameSite=Strict`;
   return jsonWithHeaders({ok:true,data:{authenticated:true,csrf:payload.csrf,expires_at:new Date(payload.exp*1000).toISOString()}},200,{'set-cookie':cookie});
@@ -77,7 +79,7 @@ export async function requireAdmin(request,env,{mutation=false}={}){
   if(mutation){
     if(!sameOrigin(request))throw new HttpError(403,'ORIGIN_REJECTED');
     const csrf=request.headers.get('x-csrf-token')||'';
-    if(!(await secureEqual(csrf,session.csrf)))throw new HttpError(403,'CSRF_REJECTED');
+    if(!secureEqual(csrf,session.csrf))throw new HttpError(403,'CSRF_REJECTED');
   }
   return session;
 }
