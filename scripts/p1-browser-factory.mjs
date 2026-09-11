@@ -52,7 +52,10 @@ const summary = {
   api_transport: 'node-fetch-with-session-cookie',
   target_duration: TARGET_DURATION,
   lineup_id: null,
+  lineup_mode: null,
   production_run_id: null,
+  policy: null,
+  usage: null,
   completed: 0,
   failed: 0,
   items: [],
@@ -174,25 +177,50 @@ try {
   }
   console.log('P1 authenticated health PASS (DB/KV/AI)');
 
-  const lineupBody = {
-    lineup_date: summary.kst_date,
-    date: summary.kst_date,
-    theme: '1분 사주 드라마',
-    audience: '20~35세 여성',
-    tracking_base: '@kstellaway',
-    platform: 'youtube_shorts'
-  };
-  console.log(`Generating lineup with explicit ${Math.round(API_REQUEST_TIMEOUT / 60000)}m API deadline`);
-  const lineupResponse = await api('/api/lineups/generate', {
-    method: 'POST',
-    body: lineupBody,
-    timeoutMs: API_REQUEST_TIMEOUT
-  });
-  const lineupId = String(lineupResponse?.lineup?.id || lineupResponse?.lineup_id || '');
-  if (!lineupId) throw new Error(`P1 did not return a lineup id: ${JSON.stringify(lineupResponse).slice(0, 1500)}`);
+  const policyStatus = await api('/api/system/policy', { timeoutMs: 60 * 1000 });
+  summary.policy = policyStatus?.policy || null;
+  summary.usage = policyStatus?.usage || null;
+  console.log(`P1 policy status: ${JSON.stringify({ usage: summary.usage, policy: summary.policy }).slice(0, 1200)}`);
+  await saveSummary();
+
+  let lineupId = '';
+  let latestLineupResponse = null;
+  try {
+    latestLineupResponse = await api('/api/lineups/latest', { timeoutMs: 60 * 1000 });
+  } catch (error) {
+    console.log(`No reusable latest lineup: ${String(error?.message || error).slice(0, 500)}`);
+  }
+  const latestLineup = latestLineupResponse?.lineup || null;
+  const latestItems = Array.isArray(latestLineupResponse?.items) ? latestLineupResponse.items : [];
+  const latestDate = String(latestLineup?.lineup_date || latestLineup?.date || '').slice(0, 10);
+
+  if (latestLineup?.id && latestDate === summary.kst_date && latestItems.length === 10) {
+    lineupId = String(latestLineup.id);
+    summary.lineup_mode = 'resume';
+    console.log(`Resuming today's lineup: ${lineupId} (${latestItems.length} items)`);
+  } else {
+    const lineupBody = {
+      lineup_date: summary.kst_date,
+      date: summary.kst_date,
+      theme: '1분 사주 드라마',
+      audience: '20~35세 여성',
+      tracking_base: '@kstellaway',
+      platform: 'youtube_shorts'
+    };
+    console.log(`Generating lineup with explicit ${Math.round(API_REQUEST_TIMEOUT / 60000)}m API deadline`);
+    const lineupResponse = await api('/api/lineups/generate', {
+      method: 'POST',
+      body: lineupBody,
+      timeoutMs: API_REQUEST_TIMEOUT
+    });
+    lineupId = String(lineupResponse?.lineup?.id || lineupResponse?.lineup_id || '');
+    if (!lineupId) throw new Error(`P1 did not return a lineup id: ${JSON.stringify(lineupResponse).slice(0, 1500)}`);
+    summary.lineup_mode = 'generated';
+    console.log(`Lineup generated: ${lineupId}`);
+  }
+
   summary.lineup_id = lineupId;
   await saveSummary();
-  console.log(`Lineup ready: ${lineupId}`);
 
   const planned = await api('/api/lineups/plan-all', {
     method: 'POST',
