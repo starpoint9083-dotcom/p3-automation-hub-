@@ -68,6 +68,9 @@ jobs:
       - name: Security check
         run: npm run security
 
+      - name: Safety gate
+        run: npm run safety
+
       - name: Self test
         run: npm test
 
