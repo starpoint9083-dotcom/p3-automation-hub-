@@ -1,4 +1,6 @@
 import {bodyJson,html,HttpError,json,nowIso,sanitizePublicError} from './lib.js';
+import {authState,isAuthConfigured,login,logout,requireAdmin} from './auth.js';
+import {loginHtml} from './auth-ui.js';
 import {addMetric,briefing,createLead,createStudent,growthReport,listLeads,listRisks,recruitmentContent,recruitmentPerformance,recruitmentPlan,recruitmentTargets,recordCampaignEvent,setRecruitmentTarget,studentCard,updateLeadStage} from './services.js';
 import {appHtml} from './ui.js';
 
@@ -7,13 +9,26 @@ const match=(path,re)=>path.match(re);
 export default {async fetch(request,env){
   try{
     const url=new URL(request.url), path=url.pathname;
-    if(path==='/'&&request.method==='GET')return html(appHtml());
-    if((path==='/health'||path==='/healthz')&&request.method==='GET')return json({ok:true,service:'ai-director-office',version:env.APP_VERSION||'0.2.0',db:Boolean(env.DB),ai:Boolean(env.AI),timestamp:nowIso()});
+
+    if((path==='/health'||path==='/healthz')&&request.method==='GET')return json({ok:true,service:'ai-director-office',version:env.APP_VERSION||'0.3.0',db:Boolean(env.DB),ai:Boolean(env.AI),auth:isAuthConfigured(env),timestamp:nowIso()});
     if(path==='/preflight'&&request.method==='GET'){
-      const ok=Boolean(env.DB)&&Boolean(env.AI);
-      return json({ok,checks:{worker:true,d1:Boolean(env.DB),workersAI:Boolean(env.AI)},version:env.APP_VERSION||'0.2.0'},ok?200:503);
+      const ok=Boolean(env.DB)&&Boolean(env.AI)&&isAuthConfigured(env);
+      return json({ok,checks:{worker:true,d1:Boolean(env.DB),workersAI:Boolean(env.AI),adminAuth:isAuthConfigured(env)},version:env.APP_VERSION||'0.3.0'},ok?200:503);
     }
+
+    if(path==='/auth/status'&&request.method==='GET')return json({ok:true,data:await authState(request,env)});
+    if(path==='/auth/login'&&request.method==='POST')return login(request,env);
+    if(path==='/auth/logout'&&request.method==='POST')return logout();
+
+    if(path==='/'&&request.method==='GET'){
+      const state=await authState(request,env);
+      if(!state.configured)return html(loginHtml(false),503);
+      if(!state.authenticated)return html(loginHtml(true));
+      return html(appHtml());
+    }
+
     if(!env.DB)throw new HttpError(503,'DB_NOT_BOUND');
+    if(path.startsWith('/api/'))await requireAdmin(request,env,{mutation:!['GET','HEAD'].includes(request.method)});
 
     if(path==='/api/briefing'&&request.method==='GET')return json({ok:true,data:await briefing(env)});
     if(path==='/api/risks'&&request.method==='GET')return json({ok:true,data:await listRisks(env)});
