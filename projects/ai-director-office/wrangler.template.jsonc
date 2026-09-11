@@ -7,7 +7,7 @@
   "ai": { "binding": "AI" },
   "secrets": { "required": ["ADMIN_PASSWORD"] },
   "vars": {
-    "APP_VERSION": "0.5.0",
+    "APP_VERSION": "0.6.0",
     "AI_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
     "IMAGE_MODEL": "@cf/black-forest-labs/flux-2-klein-4b",
     "DEFAULT_ACADEMY_ID": "academy-main"
