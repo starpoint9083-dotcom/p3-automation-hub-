@@ -96,3 +96,16 @@ jobs:
           E2E_ATTEMPTS: 12
           E2E_DELAY_MS: 5000
         run: node scripts/e2e.mjs
+
+      - name: Create last-known-good deployment receipt
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+        run: node scripts/deployment-receipt.mjs deploy.log deployment-receipt.json
+
+      - name: Archive last-known-good deployment receipt
+        uses: actions/upload-artifact@v4
+        with:
+          name: p3-last-known-good-${{ github.run_number }}
+          path: deployment-receipt.json
+          retention-days: 30
+          if-no-files-found: error
