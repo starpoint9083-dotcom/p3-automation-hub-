@@ -1,0 +1,135 @@
+name: P2 Safe Supervisor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/10 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p3-p2-safe-supervisor
+  cancel-in-progress: true
+
+jobs:
+  supervise:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      P2_REPO: starpoint9083-dotcom/my-life-room-v13-app
+      P2_DEPLOY_WORKFLOW: deploy-cloudflare.yml
+      P2_URL: https://my-life-room-v13-live-0910.starpoint9083.workers.dev
+    steps:
+      - name: Checkout P3 policy
+        uses: actions/checkout@v4
+
+      - name: Confirm supervisor safety contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f config/p2-my-life-room.json
+          node - <<'NODE'
+          const fs = require('fs');
+          const c = JSON.parse(fs.readFileSync('config/p2-my-life-room.json','utf8'));
+          if (c.automationPolicy?.mode !== 'external-supervisor') throw new Error('P2 supervisor mode missing');
+          if (c.automationPolicy?.p2OwnsDeployment !== true) throw new Error('P2 must own deployment');
+          if (c.automationPolicy?.paidGenerationInCI !== false) throw new Error('Paid generation must stay disabled in CI');
+          if (c.automationPolicy?.p3MayDeleteOrRecreateCloudflareResources !== false) throw new Error('Cloudflare destructive mutation must stay disabled');
+          console.log('P2 supervisor safety contract: PASS');
+          NODE
+
+      - name: Detect current P2 main commit
+        id: head
+        shell: bash
+        run: |
+          set -euo pipefail
+          SHA="$(git ls-remote "https://github.com/${P2_REPO}.git" refs/heads/main | awk '{print $1}')"
+          test -n "$SHA"
+          echo "sha=$SHA" >> "$GITHUB_OUTPUT"
+          echo "P2 main: $SHA"
+
+      - name: Inspect P2 deployment for current commit
+        id: deploy
+        shell: bash
+        env:
+          EXPECTED_SHA: ${{ steps.head.outputs.sha }}
+        run: |
+          set -euo pipefail
+          URL="https://api.github.com/repos/${P2_REPO}/actions/workflows/${P2_DEPLOY_WORKFLOW}/runs?branch=main&event=push&per_page=10"
+          curl -fsSL --retry 3 --retry-delay 2 -H 'Accept: application/vnd.github+json' -H 'User-Agent: p3-p2-safe-supervisor' "$URL" > runs.json
+          node - <<'NODE'
+          const fs = require('fs');
+          const expected = process.env.EXPECTED_SHA;
+          const body = JSON.parse(fs.readFileSync('runs.json','utf8'));
+          const run = (body.workflow_runs || []).find(r => r.head_sha === expected);
+          const out = process.env.GITHUB_OUTPUT;
+          if (!run) {
+            fs.appendFileSync(out, 'state=pending\n');
+            fs.appendFileSync(out, 'message=no matching deployment run yet\n');
+            console.log('P2 deployment for current main has not appeared yet; supervisor will check again.');
+            process.exit(0);
+          }
+          fs.appendFileSync(out, `state=${run.status === 'completed' ? run.conclusion : 'pending'}\n`);
+          fs.appendFileSync(out, `run_url=${run.html_url}\n`);
+          fs.appendFileSync(out, `run_id=${run.id}\n`);
+          console.log(`P2 deploy run ${run.id}: status=${run.status} conclusion=${run.conclusion}`);
+          if (run.status === 'completed' && run.conclusion !== 'success') process.exit(9);
+          NODE
+
+      - name: Stop cleanly while deployment is pending
+        if: steps.deploy.outputs.state == 'pending'
+        shell: bash
+        run: |
+          echo "### P2 supervisor" >> "$GITHUB_STEP_SUMMARY"
+          echo "Current P2 main commit is waiting for its normal P2 deployment pipeline. No P3 mutation was attempted." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Verify real P2 health URL
+        if: steps.deploy.outputs.state == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          for i in 1 2 3 4 5; do
+            if curl -fsSL --max-time 15 -H 'cache-control: no-cache' "$P2_URL/api/health" > health.json; then
+              if node - <<'NODE'
+              const fs=require('fs'); const b=JSON.parse(fs.readFileSync('health.json','utf8'));
+              const ok=b.ok===true && b.d1===true && b.r2===true && b.ai===true && b.cinemaBackground===true;
+              if(!ok){console.error(b);process.exit(1)}
+              console.log(`P2 HEALTH PASS cinema=${b.cinemaEngine} model=${b.model}`);
+              NODE
+              then break; fi
+            fi
+            if [ "$i" = 5 ]; then echo "P2 real URL health verification failed" >&2; exit 10; fi
+            sleep 5
+          done
+
+      - name: Verify read-only Cinema status
+        if: steps.deploy.outputs.state == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --max-time 15 -H 'cache-control: no-cache' "$P2_URL/api/cinema/batch/latest-public" > cinema.json
+          node - <<'NODE'
+          const fs=require('fs'); const b=JSON.parse(fs.readFileSync('cinema.json','utf8'));
+          if(b.ok!==true || Number(b.total)!==9) { console.error(b); process.exit(11); }
+          console.log(`P2 CINEMA READ-ONLY PASS status=${b.status} ready=${b.ready}/${b.total}`);
+          NODE
+
+      - name: Report supervisor result
+        if: always()
+        shell: bash
+        env:
+          MAIN_SHA: ${{ steps.head.outputs.sha }}
+          DEPLOY_STATE: ${{ steps.deploy.outputs.state }}
+          DEPLOY_URL: ${{ steps.deploy.outputs.run_url }}
+        run: |
+          {
+            echo "### P2 ↔ P3 safe supervisor"
+            echo "- P2 main: \`$MAIN_SHA\`"
+            echo "- P2 deploy state: \`${DEPLOY_STATE:-unknown}\`"
+            echo "- P2 deploy run: ${DEPLOY_URL:-not-yet-observed}"
+            echo "- Production URL: $P2_URL"
+            echo "- P3 mode: read-only external supervisor"
+            echo "- Paid Cinema generation: NEVER triggered by this workflow"
+            echo "- Cloudflare resource delete/recreate/rebind: NEVER performed by this workflow"
+          } >> "$GITHUB_STEP_SUMMARY"
