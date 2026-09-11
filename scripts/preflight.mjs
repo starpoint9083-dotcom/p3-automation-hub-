@@ -5,6 +5,7 @@ const required = [
   "wrangler.jsonc",
   "src/index.js",
   "scripts/security-check.mjs",
+  "scripts/safety-gate.mjs",
   "scripts/e2e.mjs",
   "scripts/p1-browser-factory.mjs",
   "config/p2-my-life-room.json",
@@ -43,6 +44,7 @@ const workflow = await readFile(new URL("../.github/workflows/deploy.yml", impor
 for (const expected of [
   "npm run check",
   "npm run security",
+  "npm run safety",
   "npm run preflight",
   "wrangler deploy --dry-run",
   "wrangler deploy",
@@ -50,6 +52,9 @@ for (const expected of [
 ]) {
   if (!workflow.includes(expected)) failures.push(`workflow:${expected}`);
 }
+
+const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
+if (packageJson.scripts?.safety !== "node scripts/safety-gate.mjs") failures.push("package:safety-script");
 
 const p2Config = JSON.parse(await readFile(new URL("../config/p2-my-life-room.json", import.meta.url), "utf8"));
 if (p2Config.repository !== "starpoint9083-dotcom/my-life-room-v13-app") failures.push("p2-config:repository");
@@ -141,4 +146,4 @@ if (failures.length) {
   for (const f of failures) console.error(`- ${f}`);
   process.exit(1);
 }
-console.log(`PREFLIGHT PASS (${required.length} required files + P1 daily resume/quota visibility + P1 bridge + P2 read-only supervisor + P2 zero-cost Cinema technical QC + protected-resource guards + no-paid-Cinema/no-paid-visual-AI CI + deployment pipeline invariants)`);
+console.log(`PREFLIGHT PASS (${required.length} required files + global destructive-operation safety gate + P1 daily resume/quota visibility + P1 bridge + P2 read-only supervisor + P2 zero-cost Cinema technical QC + protected-resource guards + no-paid-Cinema/no-paid-visual-AI CI + deployment pipeline invariants)`);
