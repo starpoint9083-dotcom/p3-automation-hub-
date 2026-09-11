@@ -33,7 +33,7 @@ function health(env) {
   return {
     ok: true,
     service: "p3-automation-hub",
-    version: env.P3_VERSION || "0.3.0",
+    version: env.P3_VERSION || "0.4.0",
     mode: env.P3_MODE || "p1-p2-supervisor",
     stage: "deployment-channel",
     integration: "p1-p2-supervisor",
@@ -49,12 +49,13 @@ function preflight(env) {
   return {
     ok: p1UrlValid && p2UrlValid,
     service: "p3-automation-hub",
-    version: env.P3_VERSION || "0.3.0",
+    version: env.P3_VERSION || "0.4.0",
     checks: {
       workerRuntime: true,
       workersDev: true,
       p1BridgeConfigured: p1UrlValid,
       p2SupervisorConfigured: p2UrlValid,
+      p2TechnicalQualityGateConfigured: p2UrlValid,
       d1: Boolean(env.P3_DB),
       r2: Boolean(env.P3_ASSETS),
       workersAI: Boolean(env.AI)
@@ -63,9 +64,11 @@ function preflight(env) {
       p2Mode: "read-only-supervisor",
       p2OwnsDeployment: true,
       paidCinemaGenerationFromP3: false,
+      paidVisualAIFromP3: false,
+      autoCinemaRegenerationFromP3: false,
       resourceMutationFromP3: false
     },
-    note: "P3 supervises P2 through strict allowlisted HTTPS GET probes. P2 keeps ownership of deployment and Cloudflare resources. Paid Cinema generation is never triggered by P3."
+    note: "P3 supervises P2 through strict allowlisted HTTPS GET probes. Technical Cinema QC is zero-cost metadata inspection. Visual AI QC and regeneration remain behind a separate explicit cost gate."
   };
 }
 
@@ -79,7 +82,7 @@ async function upstreamJson(base, path) {
       headers: {
         "accept": "application/json",
         "cache-control": "no-cache",
-        "user-agent": "p3-automation-hub/0.3"
+        "user-agent": "p3-automation-hub/0.4"
       },
       signal: controller.signal
     });
@@ -124,7 +127,8 @@ function p2Descriptor(env) {
     bridge: configured ? "configured" : "invalid",
     probes: {
       health: "/api/health",
-      cinema: "/api/cinema/batch/latest-public"
+      cinema: "/api/cinema/batch/latest-public",
+      quality: "/api/cinema/batch/quality-public"
     },
     protected_resources: [
       "worker:my-life-room-v13-live-0910",
@@ -132,10 +136,15 @@ function p2Descriptor(env) {
       "r2:my-life-room-assets-v13",
       "workflow:my-life-room-cinema-v23"
     ],
+    quality_gate: {
+      technical: "automatic-read-only",
+      visual: "explicit-cost-gate",
+      autoRegeneration: false
+    },
     control: {
       enabled: false,
       mode: "read-only-supervisor",
-      reason: "P2 owns deployment and mutations. P3 never auto-calls paid Cinema generation endpoints."
+      reason: "P2 owns deployment and mutations. P3 never auto-calls paid Cinema generation, visual AI, or regeneration endpoints."
     }
   };
 }
@@ -215,6 +224,55 @@ async function p2Cinema(env) {
   }
 }
 
+async function p2Quality(env) {
+  try {
+    const upstream = await upstreamJson(p2BaseUrl(env), "/api/cinema/batch/quality-public");
+    const connected = upstream.ok && upstream.body?.ok === true;
+    const b = upstream.body || {};
+    const clips = Array.isArray(b.clips) ? b.clips.map(c => ({
+      slot: String(c?.slot || ""),
+      frame: Boolean(c?.frame),
+      video: Boolean(c?.video),
+      bytes: Number(c?.bytes || 0),
+      duration: Number(c?.duration || 0),
+      contentType: c?.contentType ?? null,
+      model: c?.model ?? null,
+      technicalOk: Boolean(c?.technicalOk)
+    })) : [];
+    const technicalPass = Boolean(b.technicalPass);
+    const technicalScore = Number(b.technicalScore || 0);
+    const ready = Number(b.ready || 0);
+    const total = Number(b.total || 9);
+    return json({
+      ok: connected,
+      project: "P2",
+      connected,
+      upstream_status: upstream.status,
+      latency_ms: upstream.latency_ms,
+      quality: connected ? {
+        status: b.status ?? "unknown",
+        ready,
+        total,
+        technicalPass,
+        technicalScore,
+        visualReview: b.visualReview ?? "pending",
+        clips,
+        updatedAt: b.updatedAt ?? null
+      } : b,
+      gate: {
+        technical: connected && ready === total && total === 9 && technicalPass && technicalScore === 100,
+        visual: b.visualReview ?? "pending",
+        visualCriteria: ["face-consistency","hands-limbs","pet-count-form","room-continuity","camera-motion","morphing-flicker"],
+        autoRegeneration: false,
+        paid_visual_ai_triggered: false,
+        paid_generation_triggered: false
+      }
+    }, connected ? 200 : 502);
+  } catch (error) {
+    return json({ ok: false, project: "P2", connected: false, error: error?.name === "AbortError" ? "P2_QUALITY_TIMEOUT" : (error?.message || "P2_QUALITY_UNREACHABLE") }, 502);
+  }
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -227,6 +285,7 @@ export default {
     if (url.pathname === "/projects/p2") return json(p2Descriptor(env));
     if (url.pathname === "/projects/p2/health") return p2Health(env);
     if (url.pathname === "/projects/p2/cinema") return p2Cinema(env);
+    if (url.pathname === "/projects/p2/quality") return p2Quality(env);
     return json({ ok: false, error: "NOT_FOUND", path: url.pathname }, 404);
   }
 };
