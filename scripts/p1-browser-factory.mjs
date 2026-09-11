@@ -7,6 +7,7 @@ const CHROME_PATH = String(process.env.CHROME_PATH || '');
 const TARGET_DURATION = Math.max(50, Math.min(70, Number(process.env.P1_TARGET_DURATION || 60)));
 const SUMMARY_PATH = process.env.P1_FACTORY_SUMMARY || 'p1_factory_summary.json';
 const OIDC_AUDIENCE = 'k-stella-p1-p3-bridge';
+const BROWSER_PROTOCOL_TIMEOUT = 20 * 60 * 1000;
 
 if (!CHROME_PATH) throw new Error('CHROME_PATH is required. The workflow must locate Chrome/Chromium first.');
 if (new URL(P1_BASE_URL).hostname !== 'k-stella-shorts-factory.k-stella-p1.workers.dev') {
@@ -63,6 +64,7 @@ async function saveSummary() {
 const oidcToken = await requestGitHubOidcToken();
 const browser = await puppeteer.launch({
   executablePath: CHROME_PATH,
+  protocolTimeout: BROWSER_PROTOCOL_TIMEOUT,
   headless: true,
   args: [
     '--no-sandbox',
@@ -79,7 +81,7 @@ const browser = await puppeteer.launch({
 try {
   const page = await browser.newPage();
   await page.setViewport({ width: 720, height: 1280, deviceScaleFactor: 1 });
-  page.setDefaultTimeout(10 * 60 * 1000);
+  page.setDefaultTimeout(BROWSER_PROTOCOL_TIMEOUT);
 
   page.on('console', (msg) => {
     const text = msg.text();
