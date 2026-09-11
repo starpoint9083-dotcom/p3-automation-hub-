@@ -28,8 +28,11 @@ async function check(path, validator) {
   throw new Error(`E2E FAILED ${path}: ${lastError}`);
 }
 
-await check("/health", b => b?.ok === true && b?.service === "p3-automation-hub" && b?.integration === "p1-bridge");
-await check("/preflight", b => b?.ok === true && b?.checks?.workerRuntime === true && b?.checks?.p1BridgeConfigured === true);
+await check("/health", b => b?.ok === true && b?.service === "p3-automation-hub" && b?.integration === "p1-p2-supervisor");
+await check("/preflight", b => b?.ok === true && b?.checks?.workerRuntime === true && b?.checks?.p1BridgeConfigured === true && b?.checks?.p2SupervisorConfigured === true && b?.safety?.paidCinemaGenerationFromP3 === false);
 await check("/projects/p1", b => b?.ok === true && b?.project === "P1" && b?.bridge === "configured" && b?.probe === "/healthz");
 await check("/projects/p1/health", b => b?.ok === true && b?.project === "P1" && b?.connected === true && b?.p1?.db === true && b?.p1?.storage === true && b?.p1?.ai === true);
-console.log(`E2E COMPLETE ${base} P1_BRIDGE=CONNECTED`);
+await check("/projects/p2", b => b?.ok === true && b?.project === "P2" && b?.bridge === "configured" && b?.control?.mode === "read-only-supervisor");
+await check("/projects/p2/health", b => b?.ok === true && b?.project === "P2" && b?.connected === true && b?.safe === true && b?.p2?.d1 === true && b?.p2?.r2 === true && b?.p2?.ai === true && b?.p2?.cinemaBackground === true);
+await check("/projects/p2/cinema", b => b?.ok === true && b?.project === "P2" && b?.connected === true && b?.cinema?.total === 9 && b?.paid_generation_triggered === false);
+console.log(`E2E COMPLETE ${base} P1_BRIDGE=CONNECTED P2_SUPERVISOR=CONNECTED PAID_CINEMA_TRIGGER=DISABLED`);

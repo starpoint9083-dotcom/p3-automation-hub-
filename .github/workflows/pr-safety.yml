@@ -1,0 +1,43 @@
+name: P3 Pull Request Safety Gate
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p3-pr-safety-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Static syntax check
+        run: npm run check
+
+      - name: Security scan
+        run: npm run security
+
+      - name: Self test
+        run: npm test
+
+      - name: P3 preflight
+        run: npm run preflight
+
+      - name: Wrangler dry-run only
+        run: npx wrangler deploy --dry-run --outdir dist
