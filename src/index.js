@@ -97,6 +97,7 @@ function p1Descriptor(env) {
     repository: "starpoint9083-dotcom/k-stella-way-p1",
     base_url: baseUrl,
     bridge: configured ? "configured" : "invalid",
+    probe: "/healthz",
     control: {
       enabled: false,
       reason: "P1 operational APIs require a dedicated admin bearer secret; public bridge is health/status only."
@@ -131,27 +132,6 @@ async function p1Health(env) {
   }
 }
 
-async function p1Bootstrap(env) {
-  try {
-    const upstream = await upstreamJson(env, "/api/bootstrap/status");
-    return json({
-      ok: upstream.ok,
-      project: "P1",
-      connected: upstream.ok,
-      upstream_status: upstream.status,
-      latency_ms: upstream.latency_ms,
-      bootstrap: upstream.body
-    }, upstream.ok ? 200 : 502);
-  } catch (error) {
-    return json({
-      ok: false,
-      project: "P1",
-      connected: false,
-      error: error?.name === "AbortError" ? "P1_TIMEOUT" : (error?.message || "P1_UNREACHABLE")
-    }, 502);
-  }
-}
-
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -160,7 +140,6 @@ export default {
     if (url.pathname === "/preflight") return json(preflight(env));
     if (url.pathname === "/projects/p1") return json(p1Descriptor(env));
     if (url.pathname === "/projects/p1/health") return p1Health(env);
-    if (url.pathname === "/projects/p1/bootstrap") return p1Bootstrap(env);
     return json({ ok: false, error: "NOT_FOUND", path: url.pathname }, 404);
   }
 };
