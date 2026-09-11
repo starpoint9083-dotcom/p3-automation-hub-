@@ -2,6 +2,15 @@ name: P2 Safe Supervisor
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'src/index.js'
+      - 'config/p2-my-life-room.json'
+      - 'ops/P2_P3_SUPERVISOR_CONTRACT.md'
+      - 'scripts/e2e.mjs'
+      - 'scripts/preflight.mjs'
+      - '.github/workflows/p2-supervisor.yml'
   schedule:
     - cron: "*/10 * * * *"
 
