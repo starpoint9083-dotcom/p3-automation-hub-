@@ -22,7 +22,7 @@ export default {async fetch(request,env){
     }
 
     if(path==='/auth/status'&&request.method==='GET')return json({ok:true,data:await authState(request,env)});
-    if(path==='/auth/login'&&request.method==='POST')return login(request,env);
+    if(path==='/auth/login'&&request.method==='POST')return await login(request,env);
     if(path==='/auth/logout'&&request.method==='POST')return logout();
 
     if(path==='/'&&request.method==='GET'){
