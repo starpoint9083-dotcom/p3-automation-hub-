@@ -102,10 +102,22 @@ jobs:
           DEPLOY_URL: ${{ steps.deploy.outputs.url }}
         run: node scripts/deployment-receipt.mjs deploy.log deployment-receipt.json
 
-      - name: Archive last-known-good deployment receipt
+      - name: Create automatic operations report
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/operations-report.mjs
+          cat p3-operations-report.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Archive last-known-good deployment and operations report
         uses: actions/upload-artifact@v4
         with:
           name: p3-last-known-good-${{ github.run_number }}
-          path: deployment-receipt.json
+          path: |
+            deployment-receipt.json
+            p3-operations-report.json
+            p3-operations-report.md
           retention-days: 30
           if-no-files-found: error
