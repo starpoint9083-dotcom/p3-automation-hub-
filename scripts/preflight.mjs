@@ -6,7 +6,9 @@ const required = [
   "src/index.js",
   "scripts/security-check.mjs",
   "scripts/e2e.mjs",
-  ".github/workflows/deploy.yml"
+  "scripts/p1-browser-factory.mjs",
+  ".github/workflows/deploy.yml",
+  ".github/workflows/p1-browser-factory.yml"
 ];
 
 const failures = [];
@@ -43,9 +45,36 @@ for (const expected of [
   if (!workflow.includes(expected)) failures.push(`workflow:${expected}`);
 }
 
+const factory = await readFile(new URL("../scripts/p1-browser-factory.mjs", import.meta.url), "utf8");
+for (const expected of [
+  "P1_ADMIN_TOKEN",
+  "puppeteer-core",
+  "/api/lineups/generate",
+  "/api/lineups/plan-all",
+  "/api/production/start",
+  "processProductionItem",
+  "/api/release/daily"
+]) {
+  if (!factory.includes(expected)) failures.push(`factory:${expected}`);
+}
+if (factory.includes("console.log(P1_ADMIN_TOKEN") || factory.includes("P1_ADMIN_TOKEN}")) failures.push("factory:secret-log-risk");
+
+const factoryWorkflow = await readFile(new URL("../.github/workflows/p1-browser-factory.yml", import.meta.url), "utf8");
+for (const expected of [
+  "workflow_dispatch",
+  "secrets.P1_ADMIN_TOKEN",
+  "puppeteer-core",
+  "Locate Chrome",
+  "scripts/p1-browser-factory.mjs",
+  "actions/upload-artifact@v4"
+]) {
+  if (!factoryWorkflow.includes(expected)) failures.push(`factory-workflow:${expected}`);
+}
+if (/schedule\s*:/.test(factoryWorkflow)) failures.push("factory-workflow:nightly-schedule-must-wait-for-live-test");
+
 if (failures.length) {
   console.error("PREFLIGHT FAILED");
   for (const f of failures) console.error(`- ${f}`);
   process.exit(1);
 }
-console.log(`PREFLIGHT PASS (${required.length} required files + lightweight P1 bridge + deployment pipeline invariants)`);
+console.log(`PREFLIGHT PASS (${required.length} required files + P1 bridge + browser factory + deployment pipeline invariants)`);
