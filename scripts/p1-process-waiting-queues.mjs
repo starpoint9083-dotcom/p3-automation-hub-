@@ -66,6 +66,26 @@ async function api(path, { method = 'GET', body, timeoutMs = API_TIMEOUT_MS } = 
   }
 }
 
+async function recoverLineup(lineupId) {
+  const recovery = await api('/api/maintenance/recover-lineup-queues', {
+    method: 'POST',
+    body: { lineup_id: String(lineupId) },
+    timeoutMs: 4 * 60 * 1000
+  });
+  const projects = Array.isArray(recovery?.projects) ? recovery.projects : [];
+  if (!recovery?.ok || Number(recovery?.project_count || projects.length) !== 10) {
+    throw new Error(`P1 explicit lineup recovery returned an invalid project count: ${recovery?.project_count ?? projects.length}`);
+  }
+  return { recovery, projects };
+}
+
+function concreteWaitingRows(projects, projectIds) {
+  const rows = projects
+    .flatMap((project) => Array.isArray(project?.waiting_queue) ? project.waiting_queue : [])
+    .filter((row) => projectIds.has(String(row?.project_id || '')) && Number(row?.id) > 0);
+  return [...new Map(rows.map((row) => [Number(row.id), row])).values()];
+}
+
 const latest = await api('/api/lineups/latest', { timeoutMs: 60 * 1000 });
 const lineup = latest?.lineup || null;
 const items = Array.isArray(latest?.items) ? latest.items : [];
@@ -90,22 +110,13 @@ const projectIds = new Set(productionItems.map((item) => String(item?.project_id
 if (!projectIds.size) throw new Error('P1 production start returned no project ids.');
 console.log(`QUEUE_PROCESS start lineup=${lineup.id} run=${production?.run?.id || production?.id || 'unknown'} projects=${projectIds.size}`);
 
-// production/start may normalize or clear generation_queue state. Recover missing-scene
-// queues only after the production run exists so the rebuilt waiting rows survive into processing.
-const recovery = await api('/api/maintenance/recover-lineup-queues', {
-  method: 'POST',
-  body: { lineup_id: String(lineup.id) },
-  timeoutMs: 4 * 60 * 1000
-});
-const recoveryProjects = Array.isArray(recovery?.projects) ? recovery.projects : [];
-if (!recovery?.ok || Number(recovery?.project_count || recoveryProjects.length) !== 10) {
-  throw new Error(`P1 explicit lineup recovery returned an invalid project count: ${recovery?.project_count ?? recoveryProjects.length}`);
-}
-const recoveryMissing = recoveryProjects.reduce((sum, row) => sum + Number(row?.missing || 0), 0);
-const recoveryWaiting = recoveryProjects.reduce((sum, row) => sum + Number(row?.waiting || 0), 0);
-console.log(`QUEUE_RECOVERY lineup=${lineup.id} projects=${recoveryProjects.length} rebuilt=${Number(recovery?.rebuilt || 0)} reconciled=${Number(recovery?.reconciled || 0)} missing=${recoveryMissing} waiting=${recoveryWaiting} detail=${JSON.stringify(recoveryProjects).slice(0, 6000)}`);
-if (recoveryMissing > 0 && recoveryWaiting === 0) {
-  throw new Error(`P1 explicit lineup recovery left missing scenes without waiting queues: missing=${recoveryMissing}`);
+let recoveryState = await recoverLineup(lineup.id);
+let recoveryMissing = recoveryState.projects.reduce((sum, row) => sum + Number(row?.missing || 0), 0);
+let recoveryWaiting = recoveryState.projects.reduce((sum, row) => sum + Number(row?.waiting || 0), 0);
+let concreteWaiting = concreteWaitingRows(recoveryState.projects, projectIds);
+console.log(`QUEUE_RECOVERY lineup=${lineup.id} projects=${recoveryState.projects.length} rebuilt=${Number(recoveryState.recovery?.rebuilt || 0)} reconciled=${Number(recoveryState.recovery?.reconciled || 0)} missing=${recoveryMissing} waiting=${recoveryWaiting} concrete_ids=${concreteWaiting.length}`);
+if (recoveryMissing > 0 && concreteWaiting.length === 0) {
+  throw new Error(`P1 explicit lineup recovery left missing scenes without concrete queue ids: missing=${recoveryMissing}`);
 }
 
 let processed = 0;
@@ -114,10 +125,8 @@ let failed = 0;
 const failures = [];
 
 for (let pass = 1; pass <= MAX_PASSES; pass++) {
-  const waitingResponse = await api('/api/queue?status=waiting', { timeoutMs: 60 * 1000 });
-  const waiting = (Array.isArray(waitingResponse?.queue) ? waitingResponse.queue : [])
-    .filter((row) => projectIds.has(String(row?.project_id || '')));
-  console.log(`QUEUE_PROCESS pass=${pass} waiting=${waiting.length}`);
+  const waiting = concreteWaitingRows(recoveryState.projects, projectIds);
+  console.log(`QUEUE_PROCESS pass=${pass} waiting=${waiting.length} source=recovery_api`);
   if (!waiting.length) break;
 
   let passSuccess = 0;
@@ -141,12 +150,12 @@ for (let pass = 1; pass <= MAX_PASSES; pass++) {
     }
   }
 
+  recoveryState = await recoverLineup(lineup.id);
   if (!passSuccess) break;
 }
 
-const remainingResponse = await api('/api/queue?status=waiting', { timeoutMs: 60 * 1000 });
-const remaining = (Array.isArray(remainingResponse?.queue) ? remainingResponse.queue : [])
-  .filter((row) => projectIds.has(String(row?.project_id || '')));
+const finalRecovery = await recoverLineup(lineup.id);
+const remaining = concreteWaitingRows(finalRecovery.projects, projectIds);
 
 let missingScenes = 0;
 for (const projectId of projectIds) {
