@@ -6,7 +6,8 @@
   "workers_dev": true,
   "observability": { "enabled": true },
   "vars": {
-    "P3_VERSION": "0.1.0",
-    "P3_MODE": "skeleton"
+    "P3_VERSION": "0.2.0",
+    "P3_MODE": "p1-bridge",
+    "P1_BASE_URL": "https://k-stella-shorts-factory.k-stella-p1.workers.dev"
   }
 }
