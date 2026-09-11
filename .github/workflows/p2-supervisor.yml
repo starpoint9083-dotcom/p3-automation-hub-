@@ -44,9 +44,11 @@ jobs:
           if (c.automationPolicy?.mode !== 'external-supervisor') throw new Error('P2 supervisor mode missing');
           if (c.automationPolicy?.p2OwnsDeployment !== true) throw new Error('P2 must own deployment');
           if (c.automationPolicy?.paidGenerationInCI !== false) throw new Error('Paid generation must stay disabled in CI');
+          if (c.automationPolicy?.paidVisualAIInCI !== false) throw new Error('Paid visual AI must stay disabled in P3 CI');
           if (c.automationPolicy?.p3MayDeleteOrRecreateCloudflareResources !== false) throw new Error('Cloudflare destructive mutation must stay disabled');
           if (c.qualityPolicy?.paidVisualAIInCI !== false) throw new Error('Paid visual AI must stay disabled in CI');
           if (c.qualityPolicy?.autoRegeneration !== false) throw new Error('Automatic regeneration must stay disabled');
+          if (!(c.automationPolicy?.paidEndpointsNeverAutoCall||[]).includes('/api/cinema/batch/visual-qc/start')) throw new Error('Visual QC paid start endpoint must be denylisted');
           console.log('P2 supervisor safety contract: PASS');
           NODE
 
@@ -142,6 +144,24 @@ jobs:
           console.log(`P2 CINEMA TECHNICAL QC ${ready===9?'PASS':'PENDING'} ready=${ready}/9 score=${score} visual=${b.visualReview}`);
           NODE
 
+      - name: Observe user-started Cinema visual QC
+        id: visualqc
+        if: steps.deploy.outputs.state == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --max-time 15 -H 'cache-control: no-cache' "$P2_URL/api/cinema/batch/visual-qc/latest-public" > visual-qc.json
+          node - <<'NODE'
+          const fs=require('fs');
+          const b=JSON.parse(fs.readFileSync('visual-qc.json','utf8'));
+          if(b.ok!==true || Number(b.total)!==9 || !Array.isArray(b.clips) || !Array.isArray(b.candidates)) { console.error(b); process.exit(14); }
+          const status=String(b.status||'unknown'), ready=Number(b.ready||0), score=Number(b.visualScore||0), candidates=b.candidates.length;
+          if(status==='complete' && (ready!==9 || b.clips.length!==9)) { console.error('Completed visual QC must contain 9 results', b); process.exit(15); }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `status=${status}\nready=${ready}\nscore=${score}\ncandidates=${candidates}\npass=${b.pass===true}\n`);
+          console.log(`P2 VISUAL QC OBSERVE status=${status} ready=${ready}/9 score=${score} candidates=${candidates} paid=${b.paidAiTriggered===true}`);
+          console.log('P3 did not trigger paid visual AI and did not trigger regeneration.');
+          NODE
+
       - name: Report supervisor result
         if: always()
         shell: bash
@@ -152,7 +172,11 @@ jobs:
           QUALITY_READY: ${{ steps.quality.outputs.ready }}
           QUALITY_SCORE: ${{ steps.quality.outputs.score }}
           QUALITY_PASS: ${{ steps.quality.outputs.pass }}
-          VISUAL_STATE: ${{ steps.quality.outputs.visual }}
+          VISUAL_STATE: ${{ steps.visualqc.outputs.status }}
+          VISUAL_READY: ${{ steps.visualqc.outputs.ready }}
+          VISUAL_SCORE: ${{ steps.visualqc.outputs.score }}
+          VISUAL_CANDIDATES: ${{ steps.visualqc.outputs.candidates }}
+          VISUAL_PASS: ${{ steps.visualqc.outputs.pass }}
         run: |
           {
             echo "### P2 ↔ P3 safe supervisor"
@@ -161,10 +185,10 @@ jobs:
             echo "- P2 deploy run: ${DEPLOY_URL:-not-yet-observed}"
             echo "- Production URL: $P2_URL"
             echo "- Cinema technical QC: ready=${QUALITY_READY:-unknown}/9 score=${QUALITY_SCORE:-unknown} pass=${QUALITY_PASS:-unknown}"
-            echo "- Cinema visual QC: ${VISUAL_STATE:-pending} (separate explicit cost gate)"
+            echo "- Cinema visual QC: status=${VISUAL_STATE:-idle} ready=${VISUAL_READY:-0}/9 score=${VISUAL_SCORE:-0} pass=${VISUAL_PASS:-false} candidates=${VISUAL_CANDIDATES:-0}"
             echo "- P3 mode: read-only external supervisor"
             echo "- Paid Cinema generation: NEVER triggered by this workflow"
-            echo "- Paid visual AI QC: NEVER triggered by this workflow"
+            echo "- Paid visual AI QC: NEVER triggered by this workflow; P3 only observes user-started QC"
             echo "- Automatic Cinema regeneration: NEVER triggered by this workflow"
             echo "- Cloudflare resource delete/recreate/rebind: NEVER performed by this workflow"
           } >> "$GITHUB_STEP_SUMMARY"
