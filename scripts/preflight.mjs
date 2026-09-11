@@ -25,14 +25,15 @@ if (!wranglerText.includes('"name": "p3-automation-hub"')) failures.push("worker
 if (!wranglerText.includes('"compatibility_date": "2026-09-11"')) failures.push("compatibility-date");
 if (!wranglerText.includes('"workers_dev": true')) failures.push("workers-dev");
 if (!wranglerText.includes('"P3_MODE": "p1-p2-supervisor"')) failures.push("supervisor-mode");
+if (!wranglerText.includes('"P3_VERSION": "0.4.0"')) failures.push("p3-version");
 if (!wranglerText.includes('"P1_BASE_URL": "https://k-stella-shorts-factory.k-stella-p1.workers.dev"')) failures.push("p1-base-url");
 if (!wranglerText.includes('"P2_BASE_URL": "https://my-life-room-v13-live-0910.starpoint9083.workers.dev"')) failures.push("p2-base-url");
 
 const worker = await readFile(new URL("../src/index.js", import.meta.url), "utf8");
-for (const route of ["/health", "/healthz", "/preflight", "/projects/p1", "/projects/p1/health", "/projects/p2", "/projects/p2/health", "/projects/p2/cinema"]) {
+for (const route of ["/health", "/healthz", "/preflight", "/projects/p1", "/projects/p1/health", "/projects/p2", "/projects/p2/health", "/projects/p2/cinema", "/projects/p2/quality", "/api/cinema/batch/quality-public"]) {
   if (!worker.includes(route)) failures.push(`route:${route}`);
 }
-for (const guard of ["ALLOWED_P1_HOST", "P1_BASE_URL_NOT_ALLOWED", "ALLOWED_P2_HOST", "P2_BASE_URL_NOT_ALLOWED", "AbortController"]) {
+for (const guard of ["ALLOWED_P1_HOST", "P1_BASE_URL_NOT_ALLOWED", "ALLOWED_P2_HOST", "P2_BASE_URL_NOT_ALLOWED", "AbortController", "paidVisualAIFromP3", "autoCinemaRegenerationFromP3"]) {
   if (!worker.includes(guard)) failures.push(`bridge-guard:${guard}`);
 }
 if (worker.includes("/api/bootstrap/status")) failures.push("slow-probe:bootstrap-status");
@@ -56,6 +57,11 @@ if (p2Config.worker !== "my-life-room-v13-live-0910") failures.push("p2-config:w
 if (p2Config.resources?.d1?.name !== "my-life-room-v13") failures.push("p2-config:d1");
 if (p2Config.resources?.r2?.name !== "my-life-room-assets-v13") failures.push("p2-config:r2");
 if (p2Config.resources?.workflow?.name !== "my-life-room-cinema-v23") failures.push("p2-config:workflow");
+if (p2Config.health?.cinemaQualityPublic !== "/api/cinema/batch/quality-public") failures.push("p2-config:quality-route");
+if (p2Config.qualityPolicy?.technicalManifest !== true) failures.push("p2-config:technical-manifest");
+if (p2Config.qualityPolicy?.technicalScoreRequired !== 100) failures.push("p2-config:technical-score");
+if (p2Config.qualityPolicy?.paidVisualAIInCI !== false) failures.push("p2-config:paid-visual-ai-guard");
+if (p2Config.qualityPolicy?.autoRegeneration !== false) failures.push("p2-config:auto-regeneration-guard");
 if (p2Config.automationPolicy?.mode !== "external-supervisor") failures.push("p2-config:mode");
 if (p2Config.automationPolicy?.p2OwnsDeployment !== true) failures.push("p2-config:p2-owns-deploy");
 if (p2Config.automationPolicy?.p3MayDeleteOrRecreateCloudflareResources !== false) failures.push("p2-config:destructive-guard");
@@ -69,8 +75,11 @@ for (const expected of [
   "git ls-remote",
   "/api/health",
   "/api/cinema/batch/latest-public",
+  "/api/cinema/batch/quality-public",
   "P3 mode: read-only external supervisor",
-  "Paid Cinema generation: NEVER triggered"
+  "Paid Cinema generation: NEVER triggered",
+  "Paid visual AI QC: NEVER triggered",
+  "Automatic Cinema regeneration: NEVER triggered"
 ]) {
   if (!p2Supervisor.includes(expected)) failures.push(`p2-supervisor:${expected}`);
 }
@@ -132,4 +141,4 @@ if (failures.length) {
   for (const f of failures) console.error(`- ${f}`);
   process.exit(1);
 }
-console.log(`PREFLIGHT PASS (${required.length} required files + P1 daily resume/quota visibility + P1 bridge + P2 read-only supervisor + protected-resource guards + no-paid-Cinema CI + deployment pipeline invariants)`);
+console.log(`PREFLIGHT PASS (${required.length} required files + P1 daily resume/quota visibility + P1 bridge + P2 read-only supervisor + P2 zero-cost Cinema technical QC + protected-resource guards + no-paid-Cinema/no-paid-visual-AI CI + deployment pipeline invariants)`);
