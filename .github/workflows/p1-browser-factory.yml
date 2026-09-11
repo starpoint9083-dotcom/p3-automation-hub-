@@ -17,6 +17,7 @@ on:
       - 'package.json'
       - 'scripts/preflight.mjs'
       - 'scripts/p1-browser-factory.mjs'
+      - 'scripts/p1-live-queue-inspector.mjs'
       - '.github/workflows/p1-browser-factory.yml'
 
 permissions:
@@ -86,6 +87,9 @@ jobs:
           fi
           echo "CHROME_PATH=$CHROME_PATH" >> "$GITHUB_ENV"
           "$CHROME_PATH" --version
+
+      - name: Inspect P1 live queue state
+        run: node scripts/p1-live-queue-inspector.mjs
 
       - name: Run P1 end-to-end factory
         run: node scripts/p1-browser-factory.mjs
