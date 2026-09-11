@@ -80,6 +80,18 @@ const planned = await api('/api/lineups/plan-all', {
 });
 console.log(`QUEUE_PROCESS planned lineup=${lineup.id} projects=${Array.isArray(planned?.planned) ? planned.planned.length : 0}`);
 
+const production = await api('/api/production/start', {
+  method: 'POST',
+  body: { lineup_id: String(lineup.id) },
+  timeoutMs: 2 * 60 * 1000
+});
+const productionItems = Array.isArray(production?.items) ? production.items : [];
+const projectIds = new Set(productionItems.map((item) => String(item?.project_id || '')).filter(Boolean));
+if (!projectIds.size) throw new Error('P1 production start returned no project ids.');
+console.log(`QUEUE_PROCESS start lineup=${lineup.id} run=${production?.run?.id || production?.id || 'unknown'} projects=${projectIds.size}`);
+
+// production/start may normalize or clear generation_queue state. Recover missing-scene
+// queues only after the production run exists so the rebuilt waiting rows survive into processing.
 const recovery = await api('/api/maintenance/recover-lineup-queues', {
   method: 'POST',
   body: { lineup_id: String(lineup.id) },
@@ -89,18 +101,12 @@ const recoveryProjects = Array.isArray(recovery?.projects) ? recovery.projects :
 if (!recovery?.ok || Number(recovery?.project_count || recoveryProjects.length) !== 10) {
   throw new Error(`P1 explicit lineup recovery returned an invalid project count: ${recovery?.project_count ?? recoveryProjects.length}`);
 }
-console.log(`QUEUE_RECOVERY lineup=${lineup.id} projects=${recoveryProjects.length} rebuilt=${Number(recovery?.rebuilt || 0)} reconciled=${Number(recovery?.reconciled || 0)} detail=${JSON.stringify(recoveryProjects).slice(0, 6000)}`);
-
-const production = await api('/api/production/start', {
-  method: 'POST',
-  body: { lineup_id: String(lineup.id) },
-  timeoutMs: 2 * 60 * 1000
-});
-const productionItems = Array.isArray(production?.items) ? production.items : [];
-const projectIds = new Set(productionItems.map((item) => String(item?.project_id || '')).filter(Boolean));
-if (!projectIds.size) throw new Error('P1 production start returned no project ids.');
-
-console.log(`QUEUE_PROCESS start lineup=${lineup.id} run=${production?.run?.id || production?.id || 'unknown'} projects=${projectIds.size}`);
+const recoveryMissing = recoveryProjects.reduce((sum, row) => sum + Number(row?.missing || 0), 0);
+const recoveryWaiting = recoveryProjects.reduce((sum, row) => sum + Number(row?.waiting || 0), 0);
+console.log(`QUEUE_RECOVERY lineup=${lineup.id} projects=${recoveryProjects.length} rebuilt=${Number(recovery?.rebuilt || 0)} reconciled=${Number(recovery?.reconciled || 0)} missing=${recoveryMissing} waiting=${recoveryWaiting} detail=${JSON.stringify(recoveryProjects).slice(0, 6000)}`);
+if (recoveryMissing > 0 && recoveryWaiting === 0) {
+  throw new Error(`P1 explicit lineup recovery left missing scenes without waiting queues: missing=${recoveryMissing}`);
+}
 
 let processed = 0;
 let reused = 0;
