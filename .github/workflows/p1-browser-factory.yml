@@ -18,6 +18,7 @@ on:
       - 'scripts/preflight.mjs'
       - 'scripts/p1-browser-factory.mjs'
       - 'scripts/p1-live-queue-inspector.mjs'
+      - 'scripts/p1-process-waiting-queues.mjs'
       - '.github/workflows/p1-browser-factory.yml'
 
 permissions:
@@ -90,6 +91,9 @@ jobs:
 
       - name: Inspect P1 live queue state
         run: node scripts/p1-live-queue-inspector.mjs
+
+      - name: Rebuild and process P1 waiting queues
+        run: node scripts/p1-process-waiting-queues.mjs
 
       - name: Run P1 end-to-end factory
         run: node scripts/p1-browser-factory.mjs
