@@ -1,4 +1,4 @@
-first-live-test-retry-18
+first-live-test-retry-19
 kst_date=2026-09-12
 mode=resume-today
-reason=diagnose-first-media-load-failure
+reason=diagnose-audio-payload-signatures
