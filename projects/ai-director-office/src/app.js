@@ -1,35 +1,38 @@
-import {bodyJson,html,HttpError,json,nowIso,sanitizePublicError} from './lib.js';
+import {bodyJson,HTML_HEADERS,HttpError,json,nowIso,sanitizePublicError} from './lib.js';
 import {authState,isAuthConfigured,login,logout,requireAdmin} from './auth.js';
 import {loginHtml} from './auth-ui.js';
 import {addMetric,briefing,createLead,createStudent,growthReport,listLeads,listRisks,recruitmentContent,recruitmentPerformance,recruitmentPlan,recruitmentTargets,recordCampaignEvent,setRecruitmentTarget,studentCard,updateLeadStage} from './services.js';
-import {appHtml} from './ui.js';
+import {appHtml} from './ui-v2.js';
+import {CLIENT_JS} from './client-v2.js';
 
 const match=(path,re)=>path.match(re);
+const APP_HTML_HEADERS={...HTML_HEADERS,"content-security-policy":"default-src 'none'; style-src 'unsafe-inline'; script-src 'self'; connect-src 'self'; img-src 'self' data:; font-src 'self' data:; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"};
+const JS_HEADERS={"content-type":"application/javascript; charset=utf-8","cache-control":"no-store","x-content-type-options":"nosniff","referrer-policy":"no-referrer","strict-transport-security":"max-age=31536000; includeSubDomains"};
 function securedAppHtml(csrf){
-  const token=JSON.stringify(csrf||'');
-  const bridge=`<script>(function(){const csrf=${token};const raw=window.fetch.bind(window);window.fetch=function(input,init={}){const src=typeof input==='string'?input:input.url;const u=new URL(src,location.href);const method=String(init.method||(input instanceof Request?input.method:'GET')).toUpperCase();if(u.origin===location.origin&&!['GET','HEAD','OPTIONS'].includes(method)){const h=new Headers(init.headers||(input instanceof Request?input.headers:undefined));h.set('x-csrf-token',csrf);init={...init,headers:h};}return raw(input,init);};})();</script>`;
-  return appHtml().replace('</head>',`${bridge}</head>`);
+  const safe=String(csrf||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  return appHtml().replace('<meta name="csrf-token" content="">','<meta name="csrf-token" content="'+safe+'">');
 }
 
 export default {async fetch(request,env){
   try{
     const url=new URL(request.url), path=url.pathname;
 
-    if((path==='/health'||path==='/healthz')&&request.method==='GET')return json({ok:true,service:'ai-director-office',version:env.APP_VERSION||'0.3.0',db:Boolean(env.DB),ai:Boolean(env.AI),auth:isAuthConfigured(env),timestamp:nowIso()});
+    if((path==='/health'||path==='/healthz')&&request.method==='GET')return json({ok:true,service:'ai-director-office',version:env.APP_VERSION||'0.4.0',db:Boolean(env.DB),ai:Boolean(env.AI),auth:isAuthConfigured(env),timestamp:nowIso()});
     if(path==='/preflight'&&request.method==='GET'){
       const ok=Boolean(env.DB)&&Boolean(env.AI)&&isAuthConfigured(env);
-      return json({ok,checks:{worker:true,d1:Boolean(env.DB),workersAI:Boolean(env.AI),adminAuth:isAuthConfigured(env)},version:env.APP_VERSION||'0.3.0'},ok?200:503);
+      return json({ok,checks:{worker:true,d1:Boolean(env.DB),workersAI:Boolean(env.AI),adminAuth:isAuthConfigured(env)},version:env.APP_VERSION||'0.4.0'},ok?200:503);
     }
 
     if(path==='/auth/status'&&request.method==='GET')return json({ok:true,data:await authState(request,env)});
     if(path==='/auth/login'&&request.method==='POST')return await login(request,env);
     if(path==='/auth/logout'&&request.method==='POST')return logout();
+    if(path==='/app.js'&&request.method==='GET')return new Response(CLIENT_JS,{status:200,headers:JS_HEADERS});
 
     if(path==='/'&&request.method==='GET'){
       const state=await authState(request,env);
-      if(!state.configured)return html(loginHtml(false),503);
-      if(!state.authenticated)return html(loginHtml(true));
-      return html(securedAppHtml(state.csrf));
+      if(!state.configured)return new Response(loginHtml(false),{status:503,headers:HTML_HEADERS});
+      if(!state.authenticated)return new Response(loginHtml(true),{status:200,headers:HTML_HEADERS});
+      return new Response(securedAppHtml(state.csrf),{status:200,headers:APP_HTML_HEADERS});
     }
 
     if(!env.DB)throw new HttpError(503,'DB_NOT_BOUND');
