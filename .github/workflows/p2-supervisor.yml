@@ -36,6 +36,8 @@ jobs:
           if (c.automationPolicy?.p2OwnsDeployment !== true) throw new Error('P2 must own deployment');
           if (c.automationPolicy?.paidGenerationInCI !== false) throw new Error('Paid generation must stay disabled in CI');
           if (c.automationPolicy?.p3MayDeleteOrRecreateCloudflareResources !== false) throw new Error('Cloudflare destructive mutation must stay disabled');
+          if (c.qualityPolicy?.paidVisualAIInCI !== false) throw new Error('Paid visual AI must stay disabled in CI');
+          if (c.qualityPolicy?.autoRegeneration !== false) throw new Error('Automatic regeneration must stay disabled');
           console.log('P2 supervisor safety contract: PASS');
           NODE
 
@@ -115,6 +117,26 @@ jobs:
           console.log(`P2 CINEMA READ-ONLY PASS status=${b.status} ready=${b.ready}/${b.total}`);
           NODE
 
+      - name: Verify zero-cost Cinema technical quality manifest
+        id: quality
+        if: steps.deploy.outputs.state == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --max-time 15 -H 'cache-control: no-cache' "$P2_URL/api/cinema/batch/quality-public" > quality.json
+          node - <<'NODE'
+          const fs=require('fs');
+          const b=JSON.parse(fs.readFileSync('quality.json','utf8'));
+          if(b.ok!==true || Number(b.total)!==9 || !Array.isArray(b.clips) || b.paidAiTriggered!==false) { console.error(b); process.exit(12); }
+          const ready=Number(b.ready||0), score=Number(b.technicalScore||0), pass=b.technicalPass===true;
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `ready=${ready}\nscore=${score}\npass=${pass}\nvisual=${String(b.visualReview||'pending')}\n`);
+          if(ready===9 && (!pass || score!==100 || b.clips.length!==9 || b.clips.some(c=>c.technicalOk!==true))) {
+            console.error('P2 Cinema technical QC failed for one or more completed clips', b);
+            process.exit(13);
+          }
+          console.log(`P2 CINEMA TECHNICAL QC ${ready===9?'PASS':'PENDING'} ready=${ready}/9 score=${score} visual=${b.visualReview}`);
+          NODE
+
       - name: Report supervisor result
         if: always()
         shell: bash
@@ -122,6 +144,10 @@ jobs:
           MAIN_SHA: ${{ steps.head.outputs.sha }}
           DEPLOY_STATE: ${{ steps.deploy.outputs.state }}
           DEPLOY_URL: ${{ steps.deploy.outputs.run_url }}
+          QUALITY_READY: ${{ steps.quality.outputs.ready }}
+          QUALITY_SCORE: ${{ steps.quality.outputs.score }}
+          QUALITY_PASS: ${{ steps.quality.outputs.pass }}
+          VISUAL_STATE: ${{ steps.quality.outputs.visual }}
         run: |
           {
             echo "### P2 ↔ P3 safe supervisor"
@@ -129,7 +155,11 @@ jobs:
             echo "- P2 deploy state: \`${DEPLOY_STATE:-unknown}\`"
             echo "- P2 deploy run: ${DEPLOY_URL:-not-yet-observed}"
             echo "- Production URL: $P2_URL"
+            echo "- Cinema technical QC: ready=${QUALITY_READY:-unknown}/9 score=${QUALITY_SCORE:-unknown} pass=${QUALITY_PASS:-unknown}"
+            echo "- Cinema visual QC: ${VISUAL_STATE:-pending} (separate explicit cost gate)"
             echo "- P3 mode: read-only external supervisor"
             echo "- Paid Cinema generation: NEVER triggered by this workflow"
+            echo "- Paid visual AI QC: NEVER triggered by this workflow"
+            echo "- Automatic Cinema regeneration: NEVER triggered by this workflow"
             echo "- Cloudflare resource delete/recreate/rebind: NEVER performed by this workflow"
           } >> "$GITHUB_STEP_SUMMARY"
