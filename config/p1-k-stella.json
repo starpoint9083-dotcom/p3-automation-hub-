@@ -1,0 +1,62 @@
+{
+  "projectId": "P1",
+  "name": "K Stella Way Shorts Factory",
+  "repository": "starpoint9083-dotcom/k-stella-way-p1",
+  "branch": "main",
+  "deployWorkflow": "deploy-cloudflare.yml",
+  "worker": "k-stella-shorts-factory",
+  "deployUrl": "https://k-stella-shorts-factory.k-stella-p1.workers.dev",
+  "resources": {
+    "d1": { "name": "k-stella-shorts-factory", "binding": "DB" },
+    "kv": { "name": "k-stella-shorts-assets-kv", "binding": "ASSETS_BUCKET" },
+    "workersAI": { "binding": "AI" },
+    "r2": null
+  },
+  "health": {
+    "public": "/healthz",
+    "authenticated": "/api/health"
+  },
+  "bridgeAuth": {
+    "mode": "github-actions-oidc-to-p1-session",
+    "audience": "k-stella-p1-p3-bridge",
+    "sessionEndpoint": "/api/session",
+    "sessionCookie": "kstella_session",
+    "staticAdminPasswordInP3": false
+  },
+  "factory": {
+    "targetDurationSeconds": { "min": 50, "default": 60, "max": 70 },
+    "summaryArtifact": "p1-factory-summary-*",
+    "allowedControlEndpoints": [
+      "/api/system/policy",
+      "/api/lineups/latest",
+      "/api/lineups/generate",
+      "/api/lineups/plan-all",
+      "/api/production/start",
+      "/api/release/daily"
+    ]
+  },
+  "protected": {
+    "neverDeleteOrRename": [
+      "worker:k-stella-shorts-factory",
+      "d1:k-stella-shorts-factory",
+      "kv:k-stella-shorts-assets-kv"
+    ],
+    "neverRebind": ["DB", "ASSETS_BUCKET", "AI"],
+    "protectedFiles": [
+      "wrangler.template.toml",
+      "scripts/generate-wrangler.mjs",
+      ".github/workflows/deploy-cloudflare.yml"
+    ]
+  },
+  "automationPolicy": {
+    "mode": "external-browser-factory-operator",
+    "p1OwnsDeployment": true,
+    "p3MayObserve": true,
+    "p3MayOperateFactory": true,
+    "p3MayReplaceDeploymentPipeline": false,
+    "p3MayDeleteOrRecreateCloudflareResources": false,
+    "paidExternalGenerationFromP3": false,
+    "storagePolicy": "kv-free-no-r2",
+    "onFailure": "stop-and-report"
+  }
+}
