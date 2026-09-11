@@ -92,14 +92,6 @@ jobs:
           test -n "$DEPLOY_URL"
           echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
 
-      - name: Bind admin secret to Worker
-        shell: bash
-        env:
-          ADMIN_PASSWORD: ${{ secrets.AI_OFFICE_ADMIN_PASSWORD }}
-        run: |
-          set -euo pipefail
-          printf '%s' "$ADMIN_PASSWORD" | npx wrangler secret put ADMIN_PASSWORD --config wrangler.generated.jsonc
-
       - name: Actual URL verification with auth and propagation retry
         env:
           DEPLOY_URL: ${{ steps.deploy.outputs.url }}
