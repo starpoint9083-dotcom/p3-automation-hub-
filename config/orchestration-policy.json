@@ -1,0 +1,46 @@
+{
+  "schemaVersion": 1,
+  "mode": "plan-only-safe-night-ops",
+  "timezone": "Asia/Seoul",
+  "nightlyPlanTime": "03:00",
+  "approvalTiers": {
+    "A0": "automatic-read-only-observation-and-reporting",
+    "A1": "automatic-low-risk-reversible-non-production-maintenance-after-validation",
+    "A2": "explicit-user-approval-required-for-production-mutation-or-paid-action",
+    "A3": "explicit-user-approval-always-required-for-secrets-permissions-billing-data-deletion-or-destructive-resource-change"
+  },
+  "automatic": {
+    "readOnlyHealthChecks": true,
+    "qualityObservation": true,
+    "operationsPlan": true,
+    "failureTriage": true,
+    "codeMutation": false,
+    "productionMutation": false,
+    "deploymentRollback": false,
+    "paidActions": false,
+    "resourceDeletionOrRecreation": false,
+    "secretMutation": false,
+    "permissionExpansion": false
+  },
+  "limits": {
+    "automaticPaidCostKRWPerRun": 0,
+    "automaticProductionMutationsPerRun": 0,
+    "maxPlannedTasksPerRun": 20,
+    "maxA0TasksPerRun": 20,
+    "maxA1TasksPerRun": 0,
+    "maxA2TasksPerRun": 0,
+    "maxA3TasksPerRun": 0
+  },
+  "priorityOrder": ["P0", "P1", "P2", "P3"],
+  "priorityMeaning": {
+    "P0": "service-down-security-or-protected-invariant-risk",
+    "P1": "quality-or-deployment-blocker-needs-attention",
+    "P2": "non-blocking-improvement-or-review",
+    "P3": "informational-or-future-optimization"
+  },
+  "projectIsolation": {
+    "P1": "P1 owns deployment and production resources; P3 may observe and use explicitly allowed factory workflows only.",
+    "P2": "P2 owns deployment and production resources; P3 is read-only supervisor unless explicitly approved.",
+    "P3": "P3 may self-improve only through validated low-risk changes guarded by safety/preflight/E2E."
+  }
+}
