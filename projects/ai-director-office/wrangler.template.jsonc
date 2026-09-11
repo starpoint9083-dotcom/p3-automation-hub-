@@ -2,7 +2,7 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "ai-director-office",
   "main": "src/index.js",
-  "compatibility_date": "2026-09-12",
+  "compatibility_date": "2026-09-11",
   "workers_dev": true,
   "ai": { "binding": "AI" },
   "vars": {
