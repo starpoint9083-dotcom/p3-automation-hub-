@@ -35,6 +35,16 @@
       "/api/release/daily"
     ]
   },
+  "qualityPolicy": {
+    "source": "existing-p1-engine-release-decision",
+    "releaseGate": "failed-zero-and-hold-zero",
+    "numericThresholdInventedByP3": false,
+    "classifyRegenerationCandidates": true,
+    "visualReview": "separate-explicit-cost-gate",
+    "autoRegeneration": false,
+    "paidVisualAIInCI": false,
+    "onBlock": "stop-and-report"
+  },
   "protected": {
     "neverDeleteOrRename": [
       "worker:k-stella-shorts-factory",
