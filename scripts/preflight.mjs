@@ -9,6 +9,7 @@ const required = [
   "scripts/deployment-receipt.mjs",
   "scripts/e2e.mjs",
   "scripts/p1-browser-factory.mjs",
+  "config/p1-k-stella.json",
   "config/p2-my-life-room.json",
   "ops/P2_P3_SUPERVISOR_CONTRACT.md",
   ".github/workflows/deploy.yml",
@@ -60,6 +61,23 @@ for (const expected of [
 const packageJson = JSON.parse(await readFile(new URL("../package.json", import.meta.url), "utf8"));
 if (packageJson.scripts?.safety !== "node scripts/safety-gate.mjs") failures.push("package:safety-script");
 if (packageJson.scripts?.receipt !== "node scripts/deployment-receipt.mjs") failures.push("package:receipt-script");
+
+const p1Config = JSON.parse(await readFile(new URL("../config/p1-k-stella.json", import.meta.url), "utf8"));
+if (p1Config.repository !== "starpoint9083-dotcom/k-stella-way-p1") failures.push("p1-config:repository");
+if (p1Config.worker !== "k-stella-shorts-factory") failures.push("p1-config:worker");
+if (p1Config.deployUrl !== "https://k-stella-shorts-factory.k-stella-p1.workers.dev") failures.push("p1-config:deploy-url");
+if (p1Config.resources?.d1?.name !== "k-stella-shorts-factory") failures.push("p1-config:d1");
+if (p1Config.resources?.kv?.name !== "k-stella-shorts-assets-kv") failures.push("p1-config:kv");
+if (p1Config.resources?.r2 !== null) failures.push("p1-config:no-r2");
+if (p1Config.bridgeAuth?.mode !== "github-actions-oidc-to-p1-session") failures.push("p1-config:bridge-mode");
+if (p1Config.bridgeAuth?.audience !== "k-stella-p1-p3-bridge") failures.push("p1-config:bridge-audience");
+if (p1Config.bridgeAuth?.staticAdminPasswordInP3 !== false) failures.push("p1-config:no-static-admin-password");
+if (p1Config.automationPolicy?.p1OwnsDeployment !== true) failures.push("p1-config:p1-owns-deploy");
+if (p1Config.automationPolicy?.p3MayOperateFactory !== true) failures.push("p1-config:factory-operator");
+if (p1Config.automationPolicy?.p3MayReplaceDeploymentPipeline !== false) failures.push("p1-config:deployment-guard");
+if (p1Config.automationPolicy?.p3MayDeleteOrRecreateCloudflareResources !== false) failures.push("p1-config:destructive-guard");
+if (p1Config.automationPolicy?.paidExternalGenerationFromP3 !== false) failures.push("p1-config:paid-external-guard");
+if (p1Config.automationPolicy?.storagePolicy !== "kv-free-no-r2") failures.push("p1-config:storage-policy");
 
 const p2Config = JSON.parse(await readFile(new URL("../config/p2-my-life-room.json", import.meta.url), "utf8"));
 if (p2Config.repository !== "starpoint9083-dotcom/my-life-room-v13-app") failures.push("p2-config:repository");
@@ -151,4 +169,4 @@ if (failures.length) {
   for (const f of failures) console.error(`- ${f}`);
   process.exit(1);
 }
-console.log(`PREFLIGHT PASS (${required.length} required files + global destructive-operation safety gate + last-known-good deployment receipt + P1 daily resume/quota visibility + P1 bridge + P2 read-only supervisor + P2 zero-cost Cinema technical QC + protected-resource guards + no-paid-Cinema/no-paid-visual-AI CI + deployment pipeline invariants)`);
+console.log(`PREFLIGHT PASS (${required.length} required files + global destructive-operation safety gate + last-known-good deployment receipt + independent P1/P2 protected project configs + P1 daily resume/quota visibility + P1 bridge + P2 read-only supervisor + P2 zero-cost Cinema technical QC + protected-resource guards + no-paid-Cinema/no-paid-visual-AI CI + deployment pipeline invariants)`);
