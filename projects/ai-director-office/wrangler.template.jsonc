@@ -4,6 +4,7 @@
   "main": "src/app.js",
   "compatibility_date": "2026-09-11",
   "workers_dev": true,
+  "triggers": { "crons": ["*/5 * * * *"] },
   "ai": { "binding": "AI" },
   "secrets": { "required": ["ADMIN_PASSWORD"] },
   "vars": {
