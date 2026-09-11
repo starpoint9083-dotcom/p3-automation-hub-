@@ -95,6 +95,10 @@ for (const expected of [
   "cookie: sessionCookieHeader",
   "new AbortController()",
   "api_transport: 'node-fetch-with-session-cookie'",
+  "lineup_mode: null",
+  "/api/system/policy",
+  "/api/lineups/latest",
+  "Resuming today's lineup",
   "/api/lineups/generate",
   "/api/lineups/plan-all",
   "/api/production/start",
@@ -128,4 +132,4 @@ if (failures.length) {
   for (const f of failures) console.error(`- ${f}`);
   process.exit(1);
 }
-console.log(`PREFLIGHT PASS (${required.length} required files + P1 bridge + P2 read-only supervisor + protected-resource guards + no-paid-Cinema CI + deployment pipeline invariants)`);
+console.log(`PREFLIGHT PASS (${required.length} required files + P1 daily resume/quota visibility + P1 bridge + P2 read-only supervisor + protected-resource guards + no-paid-Cinema CI + deployment pipeline invariants)`);
