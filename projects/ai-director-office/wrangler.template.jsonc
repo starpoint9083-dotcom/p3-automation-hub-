@@ -1,0 +1,13 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "ai-director-office",
+  "main": "src/index.js",
+  "compatibility_date": "2026-09-12",
+  "workers_dev": true,
+  "ai": { "binding": "AI" },
+  "vars": {
+    "APP_VERSION": "0.1.0",
+    "AI_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+    "DEFAULT_ACADEMY_ID": "academy-main"
+  }
+}
