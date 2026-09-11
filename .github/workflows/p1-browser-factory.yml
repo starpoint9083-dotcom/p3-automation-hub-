@@ -19,6 +19,7 @@ on:
       - 'scripts/p1-browser-factory.mjs'
       - 'scripts/p1-live-queue-inspector.mjs'
       - 'scripts/p1-process-waiting-queues.mjs'
+      - 'scripts/p1-pre-render-media-audit.mjs'
       - 'scripts/p1-quality-gate.mjs'
       - '.github/workflows/p1-browser-factory.yml'
 
@@ -96,6 +97,9 @@ jobs:
 
       - name: Rebuild and process P1 waiting queues
         run: node scripts/p1-process-waiting-queues.mjs
+
+      - name: Audit selected P1 media before rendering
+        run: node scripts/p1-pre-render-media-audit.mjs
 
       - name: Run P1 end-to-end factory
         run: node scripts/p1-browser-factory.mjs
