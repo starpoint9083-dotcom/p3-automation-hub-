@@ -28,6 +28,9 @@ async function check(path, validator) {
   throw new Error(`E2E FAILED ${path}: ${lastError}`);
 }
 
-await check("/health", b => b?.ok === true && b?.service === "p3-automation-hub" && b?.stage === "deployment-channel");
-await check("/preflight", b => b?.ok === true && b?.checks?.workerRuntime === true);
-console.log(`E2E COMPLETE ${base}`);
+await check("/health", b => b?.ok === true && b?.service === "p3-automation-hub" && b?.integration === "p1-bridge");
+await check("/preflight", b => b?.ok === true && b?.checks?.workerRuntime === true && b?.checks?.p1BridgeConfigured === true);
+await check("/projects/p1", b => b?.ok === true && b?.project === "P1" && b?.bridge === "configured");
+await check("/projects/p1/health", b => b?.ok === true && b?.project === "P1" && b?.connected === true && b?.p1?.db === true && b?.p1?.storage === true && b?.p1?.ai === true);
+await check("/projects/p1/bootstrap", b => b?.ok === true && b?.project === "P1" && b?.connected === true);
+console.log(`E2E COMPLETE ${base} P1_BRIDGE=CONNECTED`);
