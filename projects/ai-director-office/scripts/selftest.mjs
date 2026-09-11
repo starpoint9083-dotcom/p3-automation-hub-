@@ -1,4 +1,5 @@
 import { riskFromMetrics, summarizeMetrics } from "../src/lib.js";
+import {createSessionToken,isAuthConfigured,verifySessionToken} from "../src/auth.js";
 function assert(cond,msg){if(!cond) throw new Error(msg);}
 const stable=Array.from({length:12},(_,i)=>({observed_on:`2026-08-${String(i+1).padStart(2,"0")}`,attended:1,homework_pct:90,test_score:85,concentration_score:85}));
 const r1=riskFromMetrics(stable,10);
@@ -23,4 +24,14 @@ assert(r3.confidence==="LOW","sparse data must carry low confidence");
 const s=summarizeMetrics(sparse);
 assert(s.attendance_rate===100,"only observed attendance should count");
 assert(s.trends.homework_pct.recent===null,"missing homework must stay null");
-console.log(JSON.stringify({ok:true,stable:r1,decline:r2,sparse:r3,summary:s},null,2));
+
+const authEnv={ADMIN_PASSWORD:'test-only-admin-password-1234'};
+assert(isAuthConfigured(authEnv),"strong admin secret must configure auth");
+assert(!isAuthConfigured({ADMIN_PASSWORD:'short'}),"short admin secret must not configure auth");
+const session=await createSessionToken(authEnv);
+const verified=await verifySessionToken(authEnv,session.token);
+assert(verified?.csrf===session.payload.csrf,"signed session must verify");
+assert(!(await verifySessionToken({ADMIN_PASSWORD:'different-test-password-5678'},session.token)),"session must invalidate when secret changes");
+assert(!(await verifySessionToken(authEnv,`${session.token}x`)),"tampered session must fail");
+
+console.log(JSON.stringify({ok:true,stable:r1,decline:r2,sparse:r3,summary:s,auth:{configured:true,signed_session:true,tamper_rejected:true}},null,2));
