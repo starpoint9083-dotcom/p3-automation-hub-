@@ -13,7 +13,7 @@ permissions:
 
 concurrency:
   group: ai-director-office-v1
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   build-deploy-verify:
@@ -51,6 +51,16 @@ jobs:
           echo "CLOUDFLARE_API_TOKEN=$CLEAN_CF_TOKEN" >> "$GITHUB_ENV"
           echo "CLOUDFLARE_ACCOUNT_ID=$CLEAN_CF_ACCOUNT" >> "$GITHUB_ENV"
 
+      - name: Require AI Office admin secret
+        shell: bash
+        env:
+          ADMIN_PASSWORD: ${{ secrets.AI_OFFICE_ADMIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          test -n "$ADMIN_PASSWORD"
+          test "${#ADMIN_PASSWORD}" -ge 12
+          echo "::add-mask::$ADMIN_PASSWORD"
+
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
@@ -82,9 +92,18 @@ jobs:
           test -n "$DEPLOY_URL"
           echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
 
-      - name: Actual URL verification with propagation retry
+      - name: Bind admin secret to Worker
+        shell: bash
+        env:
+          ADMIN_PASSWORD: ${{ secrets.AI_OFFICE_ADMIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$ADMIN_PASSWORD" | npx wrangler secret put ADMIN_PASSWORD --config wrangler.generated.jsonc
+
+      - name: Actual URL verification with auth and propagation retry
         env:
           DEPLOY_URL: ${{ steps.deploy.outputs.url }}
-          E2E_ATTEMPTS: 12
-          E2E_DELAY_MS: 5000
+          ADMIN_PASSWORD: ${{ secrets.AI_OFFICE_ADMIN_PASSWORD }}
+          E2E_ATTEMPTS: 8
+          E2E_DELAY_MS: 4000
         run: npm run verify
