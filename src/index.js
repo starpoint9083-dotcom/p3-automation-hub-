@@ -56,6 +56,7 @@ function preflight(env) {
       p1BridgeConfigured: p1UrlValid,
       p2SupervisorConfigured: p2UrlValid,
       p2TechnicalQualityGateConfigured: p2UrlValid,
+      p2VisualQualityObservationConfigured: p2UrlValid,
       d1: Boolean(env.P3_DB),
       r2: Boolean(env.P3_ASSETS),
       workersAI: Boolean(env.AI)
@@ -68,7 +69,7 @@ function preflight(env) {
       autoCinemaRegenerationFromP3: false,
       resourceMutationFromP3: false
     },
-    note: "P3 supervises P2 through strict allowlisted HTTPS GET probes. Technical Cinema QC is zero-cost metadata inspection. Visual AI QC and regeneration remain behind a separate explicit cost gate."
+    note: "P3 supervises P2 through strict allowlisted HTTPS GET probes. P3 may observe a user-started visual QC result but never starts paid visual AI or regeneration."
   };
 }
 
@@ -128,7 +129,8 @@ function p2Descriptor(env) {
     probes: {
       health: "/api/health",
       cinema: "/api/cinema/batch/latest-public",
-      quality: "/api/cinema/batch/quality-public"
+      quality: "/api/cinema/batch/quality-public",
+      visualQc: "/api/cinema/batch/visual-qc/latest-public"
     },
     protected_resources: [
       "worker:my-life-room-v13-live-0910",
@@ -138,7 +140,7 @@ function p2Descriptor(env) {
     ],
     quality_gate: {
       technical: "automatic-read-only",
-      visual: "explicit-cost-gate",
+      visual: "user-started-paid-qc-read-only-observation",
       autoRegeneration: false
     },
     control: {
@@ -264,12 +266,54 @@ async function p2Quality(env) {
         visual: b.visualReview ?? "pending",
         visualCriteria: ["face-consistency","hands-limbs","pet-count-form","room-continuity","camera-motion","morphing-flicker"],
         autoRegeneration: false,
-        paid_visual_ai_triggered: false,
+        paid_visual_ai_triggered_by_p3: false,
         paid_generation_triggered: false
       }
     }, connected ? 200 : 502);
   } catch (error) {
     return json({ ok: false, project: "P2", connected: false, error: error?.name === "AbortError" ? "P2_QUALITY_TIMEOUT" : (error?.message || "P2_QUALITY_UNREACHABLE") }, 502);
+  }
+}
+
+async function p2VisualQc(env) {
+  try {
+    const upstream = await upstreamJson(p2BaseUrl(env), "/api/cinema/batch/visual-qc/latest-public");
+    const connected = upstream.ok && upstream.body?.ok === true;
+    const b = upstream.body || {};
+    const clips = Array.isArray(b.clips) ? b.clips.map(c => ({
+      slot: String(c?.slot || ""),
+      score: Number(c?.score || 0),
+      pass: Boolean(c?.pass),
+      regenerationCandidate: Boolean(c?.regenerationCandidate),
+      issues: Array.isArray(c?.issues) ? c.issues.map(x=>String(x).slice(0,180)).slice(0,5) : []
+    })) : [];
+    return json({
+      ok: connected,
+      project: "P2",
+      connected,
+      upstream_status: upstream.status,
+      latency_ms: upstream.latency_ms,
+      visualQc: connected ? {
+        status: b.status ?? "unknown",
+        ready: Number(b.ready || 0),
+        total: Number(b.total || 9),
+        complete: Boolean(b.complete),
+        visualScore: Number(b.visualScore || 0),
+        pass: Boolean(b.pass),
+        model: b.model ?? null,
+        candidates: Array.isArray(b.candidates) ? b.candidates.map(String).slice(0,9) : [],
+        clips,
+        motionReview: b.motionReview ?? "pending-middle-frame-pass",
+        updatedAt: b.updatedAt ?? null
+      } : b,
+      safety: {
+        p3TriggeredPaidVisualAI: false,
+        p3TriggeredRegeneration: false,
+        observationOnly: true
+      }
+    }, connected ? 200 : 502);
+  } catch (error) {
+    return json({ ok: false, project: "P2", connected: false, error: error?.name === "AbortError" ? "P2_VISUAL_QC_TIMEOUT" : (error?.message || "P2_VISUAL_QC_UNREACHABLE") }, 502);
   }
 }
 
@@ -286,6 +330,7 @@ export default {
     if (url.pathname === "/projects/p2/health") return p2Health(env);
     if (url.pathname === "/projects/p2/cinema") return p2Cinema(env);
     if (url.pathname === "/projects/p2/quality") return p2Quality(env);
+    if (url.pathname === "/projects/p2/visual-qc") return p2VisualQc(env);
     return json({ ok: false, error: "NOT_FOUND", path: url.pathname }, 404);
   }
 };
