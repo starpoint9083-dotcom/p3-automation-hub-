@@ -1,18 +1,20 @@
 {
   "name": "ai-director-office",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "check": "node --check src/lib.js && node --check src/auth.js && node --check src/auth-ui.js && node --check src/services.js && node --check src/ui.js && node --check src/app.js && node --check scripts/selftest.mjs && node --check scripts/preflight.mjs && node --check scripts/e2e.mjs && node --check scripts/prepare-wrangler.mjs",
+    "check": "node --check src/lib.js && node --check src/auth.js && node --check src/auth-ui.js && node --check src/services.js && node --check src/ui-v2.js && node --check src/client-v2.js && node --check src/app.js && node --check scripts/selftest.mjs && node --check scripts/preflight.mjs && node --check scripts/e2e.mjs && node --check scripts/browser-e2e.mjs && node --check scripts/prepare-wrangler.mjs",
     "test": "node scripts/selftest.mjs",
     "preflight": "node scripts/preflight.mjs",
     "prepare:wrangler": "node scripts/prepare-wrangler.mjs",
     "dry-run": "wrangler deploy --config wrangler.generated.jsonc --dry-run --outdir dist",
     "deploy": "wrangler deploy --config wrangler.generated.jsonc",
-    "verify": "node scripts/e2e.mjs"
+    "verify": "node scripts/e2e.mjs",
+    "verify:browser": "node scripts/browser-e2e.mjs"
   },
   "devDependencies": {
+    "playwright": "1.55.0",
     "wrangler": "4.130.0"
   },
   "engines": {
