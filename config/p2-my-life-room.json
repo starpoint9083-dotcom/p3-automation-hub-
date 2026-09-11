@@ -16,12 +16,14 @@
   "health": {
     "app": "/api/health",
     "cinemaPublic": "/api/cinema/batch/latest-public",
-    "cinemaQualityPublic": "/api/cinema/batch/quality-public"
+    "cinemaQualityPublic": "/api/cinema/batch/quality-public",
+    "cinemaVisualQcPublic": "/api/cinema/batch/visual-qc/latest-public"
   },
   "qualityPolicy": {
     "technicalManifest": true,
     "technicalScoreRequired": 100,
     "visualReview": "separate-explicit-cost-gate",
+    "visualQcObservation": "read-only-after-user-start",
     "autoRegeneration": false,
     "paidVisualAIInCI": false
   },
@@ -42,7 +44,8 @@
     "p3MayReplaceDeploymentPipeline": false,
     "p3MayDeleteOrRecreateCloudflareResources": false,
     "paidGenerationInCI": false,
-    "paidEndpointsNeverAutoCall": ["/api/cinema/generate", "/api/cinema/batch/start"],
+    "paidVisualAIInCI": false,
+    "paidEndpointsNeverAutoCall": ["/api/cinema/generate", "/api/cinema/batch/start", "/api/cinema/batch/visual-qc/start"],
     "onFailure": "stop-and-report"
   }
 }
