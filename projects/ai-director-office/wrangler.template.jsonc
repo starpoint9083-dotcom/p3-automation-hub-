@@ -6,7 +6,7 @@
   "workers_dev": true,
   "ai": { "binding": "AI" },
   "vars": {
-    "APP_VERSION": "0.2.0",
+    "APP_VERSION": "0.3.0",
     "AI_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
     "DEFAULT_ACADEMY_ID": "academy-main"
   }
