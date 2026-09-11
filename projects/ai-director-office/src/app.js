@@ -2,7 +2,7 @@ import {bodyJson,HTML_HEADERS,HttpError,json,nowIso,sanitizePublicError} from '.
 import {authState,isAuthConfigured,login,logout,requireAdmin} from './auth.js';
 import {loginHtml} from './auth-ui.js';
 import {addMetric,briefing,createLead,createStudent,growthReport,listLeads,listRisks,recruitmentContent,recruitmentPerformance,recruitmentPlan,recruitmentTargets,recordCampaignEvent,setRecruitmentTarget,studentCard,updateLeadStage} from './services.js';
-import {createPromoMission,createPromoPost,getAcademyProfile,listPromoAssets,listPromoPosts,promoAssetObject,promoDashboard,saveAcademyProfile} from './promo.js';
+import {createPromoMission,createPromoPost,getAcademyProfile,listPromoAssets,listPromoPosts,promoAssetObject,promoDashboard,saveAcademyProfile} from './promo-v2.js';
 import {createPromoProductionRun,generateOrReusePromoImage,promoProductionRun,recoverPromoProductionRun} from './promo-engine.js';
 import {cleanupP3Fixtures} from './cleanup.js';
 import {appHtml} from './ui-v3.js';
