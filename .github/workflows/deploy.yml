@@ -26,6 +26,7 @@ jobs:
           node-version: 22
 
       - name: Normalize Cloudflare credentials
+        id: credentials
         shell: bash
         env:
           RAW_CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -60,24 +61,31 @@ jobs:
           echo "CLOUDFLARE_ACCOUNT_ID=$CLEAN_CF_ACCOUNT" >> "$GITHUB_ENV"
 
       - name: Install dependencies
+        id: install
         run: npm install --no-audit --no-fund
 
       - name: Syntax check
+        id: syntax
         run: npm run check
 
       - name: Security check
+        id: security
         run: npm run security
 
       - name: Safety gate
+        id: safety
         run: npm run safety
 
       - name: Self test
+        id: selftest
         run: npm test
 
       - name: Preflight
+        id: preflight
         run: npm run preflight
 
       - name: Wrangler dry-run
+        id: dryrun
         run: npx wrangler deploy --dry-run --outdir dist
 
       - name: Deploy to Cloudflare
@@ -91,6 +99,7 @@ jobs:
           echo "DEPLOY_URL=$DEPLOY_URL" >> "$GITHUB_ENV"
 
       - name: Actual URL E2E verification with propagation retry
+        id: e2e
         env:
           DEPLOY_URL: ${{ steps.deploy.outputs.url }}
           E2E_ATTEMPTS: 12
@@ -98,11 +107,13 @@ jobs:
         run: node scripts/e2e.mjs
 
       - name: Create last-known-good deployment receipt
+        id: receipt
         env:
           DEPLOY_URL: ${{ steps.deploy.outputs.url }}
         run: node scripts/deployment-receipt.mjs deploy.log deployment-receipt.json
 
       - name: Create automatic operations report
+        id: report
         env:
           DEPLOY_URL: ${{ steps.deploy.outputs.url }}
         shell: bash
@@ -112,6 +123,7 @@ jobs:
           cat p3-operations-report.md >> "$GITHUB_STEP_SUMMARY"
 
       - name: Archive last-known-good deployment and operations report
+        id: archive
         uses: actions/upload-artifact@v4
         with:
           name: p3-last-known-good-${{ github.run_number }}
@@ -120,4 +132,37 @@ jobs:
             p3-operations-report.json
             p3-operations-report.md
           retention-days: 30
+          if-no-files-found: error
+
+      - name: Create validated repair packet on failure
+        if: failure()
+        env:
+          STEP_CREDENTIALS: ${{ steps.credentials.outcome }}
+          STEP_INSTALL: ${{ steps.install.outcome }}
+          STEP_SYNTAX: ${{ steps.syntax.outcome }}
+          STEP_SECURITY: ${{ steps.security.outcome }}
+          STEP_SAFETY: ${{ steps.safety.outcome }}
+          STEP_SELFTEST: ${{ steps.selftest.outcome }}
+          STEP_PREFLIGHT: ${{ steps.preflight.outcome }}
+          STEP_DRYRUN: ${{ steps.dryrun.outcome }}
+          STEP_DEPLOY: ${{ steps.deploy.outcome }}
+          STEP_E2E: ${{ steps.e2e.outcome }}
+          STEP_RECEIPT: ${{ steps.receipt.outcome }}
+          STEP_REPORT: ${{ steps.report.outcome }}
+          STEP_ARCHIVE: ${{ steps.archive.outcome }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm run triage
+          cat p3-repair-packet.md >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Archive validated repair packet
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p3-repair-packet-${{ github.run_number }}
+          path: |
+            p3-repair-packet.json
+            p3-repair-packet.md
+          retention-days: 14
           if-no-files-found: error
