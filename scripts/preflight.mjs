@@ -47,7 +47,11 @@ for (const expected of [
 
 const factory = await readFile(new URL("../scripts/p1-browser-factory.mjs", import.meta.url), "utf8");
 for (const expected of [
-  "P1_ADMIN_TOKEN",
+  "ACTIONS_ID_TOKEN_REQUEST_URL",
+  "ACTIONS_ID_TOKEN_REQUEST_TOKEN",
+  "k-stella-p1-p3-bridge",
+  "/api/session",
+  "credentials: 'same-origin'",
   "puppeteer-core",
   "/api/lineups/generate",
   "/api/lineups/plan-all",
@@ -57,12 +61,15 @@ for (const expected of [
 ]) {
   if (!factory.includes(expected)) failures.push(`factory:${expected}`);
 }
-if (factory.includes("console.log(P1_ADMIN_TOKEN") || factory.includes("P1_ADMIN_TOKEN}")) failures.push("factory:secret-log-risk");
+if (factory.includes("P1_ADMIN_TOKEN")) failures.push("factory:legacy-admin-secret-dependency");
+if (/console\.log\([^\n]*(?:ACTIONS_ID_TOKEN_REQUEST_TOKEN|oidcToken)/.test(factory)) failures.push("factory:oidc-secret-log-risk");
 
 const factoryWorkflow = await readFile(new URL("../.github/workflows/p1-browser-factory.yml", import.meta.url), "utf8");
 for (const expected of [
   "workflow_dispatch",
-  "secrets.P1_ADMIN_TOKEN",
+  "id-token: write",
+  "ACTIONS_ID_TOKEN_REQUEST_URL",
+  "ACTIONS_ID_TOKEN_REQUEST_TOKEN",
   "puppeteer-core",
   "Locate Chrome",
   "scripts/p1-browser-factory.mjs",
@@ -70,6 +77,7 @@ for (const expected of [
 ]) {
   if (!factoryWorkflow.includes(expected)) failures.push(`factory-workflow:${expected}`);
 }
+if (factoryWorkflow.includes("secrets.P1_ADMIN_TOKEN") || factoryWorkflow.includes("P1_ADMIN_TOKEN:")) failures.push("factory-workflow:legacy-admin-secret-dependency");
 if (/schedule\s*:/.test(factoryWorkflow)) failures.push("factory-workflow:nightly-schedule-must-wait-for-live-test");
 
 if (failures.length) {
@@ -77,4 +85,4 @@ if (failures.length) {
   for (const f of failures) console.error(`- ${f}`);
   process.exit(1);
 }
-console.log(`PREFLIGHT PASS (${required.length} required files + P1 bridge + browser factory + deployment pipeline invariants)`);
+console.log(`PREFLIGHT PASS (${required.length} required files + P1 bridge + secretless GitHub OIDC browser factory + deployment pipeline invariants)`);

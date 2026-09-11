@@ -17,6 +17,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
 
 concurrency:
   group: p1-browser-factory-production
@@ -47,7 +48,6 @@ jobs:
     timeout-minutes: 60
     env:
       P1_BASE_URL: https://k-stella-shorts-factory.k-stella-p1.workers.dev
-      P1_ADMIN_TOKEN: ${{ secrets.P1_ADMIN_TOKEN }}
       P1_TARGET_DURATION: ${{ inputs.target_duration || '60' }}
       P1_FACTORY_SUMMARY: p1_factory_summary.json
     steps:
@@ -59,15 +59,15 @@ jobs:
         with:
           node-version: 22
 
-      - name: Require P1 admin secret
+      - name: Verify GitHub OIDC environment
         shell: bash
         run: |
           set -euo pipefail
-          if [ -z "${P1_ADMIN_TOKEN:-}" ]; then
-            echo "P1_ADMIN_TOKEN repository secret is missing." >&2
+          if [ -z "${ACTIONS_ID_TOKEN_REQUEST_URL:-}" ] || [ -z "${ACTIONS_ID_TOKEN_REQUEST_TOKEN:-}" ]; then
+            echo "GitHub OIDC environment is unavailable. Check id-token: write permission." >&2
             exit 1
           fi
-          echo "P1 admin credential is configured."
+          echo "GitHub OIDC identity is available for P1 session exchange."
 
       - name: Install browser controller
         run: npm install --no-audit --no-fund --no-save puppeteer-core@24.16.0

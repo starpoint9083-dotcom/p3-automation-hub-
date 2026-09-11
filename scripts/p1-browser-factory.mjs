@@ -3,15 +3,37 @@ import process from 'node:process';
 import puppeteer from 'puppeteer-core';
 
 const P1_BASE_URL = (process.env.P1_BASE_URL || 'https://k-stella-shorts-factory.k-stella-p1.workers.dev').replace(/\/$/, '');
-const P1_ADMIN_TOKEN = String(process.env.P1_ADMIN_TOKEN || '');
 const CHROME_PATH = String(process.env.CHROME_PATH || '');
 const TARGET_DURATION = Math.max(50, Math.min(70, Number(process.env.P1_TARGET_DURATION || 60)));
 const SUMMARY_PATH = process.env.P1_FACTORY_SUMMARY || 'p1_factory_summary.json';
+const OIDC_AUDIENCE = 'k-stella-p1-p3-bridge';
 
-if (!P1_ADMIN_TOKEN) throw new Error('P1_ADMIN_TOKEN is required. Store it only as a GitHub Actions secret.');
 if (!CHROME_PATH) throw new Error('CHROME_PATH is required. The workflow must locate Chrome/Chromium first.');
 if (new URL(P1_BASE_URL).hostname !== 'k-stella-shorts-factory.k-stella-p1.workers.dev') {
   throw new Error('P1_BASE_URL host is not allowlisted.');
+}
+
+async function requestGitHubOidcToken() {
+  const requestUrl = String(process.env.ACTIONS_ID_TOKEN_REQUEST_URL || '');
+  const requestToken = String(process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN || '');
+  if (!requestUrl || !requestToken) {
+    throw new Error('GitHub OIDC environment is unavailable. The workflow needs id-token: write permission.');
+  }
+  const url = new URL(requestUrl);
+  url.searchParams.set('audience', OIDC_AUDIENCE);
+  const response = await fetch(url, {
+    headers: {
+      accept: 'application/json',
+      authorization: `Bearer ${requestToken}`
+    },
+    cache: 'no-store'
+  });
+  const data = await response.json().catch(() => ({}));
+  const value = String(data?.value || '');
+  if (!response.ok || !value) {
+    throw new Error(`GitHub OIDC token request failed (${response.status}).`);
+  }
+  return value;
 }
 
 const kstDate = () => new Intl.DateTimeFormat('en-CA', {
@@ -23,6 +45,7 @@ const summary = {
   started_at: new Date().toISOString(),
   kst_date: kstDate(),
   p1: P1_BASE_URL,
+  auth: 'github-actions-oidc-to-p1-session',
   target_duration: TARGET_DURATION,
   lineup_id: null,
   production_run_id: null,
@@ -37,6 +60,7 @@ async function saveSummary() {
   await fs.writeFile(SUMMARY_PATH, JSON.stringify(summary, null, 2));
 }
 
+const oidcToken = await requestGitHubOidcToken();
 const browser = await puppeteer.launch({
   executablePath: CHROME_PATH,
   headless: true,
@@ -57,10 +81,6 @@ try {
   await page.setViewport({ width: 720, height: 1280, deviceScaleFactor: 1 });
   page.setDefaultTimeout(10 * 60 * 1000);
 
-  await page.evaluateOnNewDocument((token) => {
-    localStorage.setItem('kstella_admin_password', token);
-  }, P1_ADMIN_TOKEN);
-
   page.on('console', (msg) => {
     const text = msg.text();
     if (/render|production|retry|quality|warning|error/i.test(text)) {
@@ -72,14 +92,35 @@ try {
   await page.goto(P1_BASE_URL, { waitUntil: 'networkidle2', timeout: 120000 });
   await page.waitForFunction(() => typeof window.fetch === 'function' && document.readyState === 'complete');
 
+  const sessionExchange = await page.evaluate(async ({ oidcToken }) => {
+    localStorage.removeItem('kstella_admin_password');
+    const res = await fetch('/api/session', {
+      method: 'POST',
+      headers: {
+        accept: 'application/json',
+        authorization: `Bearer ${oidcToken}`
+      },
+      credentials: 'same-origin',
+      cache: 'no-store'
+    });
+    const text = await res.text();
+    let data;
+    try { data = JSON.parse(text); } catch { data = { raw: text.slice(0, 500) }; }
+    return { ok: res.ok, status: res.status, data };
+  }, { oidcToken });
+  if (!sessionExchange.ok || !sessionExchange.data?.ok) {
+    throw new Error(`P1 OIDC session exchange failed (${sessionExchange.status}): ${sessionExchange.data?.error || JSON.stringify(sessionExchange.data)}`);
+  }
+  console.log('P1 GitHub OIDC session exchange PASS');
+
   async function api(path, { method = 'GET', body } = {}) {
     const result = await page.evaluate(async ({ path, method, body }) => {
-      const token = localStorage.getItem('kstella_admin_password') || '';
-      const headers = { 'accept': 'application/json', 'authorization': `Bearer ${token}` };
+      const headers = { accept: 'application/json' };
       if (body !== undefined) headers['content-type'] = 'application/json';
       const res = await fetch(path, {
         method,
         headers,
+        credentials: 'same-origin',
         cache: 'no-store',
         body: body === undefined ? undefined : JSON.stringify(body)
       });
@@ -96,7 +137,7 @@ try {
   if (!health?.ok || !health?.db || !health?.r2 || !health?.ai) {
     throw new Error(`P1 authenticated health check failed: ${JSON.stringify({ ok: health?.ok, db: health?.db, r2: health?.r2, ai: health?.ai })}`);
   }
-  console.log('P1 authenticated health PASS (DB/R2/AI)');
+  console.log('P1 authenticated health PASS (DB/KV/AI)');
 
   const lineupBody = {
     lineup_date: summary.kst_date,
