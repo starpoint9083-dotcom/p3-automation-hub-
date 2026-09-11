@@ -18,7 +18,7 @@ concurrency:
 jobs:
   build-deploy-verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     defaults:
       run:
         working-directory: projects/ai-director-office
@@ -64,6 +64,9 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
+      - name: Install Chromium for real UI verification
+        run: npx playwright install --with-deps chromium
+
       - name: Syntax check
         run: npm run check
 
@@ -92,10 +95,16 @@ jobs:
           test -n "$DEPLOY_URL"
           echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
 
-      - name: Actual URL verification with auth and propagation retry
+      - name: API and security E2E
         env:
           DEPLOY_URL: ${{ steps.deploy.outputs.url }}
           ADMIN_PASSWORD: ${{ secrets.AI_OFFICE_ADMIN_PASSWORD }}
           E2E_ATTEMPTS: 8
           E2E_DELAY_MS: 4000
         run: npm run verify
+
+      - name: Real mobile browser E2E
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+          ADMIN_PASSWORD: ${{ secrets.AI_OFFICE_ADMIN_PASSWORD }}
+        run: npm run verify:browser
