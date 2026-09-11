@@ -43,8 +43,9 @@ for(let i=0;i<unique.length;i+=concurrency){
   const out=await Promise.all(batch.map(async row=>{
     const url=new URL(`/media/${encodeURIComponent(row.key)}`,`${P1_BASE_URL}/`);
     try{
-      const r=await fetch(url,{method:'HEAD',headers:{cookie},cache:'no-store',redirect:'manual'});
-      return {...row,status:r.status,ok:r.ok,content_type:r.headers.get('content-type')||''};
+      const r=await fetch(url,{method:'GET',headers:{cookie,range:'bytes=0-31'},cache:'no-store',redirect:'manual'});
+      const b=new Uint8Array(await r.arrayBuffer());
+      return {...row,status:r.status,ok:r.ok,content_type:r.headers.get('content-type')||'',bytes:b.byteLength,hex:[...b.slice(0,16)].map(x=>x.toString(16).padStart(2,'0')).join('')};
     }catch(e){return {...row,status:0,ok:false,error:String(e?.message||e).slice(0,300)};}
   }));
   results.push(...out);
@@ -57,3 +58,35 @@ if(missing.length)console.log(`MEDIA_AUDIT missing_sample=${JSON.stringify(missi
 if(affectedScenes.length)console.log(`MEDIA_AUDIT affected_sample=${JSON.stringify(affectedScenes.slice(0,30))}`);
 if(missing.length)throw new Error(`P1 pre-render media audit failed: ${missing.length}/${unique.length} selected media keys are unavailable; affected_scenes=${affectedScenes.length}`);
 console.log('MEDIA_AUDIT PASS: every selected scene asset is readable through the live authenticated /media route.');
+
+function signature(bytes){
+  const b=bytes;
+  const ascii=(a,z)=>String.fromCharCode(...b.slice(a,z));
+  if(b.length>=12&&ascii(0,4)==='RIFF'&&ascii(8,12)==='WAVE')return 'wav';
+  if(b.length>=3&&ascii(0,3)==='ID3')return 'mp3-id3';
+  if(b.length>=2&&b[0]===0xff&&(b[1]&0xe0)===0xe0)return 'mp3-frame';
+  if(b.length>=4&&ascii(0,4)==='OggS')return 'ogg';
+  if(b.length>=4&&b[0]===0x1a&&b[1]===0x45&&b[2]===0xdf&&b[3]===0xa3)return 'webm';
+  if(b.length>=12&&ascii(4,8)==='ftyp')return 'mp4';
+  return 'unknown';
+}
+
+const firstProjectId=String(items[0]?.project_id||'');
+if(firstProjectId){
+  let plan=null;
+  try{plan=(await api(`/api/video-plan?project_id=${encodeURIComponent(firstProjectId)}`))?.plan?.manifest||null;}catch(e){console.log(`AUDIO_AUDIT plan_warning=${String(e?.message||e).slice(0,500)}`);}
+  const audio=[];
+  if(plan?.music?.url)audio.push({kind:'music',url:String(plan.music.url),filename:String(plan.music.filename||'')});
+  if(plan?.narration?.url)audio.push({kind:'narration',url:String(plan.narration.url),mime_hint:String(plan.narration.mime_type||'')});
+  for(const shot of (plan?.shots||[]))for(const cue of (shot?.sfx_assets||[]))if(cue?.url)audio.push({kind:'sfx',url:String(cue.url),scene_no:Number(shot.shot_no||0),label:String(cue.label||'')});
+  const uniqueAudio=[...new Map(audio.map(x=>[x.url,x])).values()];
+  console.log(`AUDIO_AUDIT project=${firstProjectId} music=${plan?.music?.url||'none'} narration=${plan?.narration?.url||'none'} unique_audio=${uniqueAudio.length}`);
+  for(const row of uniqueAudio){
+    try{
+      const r=await fetch(new URL(row.url,`${P1_BASE_URL}/`),{headers:{cookie,range:'bytes=0-4095'},cache:'no-store',redirect:'manual'});
+      const bytes=new Uint8Array(await r.arrayBuffer());
+      const hex=[...bytes.slice(0,24)].map(x=>x.toString(16).padStart(2,'0')).join('');
+      console.log(`AUDIO_AUDIT kind=${row.kind} url=${row.url} status=${r.status} type=${r.headers.get('content-type')||''} content_length=${r.headers.get('content-length')||''} accept_ranges=${r.headers.get('accept-ranges')||''} bytes=${bytes.byteLength} signature=${signature(bytes)} hex=${hex}`);
+    }catch(e){console.log(`AUDIO_AUDIT kind=${row.kind} url=${row.url} FETCH_FAIL ${String(e?.message||e).slice(0,700)}`);}
+  }
+}
