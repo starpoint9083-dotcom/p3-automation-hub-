@@ -10,6 +10,7 @@ const OIDC_AUDIENCE = 'k-stella-p1-p3-bridge';
 const BROWSER_PROTOCOL_TIMEOUT = 20 * 60 * 1000;
 const API_REQUEST_TIMEOUT = 8 * 60 * 1000;
 const RENDER_ITEM_TIMEOUT = 15 * 60 * 1000;
+const MEDIA_DIAGNOSTIC_MAX_ITEMS = 1;
 
 if (!CHROME_PATH) throw new Error('CHROME_PATH is required. The workflow must locate Chrome/Chromium first.');
 if (new URL(P1_BASE_URL).hostname !== 'k-stella-shorts-factory.k-stella-p1.workers.dev') {
@@ -51,6 +52,8 @@ const summary = {
   auth: 'github-actions-oidc-to-p1-session',
   api_transport: 'node-fetch-with-session-cookie',
   target_duration: TARGET_DURATION,
+  diagnostic_mode: 'media-load-first-item',
+  diagnostic_max_items: MEDIA_DIAGNOSTIC_MAX_ITEMS,
   lineup_id: null,
   lineup_mode: null,
   production_run_id: null,
@@ -105,9 +108,20 @@ try {
 
   page.on('console', (msg) => {
     const text = msg.text();
-    if (/render|production|retry|quality|warning|error/i.test(text)) {
-      console.log(`[P1 browser] ${text.slice(0, 500)}`);
+    if (/render|production|retry|quality|warning|error|media|asset|audio|image/i.test(text)) {
+      console.log(`[P1 browser] ${text.slice(0, 1000)}`);
     }
+  });
+  page.on('pageerror', (error) => {
+    console.log(`[P1 pageerror] ${String(error?.message || error).slice(0, 1500)}`);
+  });
+  page.on('requestfailed', (request) => {
+    console.log(`[P1 requestfailed] type=${request.resourceType()} error=${request.failure()?.errorText || 'unknown'} url=${request.url().slice(0, 1500)}`);
+  });
+  page.on('response', (response) => {
+    if (response.status() < 400) return;
+    const request = response.request();
+    console.log(`[P1 bad-response] status=${response.status()} type=${request.resourceType()} url=${response.url().slice(0, 1500)}`);
   });
 
   console.log(`Opening P1 factory for ${summary.kst_date}`);
@@ -236,9 +250,10 @@ try {
   });
   const runId = String(production?.run?.id || production?.id || '');
   summary.production_run_id = runId || null;
-  const todo = (production?.items || []).filter((x) => x.status !== 'done');
+  const allTodo = (production?.items || []).filter((x) => x.status !== 'done');
+  const todo = allTodo.slice(0, MEDIA_DIAGNOSTIC_MAX_ITEMS);
   await saveSummary();
-  console.log(`Production run ${runId || '(unknown)'}: ${todo.length} item(s) to process`);
+  console.log(`Production run ${runId || '(unknown)'}: diagnostic ${todo.length}/${allTodo.length} item(s) to process`);
 
   await page.waitForFunction(() => typeof processProductionItem === 'function' && typeof renderOnDevice === 'function' && !!document.querySelector('#renderCanvas'));
   await page.evaluate((duration) => {
@@ -249,6 +264,16 @@ try {
   for (let i = 0; i < todo.length; i++) {
     const item = todo[i];
     console.log(`Item ${i + 1}/${todo.length}, slot=${item.slot_no}, project=${item.project_id}`);
+    if (i === 0) {
+      try {
+        const projectDiag = await api(`/api/projects/${encodeURIComponent(item.project_id)}`, { timeoutMs: 60 * 1000 });
+        const scenes = Array.isArray(projectDiag?.scenes) ? projectDiag.scenes : [];
+        console.log(`PROJECT_MEDIA_DIAG project=${item.project_id} scene_count=${scenes.length} sample=${JSON.stringify(scenes.slice(0, 3)).slice(0, 6000)}`);
+        console.log(`PROJECT_MEDIA_DIAG narration=${JSON.stringify(projectDiag?.narration || projectDiag?.audio || null).slice(0, 2500)}`);
+      } catch (error) {
+        console.log(`PROJECT_MEDIA_DIAG fetch failed: ${String(error?.message || error).slice(0, 1000)}`);
+      }
+    }
     const result = await withDeadline(page.evaluate(async ({ item, index, total }) => {
       try {
         const r = await processProductionItem(item, index, total);
@@ -290,8 +315,8 @@ try {
   summary.ok = summary.failed === 0 && Number(summary.release?.hold || 0) === 0;
   await saveSummary();
 
-  console.log(`Factory complete: completed=${summary.completed}, failed=${summary.failed}, release ready=${summary.release?.ready ?? 0}, review=${summary.release?.review ?? 0}, hold=${summary.release?.hold ?? 0}`);
-  if (summary.failed) throw new Error(`${summary.failed} production item(s) failed. See ${SUMMARY_PATH}.`);
+  console.log(`Factory diagnostic complete: completed=${summary.completed}, failed=${summary.failed}, release ready=${summary.release?.ready ?? 0}, review=${summary.release?.review ?? 0}, hold=${summary.release?.hold ?? 0}`);
+  if (summary.failed) throw new Error(`${summary.failed} diagnostic production item(s) failed. See ${SUMMARY_PATH}.`);
 } catch (error) {
   summary.error = error?.message || String(error);
   await saveSummary();
