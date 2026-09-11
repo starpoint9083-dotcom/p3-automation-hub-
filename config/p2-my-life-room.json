@@ -1,0 +1,40 @@
+{
+  "projectId": "P2",
+  "name": "My Life Room",
+  "repository": "starpoint9083-dotcom/my-life-room-v13-app",
+  "branch": "main",
+  "deployWorkflow": "deploy-cloudflare.yml",
+  "worker": "my-life-room-v13-live-0910",
+  "deployUrl": "https://my-life-room-v13-live-0910.starpoint9083.workers.dev",
+  "resources": {
+    "d1": { "name": "my-life-room-v13", "binding": "DB" },
+    "r2": { "name": "my-life-room-assets-v13", "binding": "AVATAR_ASSETS" },
+    "workersAI": { "binding": "AI" },
+    "workflow": { "name": "my-life-room-cinema-v23", "binding": "CINEMA_WORKFLOW", "class": "CinemaBatchWorkflow" },
+    "assets": { "binding": "ASSETS" }
+  },
+  "health": {
+    "app": "/api/health",
+    "cinemaPublic": "/api/cinema/batch/latest-public"
+  },
+  "protected": {
+    "neverDeleteOrRename": [
+      "worker:my-life-room-v13-live-0910",
+      "d1:my-life-room-v13",
+      "r2:my-life-room-assets-v13",
+      "workflow:my-life-room-cinema-v23"
+    ],
+    "neverRebind": ["DB", "AVATAR_ASSETS", "AI", "CINEMA_WORKFLOW", "ASSETS"],
+    "protectedFiles": ["deploy.settings.json", "wrangler.jsonc", "scripts/prepare-cloudflare.mjs", "migrations/"]
+  },
+  "automationPolicy": {
+    "mode": "external-supervisor",
+    "p2OwnsDeployment": true,
+    "p3MayObserve": true,
+    "p3MayReplaceDeploymentPipeline": false,
+    "p3MayDeleteOrRecreateCloudflareResources": false,
+    "paidGenerationInCI": false,
+    "paidEndpointsNeverAutoCall": ["/api/cinema/generate", "/api/cinema/batch/start"],
+    "onFailure": "stop-and-report"
+  }
+}
