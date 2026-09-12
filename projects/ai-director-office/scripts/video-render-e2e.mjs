@@ -19,6 +19,12 @@ const page=await context.newPage();
 
 async function internalPost(path){return page.evaluate(async p=>{const csrf=document.querySelector('meta[name="csrf-token"]')?.content||'';const r=await fetch(p,{method:'POST',headers:{'content-type':'application/json','x-csrf-token':csrf},body:'{}'});return {status:r.status,body:await r.json().catch(()=>null)}},path)}
 function project(channel){const isY=channel==='YOUTUBE',id=isY?'p3-video-shorts':'p3-video-reels';return {id,mission_id:'p3-ui-mission',channel,status:'TTS_READY',duration_seconds:1,plan:{channel,width:1080,height:1920,duration_seconds:1,title:isY?'P3 쇼츠':'P3 릴스',hook:isY?'쇼츠 안전영역':'릴스 안전영역',cta:'상담 문의',narration:'P3 영상 검수',scenes:[{index:1,start:0,end:1,duration:1,asset_id:'fixture',asset_url:png,asset_kind:'IMAGE',subtitle:isY?'쇼츠 자막':'릴스 자막'}]},safe_zone:isY?{width:1080,height:1920,left:90,right:250,top:180,bottom:330,title_y:[230,760],subtitle_y:[1030,1430],cta_y:[1450,1560]}:{width:1080,height:1920,left:90,right:220,top:190,bottom:420,title_y:[240,760],subtitle_y:[1010,1370],cta_y:[1390,1490]},narration_url:'/api/promo/videos/'+id+'/narration',video_url:null};}
+async function waitVideoOutcome(successText,label){
+  await page.waitForFunction(({successText})=>{const t=document.getElementById('videoRenderStatus')?.textContent||'';return t.includes(successText)||t.includes('영상 생성 중단')||t.includes('실패')},{successText},{timeout:15000});
+  const text=(await page.locator('#videoRenderStatus').textContent())||'';
+  if(!text.includes(successText))throw new Error(label+'_RENDER_STATUS:'+text);
+  return text;
+}
 
 await page.route('**/api/promo/videos',async route=>{
   if(route.request().method()!=='POST')return route.continue();
@@ -54,8 +60,8 @@ try{
   const instagramLabel=(await page.locator('#chInstagram').locator('xpath=..').textContent())||'';if(!instagramLabel.includes('인스타 릴스'))throw new Error('REELS_LABEL_MISSING');
   const mp4=await page.evaluate(()=>({supported:window.__AI_OFFICE_MP4_SUPPORTED__===true,candidates:['video/mp4;codecs="avc1.42E01E,mp4a.40.2"','video/mp4;codecs="vp9,opus"','video/mp4'].filter(x=>window.MediaRecorder?.isTypeSupported?.(x))}));
   if(!mp4.supported)throw new Error('MP4_MEDIARECORDER_UNSUPPORTED:'+JSON.stringify(mp4));
-  await page.locator('#makeShortsVideo').click();await page.waitForFunction(()=>document.getElementById('videoRenderStatus')?.textContent.includes('유튜브 쇼츠 완성 · MP4'),null,{timeout:30000});if(!uploaded.YOUTUBE?.length)throw new Error('SHORTS_MP4_NOT_UPLOADED');
-  await page.locator('#makeReelsVideo').click();await page.waitForFunction(()=>document.getElementById('videoRenderStatus')?.textContent.includes('인스타 릴스 완성 · MP4'),null,{timeout:30000});if(!uploaded.INSTAGRAM?.length)throw new Error('REELS_MP4_NOT_UPLOADED');
+  await page.locator('#makeShortsVideo').click();await waitVideoOutcome('유튜브 쇼츠 완성 · MP4','SHORTS');if(!uploaded.YOUTUBE?.length)throw new Error('SHORTS_MP4_NOT_UPLOADED');
+  await page.locator('#makeReelsVideo').click();await waitVideoOutcome('인스타 릴스 완성 · MP4','REELS');if(!uploaded.INSTAGRAM?.length)throw new Error('REELS_MP4_NOT_UPLOADED');
   const sizes={shorts:uploaded.YOUTUBE.length,reels:uploaded.INSTAGRAM.length};
   console.log(JSON.stringify({ok:true,viewport:'390x844',separate_controls:true,reels_label:true,mp4_supported:true,mp4_candidates:mp4.candidates,shorts_mp4:true,reels_mp4:true,sizes,platform_safe_zones_separate:true,ai_calls:0,real_academy_data_mutated:false},null,2));
 }finally{
