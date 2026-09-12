@@ -113,6 +113,12 @@ jobs:
           ADMIN_PASSWORD: ${{ secrets.AI_OFFICE_ADMIN_PASSWORD }}
         run: npm run verify:browser
 
+      - name: Student edit mobile E2E
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+          ADMIN_PASSWORD: ${{ secrets.AI_OFFICE_ADMIN_PASSWORD }}
+        run: npm run verify:student-edit
+
       - name: Full AI release E2E
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.full_ai }}
         env:
