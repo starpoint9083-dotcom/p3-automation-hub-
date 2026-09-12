@@ -18,7 +18,18 @@
     "cinemaPublic": "/api/cinema/batch/latest-public",
     "cinemaQualityPublic": "/api/cinema/batch/quality-public",
     "cinemaVisualQcPublic": "/api/cinema/batch/visual-qc/latest-public",
-    "cinemaMotionQcPublic": "/api/cinema/batch/motion-qc/latest-public"
+    "cinemaMotionQcPublic": "/api/cinema/batch/motion-qc/latest-public",
+    "cinemaFlowManifest": "/assets/cinema_flow_manifest_v1.json"
+  },
+  "flowPolicy": {
+    "baseline": "P2 Cinema Pilot Baseline v1",
+    "baselineLocked": true,
+    "clipSlots": 9,
+    "logicalCombinations": 27,
+    "p2OwnsPlayback": true,
+    "p3ReadOnlySupervisor": true,
+    "autoRegeneration": false,
+    "paidGenerationByP3": false
   },
   "qualityPolicy": {
     "technicalManifest": true,
