@@ -1,4 +1,4 @@
-first-live-test-retry-20
+first-live-test-retry-21
 kst_date=2026-09-12
 mode=resume-today
-reason=verify-corrupt-narration-purge-and-real-tts
+reason=verify-workers-ai-json-audio-unwrapped-and-rendered
