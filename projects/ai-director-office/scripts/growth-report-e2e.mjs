@@ -32,6 +32,7 @@ try{
   await page.locator('.mobilebar [data-view="students"]').click();
   await page.locator('#students').waitFor({state:'visible'});
   await page.waitForFunction(()=>document.getElementById('growthReportList')?.textContent.includes('P3 성장보고서 검수'),null,{timeout:15000});
+  await page.waitForFunction(()=>[...document.querySelectorAll('#reportStudent option')].some(o=>o.textContent?.includes('P3 성장보고서 검수')),null,{timeout:15000});
 
   const select=page.locator('#reportStudent');
   const options=await select.locator('option').allTextContents();
