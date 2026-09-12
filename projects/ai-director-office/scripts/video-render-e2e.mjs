@@ -20,10 +20,15 @@ const page=await context.newPage();
 async function internalPost(path){return page.evaluate(async p=>{const csrf=document.querySelector('meta[name="csrf-token"]')?.content||'';const r=await fetch(p,{method:'POST',headers:{'content-type':'application/json','x-csrf-token':csrf},body:'{}'});return {status:r.status,body:await r.json().catch(()=>null)}},path)}
 function project(channel){const isY=channel==='YOUTUBE',id=isY?'p3-video-shorts':'p3-video-reels';return {id,mission_id:'p3-ui-mission',channel,status:'TTS_READY',duration_seconds:1,plan:{channel,width:1080,height:1920,duration_seconds:1,title:isY?'P3 쇼츠':'P3 릴스',hook:isY?'쇼츠 안전영역':'릴스 안전영역',cta:'상담 문의',narration:'P3 영상 검수',scenes:[{index:1,start:0,end:1,duration:1,asset_id:'fixture',asset_url:png,asset_kind:'IMAGE',subtitle:isY?'쇼츠 자막':'릴스 자막'}]},safe_zone:isY?{width:1080,height:1920,left:90,right:250,top:180,bottom:330,title_y:[230,760],subtitle_y:[1030,1430],cta_y:[1450,1560]}:{width:1080,height:1920,left:90,right:220,top:190,bottom:420,title_y:[240,760],subtitle_y:[1010,1370],cta_y:[1390,1490]},narration_url:'/api/promo/videos/'+id+'/narration',video_url:null};}
 async function waitVideoOutcome(successText,label){
-  await page.waitForFunction(({successText})=>{const t=document.getElementById('videoRenderStatus')?.textContent||'';return t.includes(successText)||t.includes('영상 생성 중단')||t.includes('실패')},{successText},{timeout:15000});
-  const text=(await page.locator('#videoRenderStatus').textContent())||'';
-  if(!text.includes(successText))throw new Error(label+'_RENDER_STATUS:'+text);
-  return text;
+  const end=Date.now()+12000;
+  while(Date.now()<end){
+    const text=(await page.locator('#videoRenderStatus').textContent().catch(()=>''))||'';
+    if(text.includes(successText))return text;
+    if(text.includes('영상 생성 중단')||text.includes('실패'))throw new Error(label+'_RENDER_STATUS:'+text);
+    await page.waitForTimeout(250);
+  }
+  const text=(await page.locator('#videoRenderStatus').textContent().catch(()=>''))||'';
+  throw new Error(label+'_RENDER_STALLED:'+text);
 }
 
 await page.route('**/api/promo/videos',async route=>{
