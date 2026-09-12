@@ -27,7 +27,7 @@ if(Array.isArray(listData?.audio)&&listData.audio.length){
 }
 
 const names=(await fs.readdir(PART_DIR)).filter(x=>/^part_\d+\.b64$/.test(x)).sort();
-if(names.length!==3)throw new Error(`Expected 3 Suno preview chunks, found ${names.length}`);
+if(names.length!==6)throw new Error(`Expected 6 Suno preview chunks, found ${names.length}`);
 const b64=(await Promise.all(names.map(n=>fs.readFile(path.join(PART_DIR,n),'utf8')))).join('').replace(/\s+/g,'');
 const bytes=Buffer.from(b64,'base64');
 const sha=crypto.createHash('sha256').update(bytes).digest('hex');
