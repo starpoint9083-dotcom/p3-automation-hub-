@@ -18,7 +18,7 @@ jobs:
   build-deploy-verify:
     if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: projects/ai-director-office
@@ -30,36 +30,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-
-      - name: Normalize Cloudflare credentials
-        shell: bash
-        env:
-          RAW_CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          RAW_CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: |
-          set -euo pipefail
-          CLEAN_CF_TOKEN="$(printf '%s' "$RAW_CF_TOKEN" | tr -d '[:space:]')"
-          CLEAN_CF_ACCOUNT="$(printf '%s' "$RAW_CF_ACCOUNT" | tr -d '[:space:]')"
-          CLEAN_CF_ACCOUNT="${CLEAN_CF_ACCOUNT#https://dash.cloudflare.com/}"
-          CLEAN_CF_ACCOUNT="${CLEAN_CF_ACCOUNT#http://dash.cloudflare.com/}"
-          CLEAN_CF_ACCOUNT="${CLEAN_CF_ACCOUNT#dash.cloudflare.com/}"
-          CLEAN_CF_ACCOUNT="${CLEAN_CF_ACCOUNT%%/*}"
-          test -n "$CLEAN_CF_TOKEN"
-          test -n "$CLEAN_CF_ACCOUNT"
-          echo "::add-mask::$CLEAN_CF_TOKEN"
-          echo "::add-mask::$CLEAN_CF_ACCOUNT"
-          echo "CLOUDFLARE_API_TOKEN=$CLEAN_CF_TOKEN" >> "$GITHUB_ENV"
-          echo "CLOUDFLARE_ACCOUNT_ID=$CLEAN_CF_ACCOUNT" >> "$GITHUB_ENV"
-
-      - name: Require AI Office admin secret
-        shell: bash
-        env:
-          ADMIN_PASSWORD: ${{ secrets.AI_OFFICE_ADMIN_PASSWORD }}
-        run: |
-          set -euo pipefail
-          test -n "$ADMIN_PASSWORD"
-          test "${#ADMIN_PASSWORD}" -ge 12
-          echo "::add-mask::$ADMIN_PASSWORD"
 
       - name: Install dependencies
         run: npm install --no-audit --no-fund
@@ -73,29 +43,7 @@ jobs:
       - name: Product preflight
         run: npm run preflight
 
-      - name: Ensure dedicated D1 and generate config
-        run: npm run prepare:wrangler
-
-      - name: Apply D1 migrations
-        run: npx wrangler d1 migrations apply ai-director-office-db --remote --config wrangler.generated.jsonc
-
-      - name: Wrangler dry-run
-        run: npm run dry-run
-
-      - name: Deploy dedicated AI Office Worker
-        id: deploy
-        shell: bash
+      - name: Confirm quota-safe PR gate
         run: |
-          set -euo pipefail
-          npm run deploy 2>&1 | tee deploy.log
-          DEPLOY_URL="$(grep -Eo 'https://[A-Za-z0-9.-]+\.workers\.dev' deploy.log | tail -n 1)"
-          test -n "$DEPLOY_URL"
-          echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
-
-      - name: Actual URL E2E with propagation retry
-        env:
-          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
-          ADMIN_PASSWORD: ${{ secrets.AI_OFFICE_ADMIN_PASSWORD }}
-          E2E_ATTEMPTS: 8
-          E2E_DELAY_MS: 4000
-        run: npm run verify
+          echo "PR gate intentionally performs no Cloudflare mutation, deployment, or live Workers AI calls."
+          echo "Live deploy + API/browser E2E is owned by ai-director-office.yml on branch push."
