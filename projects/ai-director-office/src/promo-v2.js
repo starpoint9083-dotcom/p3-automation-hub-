@@ -6,6 +6,7 @@ export {listPromoAssets,promoAssetObject,listPromoPosts};
 
 const CHANNELS=['YOUTUBE','NAVER_BLOG','INSTAGRAM','DAANGN'];
 const CHANNEL_LABEL={YOUTUBE:'유튜브 쇼츠',NAVER_BLOG:'네이버 블로그',INSTAGRAM:'인스타그램',DAANGN:'당근'};
+const EMPTY_PROFILE={academy_name:'',neighborhood:'',consultation_cta:'',youtube_channel_url:'',naver_blog_url:'',instagram_handle:'',daangn_profile:'',logo_asset_id:null,updated_at:null};
 function normalizeChannels(value){
   const raw=Array.isArray(value)?value:[];
   const mapped=raw.map(v=>String(v).trim().toUpperCase().replace(/\s+/g,'_')).map(v=>{
@@ -48,13 +49,14 @@ function assetNeedsFor(channels,target){
 
 export async function getAcademyProfile(env){
   await ensureAcademy(env);
-  return await env.DB.prepare(`SELECT academy_name,neighborhood,consultation_cta,youtube_channel_url,naver_blog_url,instagram_handle,daangn_profile,logo_asset_id,updated_at FROM academy_profile WHERE academy_id=?`).bind(academyId(env)).first()||{};
+  const row=await env.DB.prepare(`SELECT academy_name,neighborhood,consultation_cta,youtube_channel_url,naver_blog_url,instagram_handle,daangn_profile,logo_asset_id,updated_at FROM academy_profile WHERE academy_id=?`).bind(academyId(env)).first();
+  return {...EMPTY_PROFILE,...(row||{})};
 }
 export async function saveAcademyProfile(env,request){
   const b=await bodyJson(request);await ensureAcademy(env);
   const data={academy_name:optionalString(b.academy_name,100),neighborhood:optionalString(b.neighborhood,120),consultation_cta:optionalString(b.consultation_cta,300),youtube_channel_url:optionalString(b.youtube_channel_url,500),naver_blog_url:optionalString(b.naver_blog_url,500),instagram_handle:optionalString(b.instagram_handle,120),daangn_profile:optionalString(b.daangn_profile,300)};
   await env.DB.prepare(`INSERT INTO academy_profile (academy_id,academy_name,neighborhood,consultation_cta,youtube_channel_url,naver_blog_url,instagram_handle,daangn_profile,updated_at) VALUES (?,?,?,?,?,?,?,?,CURRENT_TIMESTAMP) ON CONFLICT(academy_id) DO UPDATE SET academy_name=excluded.academy_name,neighborhood=excluded.neighborhood,consultation_cta=excluded.consultation_cta,youtube_channel_url=excluded.youtube_channel_url,naver_blog_url=excluded.naver_blog_url,instagram_handle=excluded.instagram_handle,daangn_profile=excluded.daangn_profile,updated_at=CURRENT_TIMESTAMP`).bind(academyId(env),data.academy_name,data.neighborhood,data.consultation_cta,data.youtube_channel_url,data.naver_blog_url,data.instagram_handle,data.daangn_profile).run();
-  return {...data,missing:profileMissing(data)};
+  return {...EMPTY_PROFILE,...data,missing:profileMissing(data)};
 }
 
 export async function promoDashboard(env){
