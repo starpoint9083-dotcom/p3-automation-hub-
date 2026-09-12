@@ -50,6 +50,10 @@ jobs:
           if (c.qualityPolicy?.paidVisualAIInCI !== false) throw new Error('Paid visual AI must stay disabled in CI');
           if (c.qualityPolicy?.paidMotionAIInCI !== false) throw new Error('Paid motion AI must stay disabled in CI');
           if (c.qualityPolicy?.autoRegeneration !== false) throw new Error('Automatic regeneration must stay disabled');
+          if (c.flowPolicy?.baseline !== 'P2 Cinema Pilot Baseline v1') throw new Error('Cinema flow baseline mismatch');
+          if (c.flowPolicy?.baselineLocked !== true || c.flowPolicy?.clipSlots !== 9 || c.flowPolicy?.logicalCombinations !== 27) throw new Error('Cinema 9-clip/27-flow lock missing');
+          if (c.flowPolicy?.p2OwnsPlayback !== true || c.flowPolicy?.p3ReadOnlySupervisor !== true) throw new Error('Cinema playback ownership invalid');
+          if (c.flowPolicy?.autoRegeneration !== false || c.flowPolicy?.paidGenerationByP3 !== false) throw new Error('Cinema flow paid/regeneration guard invalid');
           const deny = c.automationPolicy?.paidEndpointsNeverAutoCall || [];
           if (!deny.includes('/api/cinema/batch/visual-qc/start')) throw new Error('Visual QC paid start endpoint must be denylisted');
           if (!deny.includes('/api/cinema/batch/motion-qc/start')) throw new Error('Motion QC paid start endpoint must be denylisted');
@@ -159,6 +163,31 @@ jobs:
           console.log('P3 did not trigger paid motion AI and did not trigger regeneration.');
           NODE
 
+      - name: Verify locked Cinema 27-flow manifest
+        id: flows
+        if: steps.deploy.outputs.state == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --max-time 15 -H 'cache-control: no-cache' "$P2_URL/assets/cinema_flow_manifest_v1.json" > cinema-flow.json
+          node - <<'NODE'
+          const fs=require('fs');
+          const b=JSON.parse(fs.readFileSync('cinema-flow.json','utf8'));
+          const slots=Array.isArray(b.clipSlots)?b.clipSlots.map(String):[];
+          const flows=Array.isArray(b.flows)?b.flows:[];
+          const bases=Array.isArray(b.axes?.base)?b.axes.base.map(String):[];
+          const states=Array.isArray(b.axes?.state)?b.axes.state.map(String):[];
+          const actions=Array.isArray(b.axes?.action)?b.axes.action.map(String):[];
+          const ids=flows.map(f=>String(f?.id||''));
+          const expected=new Set(bases.flatMap(base=>states.flatMap(state=>actions.map(action=>`${base}.${state}.${action}`))));
+          const p=b.runtimePolicy||{}, q=b.qcBaseline||{};
+          const ok=b.version==='1.0.0'&&b.baseline==='P2 Cinema Pilot Baseline v1'&&b.locked===true&&slots.length===9&&new Set(slots).size===9&&bases.length===3&&states.length===3&&actions.length===3&&Number(b.logicalCombinations)===27&&flows.length===27&&new Set(ids).size===27&&ids.every(id=>expected.has(id))&&p.reuseExistingNineClips===true&&p.autoRegeneration===false&&p.paidGenerationOnRuntime===false&&p.p2OwnsPlayback===true&&p.p3ReadOnlySupervisor===true&&q.technical==='pass'&&q.visual==='pass'&&q.motion==='pass';
+          if(!ok){console.error(b);process.exit(18)}
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `baseline=${b.baseline}\nlocked=true\nslots=9\nflows=27\n`);
+          console.log(`P2 CINEMA FLOW MANIFEST PASS baseline=${b.baseline} slots=9 flows=27 locked=true`);
+          console.log('P3 only observed the manifest; no paid generation or regeneration was triggered.');
+          NODE
+
       - name: Report supervisor result
         if: always()
         shell: bash
@@ -181,6 +210,10 @@ jobs:
           MOTION_SCORE: ${{ steps.motionqc.outputs.score }}
           MOTION_CANDIDATES: ${{ steps.motionqc.outputs.candidates }}
           MOTION_PASS: ${{ steps.motionqc.outputs.pass }}
+          FLOW_BASELINE: ${{ steps.flows.outputs.baseline }}
+          FLOW_LOCKED: ${{ steps.flows.outputs.locked }}
+          FLOW_SLOTS: ${{ steps.flows.outputs.slots }}
+          FLOW_COUNT: ${{ steps.flows.outputs.flows }}
         run: |
           {
             echo "### P2 ↔ P3 safe supervisor"
@@ -191,6 +224,7 @@ jobs:
             echo "- Cinema technical QC: ready=${QUALITY_READY:-unknown}/9 score=${QUALITY_SCORE:-unknown} pass=${QUALITY_PASS:-unknown}"
             echo "- Cinema visual QC: status=${VISUAL_STATE:-idle} ready=${VISUAL_READY:-0}/9 scored=${VISUAL_SCORED:-0}/9 score=${VISUAL_SCORE:-unset} pass=${VISUAL_PASS:-false} candidates=${VISUAL_CANDIDATES:-0}"
             echo "- Cinema motion QC: status=${MOTION_STATE:-idle} ready=${MOTION_READY:-0}/9 scored=${MOTION_SCORED:-0}/9 score=${MOTION_SCORE:-unset} pass=${MOTION_PASS:-false} candidates=${MOTION_CANDIDATES:-0}"
+            echo "- Cinema flow baseline: ${FLOW_BASELINE:-unknown}; locked=${FLOW_LOCKED:-false}; clips=${FLOW_SLOTS:-0}; logical flows=${FLOW_COUNT:-0}"
             echo "- P3 mode: read-only external supervisor"
             echo "- Paid Cinema generation: NEVER triggered by this workflow"
             echo "- Paid visual AI QC: NEVER triggered by this workflow; P3 only observes user-started QC"
