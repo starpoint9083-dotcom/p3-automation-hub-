@@ -1,7 +1,7 @@
 import {bodyJson,HttpError,JSON_HEADERS} from './lib.js';
 
 const COOKIE_NAME='__Host-aiod_session';
-const SESSION_SECONDS=12*60*60;
+const SESSION_SECONDS=30*24*60*60;
 const MAX_SECRET_INPUT=512;
 const enc=new TextEncoder();
 
