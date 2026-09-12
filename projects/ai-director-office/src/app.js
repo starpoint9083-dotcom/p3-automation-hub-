@@ -2,7 +2,8 @@ import {bodyJson,HTML_HEADERS,HttpError,json,nowIso,sanitizePublicError} from '.
 import {authState,isAuthConfigured,login,logout,requireAdmin} from './auth.js';
 import {loginHtml} from './auth-ui.js';
 import {withAIRetry} from './ai-retry.js';
-import {addMetric,briefing,createLead,createStudent,growthReport,listLeads,listRisks,recruitmentContent,recruitmentPerformance,recruitmentPlan,recruitmentTargets,recordCampaignEvent,setRecruitmentTarget,studentCard,updateLeadStage} from './services.js';
+import {addMetric,briefing,createLead,createStudent,listLeads,listRisks,recruitmentContent,recruitmentPerformance,recruitmentPlan,recruitmentTargets,recordCampaignEvent,setRecruitmentTarget,studentCard,updateLeadStage} from './services.js';
+import {growthReport} from './growth-report-v2.js';
 import {deleteStudent,updateStudent} from './student-admin.js';
 import {deleteLead,updateLead} from './lead-admin.js';
 import {listGrowthReports,updateGrowthReportStatus} from './growth-report-admin.js';
