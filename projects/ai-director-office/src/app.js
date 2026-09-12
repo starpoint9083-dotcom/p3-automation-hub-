@@ -12,7 +12,7 @@ import {p3RuntimeDiagnostic} from './p3-diagnostics.js';
 import {setupP3MobileFixture} from './p3-fixtures.js';
 import {cleanupP3Fixtures} from './cleanup.js';
 import {appHtml} from './ui-v4.js';
-import {CLIENT_JS} from './client-v10.js';
+import {CLIENT_JS} from './client-v11.js';
 const match=(path,re)=>path.match(re);
 const APP_HTML_HEADERS={...HTML_HEADERS,"content-security-policy":"default-src 'none'; style-src 'unsafe-inline'; script-src 'self'; connect-src 'self'; img-src 'self' data: blob:; font-src 'self' data:; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"};
 const JS_HEADERS={"content-type":"application/javascript; charset=utf-8","cache-control":"no-store","x-content-type-options":"nosniff","referrer-policy":"no-referrer","strict-transport-security":"max-age=31536000; includeSubDomains"};
