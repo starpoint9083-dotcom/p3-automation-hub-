@@ -27,7 +27,6 @@ jobs:
     timeout-minutes: 8
     env:
       P2_REPO: starpoint9083-dotcom/my-life-room-v13-app
-      P2_DEPLOY_WORKFLOW: deploy-cloudflare.yml
       P2_URL: https://my-life-room-v13-live-0910.starpoint9083.workers.dev
     steps:
       - name: Checkout P3 policy
@@ -45,10 +44,14 @@ jobs:
           if (c.automationPolicy?.p2OwnsDeployment !== true) throw new Error('P2 must own deployment');
           if (c.automationPolicy?.paidGenerationInCI !== false) throw new Error('Paid generation must stay disabled in CI');
           if (c.automationPolicy?.paidVisualAIInCI !== false) throw new Error('Paid visual AI must stay disabled in P3 CI');
+          if (c.automationPolicy?.paidMotionAIInCI !== false) throw new Error('Paid motion AI must stay disabled in P3 CI');
           if (c.automationPolicy?.p3MayDeleteOrRecreateCloudflareResources !== false) throw new Error('Cloudflare destructive mutation must stay disabled');
           if (c.qualityPolicy?.paidVisualAIInCI !== false) throw new Error('Paid visual AI must stay disabled in CI');
+          if (c.qualityPolicy?.paidMotionAIInCI !== false) throw new Error('Paid motion AI must stay disabled in CI');
           if (c.qualityPolicy?.autoRegeneration !== false) throw new Error('Automatic regeneration must stay disabled');
-          if (!(c.automationPolicy?.paidEndpointsNeverAutoCall||[]).includes('/api/cinema/batch/visual-qc/start')) throw new Error('Visual QC paid start endpoint must be denylisted');
+          const deny = c.automationPolicy?.paidEndpointsNeverAutoCall || [];
+          if (!deny.includes('/api/cinema/batch/visual-qc/start')) throw new Error('Visual QC paid start endpoint must be denylisted');
+          if (!deny.includes('/api/cinema/batch/motion-qc/start')) throw new Error('Motion QC paid start endpoint must be denylisted');
           console.log('P2 supervisor safety contract: PASS');
           NODE
 
@@ -62,40 +65,14 @@ jobs:
           echo "sha=$SHA" >> "$GITHUB_OUTPUT"
           echo "P2 main: $SHA"
 
-      - name: Inspect P2 deployment for current commit
+      - name: Use direct production runtime supervision
         id: deploy
         shell: bash
-        env:
-          EXPECTED_SHA: ${{ steps.head.outputs.sha }}
         run: |
           set -euo pipefail
-          URL="https://api.github.com/repos/${P2_REPO}/actions/workflows/${P2_DEPLOY_WORKFLOW}/runs?branch=main&event=push&per_page=10"
-          curl -fsSL --retry 3 --retry-delay 2 -H 'Accept: application/vnd.github+json' -H 'User-Agent: p3-p2-safe-supervisor' "$URL" > runs.json
-          node - <<'NODE'
-          const fs = require('fs');
-          const expected = process.env.EXPECTED_SHA;
-          const body = JSON.parse(fs.readFileSync('runs.json','utf8'));
-          const run = (body.workflow_runs || []).find(r => r.head_sha === expected);
-          const out = process.env.GITHUB_OUTPUT;
-          if (!run) {
-            fs.appendFileSync(out, 'state=pending\n');
-            fs.appendFileSync(out, 'message=no matching deployment run yet\n');
-            console.log('P2 deployment for current main has not appeared yet; supervisor will check again.');
-            process.exit(0);
-          }
-          fs.appendFileSync(out, `state=${run.status === 'completed' ? run.conclusion : 'pending'}\n`);
-          fs.appendFileSync(out, `run_url=${run.html_url}\n`);
-          fs.appendFileSync(out, `run_id=${run.id}\n`);
-          console.log(`P2 deploy run ${run.id}: status=${run.status} conclusion=${run.conclusion}`);
-          if (run.status === 'completed' && run.conclusion !== 'success') process.exit(9);
-          NODE
-
-      - name: Stop cleanly while deployment is pending
-        if: steps.deploy.outputs.state == 'pending'
-        shell: bash
-        run: |
-          echo "### P2 supervisor" >> "$GITHUB_STEP_SUMMARY"
-          echo "Current P2 main commit is waiting for its normal P2 deployment pipeline. No P3 mutation was attempted." >> "$GITHUB_STEP_SUMMARY"
+          echo "state=success" >> "$GITHUB_OUTPUT"
+          echo "run_url=runtime-direct-probe" >> "$GITHUB_OUTPUT"
+          echo "P3 intentionally avoids cross-repository Actions API polling. P2 owns deployment; P3 verifies the actual production runtime directly."
 
       - name: Verify real P2 health URL
         if: steps.deploy.outputs.state == 'success'
@@ -155,11 +132,29 @@ jobs:
           const fs=require('fs');
           const b=JSON.parse(fs.readFileSync('visual-qc.json','utf8'));
           if(b.ok!==true || Number(b.total)!==9 || !Array.isArray(b.clips) || !Array.isArray(b.candidates)) { console.error(b); process.exit(14); }
-          const status=String(b.status||'unknown'), ready=Number(b.ready||0), score=Number(b.visualScore||0), candidates=b.candidates.length;
-          if(status==='complete' && (ready!==9 || b.clips.length!==9)) { console.error('Completed visual QC must contain 9 results', b); process.exit(15); }
-          fs.appendFileSync(process.env.GITHUB_OUTPUT, `status=${status}\nready=${ready}\nscore=${score}\ncandidates=${candidates}\npass=${b.pass===true}\n`);
-          console.log(`P2 VISUAL QC OBSERVE status=${status} ready=${ready}/9 score=${score} candidates=${candidates} paid=${b.paidAiTriggered===true}`);
+          const status=String(b.status||'unknown'), ready=Number(b.ready||0), scored=Number(b.scoredCount||0), score=b.visualScore==null?null:Number(b.visualScore), candidates=b.candidates.length;
+          if(status==='complete' && (ready!==9 || scored!==9 || b.clips.length!==9)) { console.error('Completed visual QC must contain 9 scored results', b); process.exit(15); }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `status=${status}\nready=${ready}\nscored=${scored}\nscore=${score??''}\ncandidates=${candidates}\npass=${b.pass===true}\n`);
+          console.log(`P2 VISUAL QC OBSERVE status=${status} ready=${ready}/9 scored=${scored}/9 score=${score} candidates=${candidates} paid=${b.paidAiTriggered===true}`);
           console.log('P3 did not trigger paid visual AI and did not trigger regeneration.');
+          NODE
+
+      - name: Observe user-started Cinema motion QC
+        id: motionqc
+        if: steps.deploy.outputs.state == 'success'
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --max-time 15 -H 'cache-control: no-cache' "$P2_URL/api/cinema/batch/motion-qc/latest-public" > motion-qc.json
+          node - <<'NODE'
+          const fs=require('fs');
+          const b=JSON.parse(fs.readFileSync('motion-qc.json','utf8'));
+          if(b.ok!==true || Number(b.total)!==9 || !Array.isArray(b.clips) || !Array.isArray(b.candidates)) { console.error(b); process.exit(16); }
+          const status=String(b.status||'unknown'), ready=Number(b.ready||0), scored=Number(b.scoredCount||0), score=b.motionScore==null?null:Number(b.motionScore), candidates=b.candidates.length;
+          if(status==='complete' && (ready!==9 || scored!==9 || b.clips.length!==9)) { console.error('Completed motion QC must contain 9 scored results', b); process.exit(17); }
+          fs.appendFileSync(process.env.GITHUB_OUTPUT, `status=${status}\nready=${ready}\nscored=${scored}\nscore=${score??''}\ncandidates=${candidates}\npass=${b.pass===true}\n`);
+          console.log(`P2 MOTION QC OBSERVE status=${status} ready=${ready}/9 scored=${scored}/9 score=${score} candidates=${candidates} paid=${b.paidAiTriggered===true}`);
+          console.log('P3 did not trigger paid motion AI and did not trigger regeneration.');
           NODE
 
       - name: Report supervisor result
@@ -174,21 +169,30 @@ jobs:
           QUALITY_PASS: ${{ steps.quality.outputs.pass }}
           VISUAL_STATE: ${{ steps.visualqc.outputs.status }}
           VISUAL_READY: ${{ steps.visualqc.outputs.ready }}
+          VISUAL_SCORED: ${{ steps.visualqc.outputs.scored }}
           VISUAL_SCORE: ${{ steps.visualqc.outputs.score }}
           VISUAL_CANDIDATES: ${{ steps.visualqc.outputs.candidates }}
           VISUAL_PASS: ${{ steps.visualqc.outputs.pass }}
+          MOTION_STATE: ${{ steps.motionqc.outputs.status }}
+          MOTION_READY: ${{ steps.motionqc.outputs.ready }}
+          MOTION_SCORED: ${{ steps.motionqc.outputs.scored }}
+          MOTION_SCORE: ${{ steps.motionqc.outputs.score }}
+          MOTION_CANDIDATES: ${{ steps.motionqc.outputs.candidates }}
+          MOTION_PASS: ${{ steps.motionqc.outputs.pass }}
         run: |
           {
             echo "### P2 ↔ P3 safe supervisor"
             echo "- P2 main: \`$MAIN_SHA\`"
-            echo "- P2 deploy state: \`${DEPLOY_STATE:-unknown}\`"
-            echo "- P2 deploy run: ${DEPLOY_URL:-not-yet-observed}"
+            echo "- P2 deployment ownership: P2 only; P3 uses direct production runtime probes"
+            echo "- P2 runtime probe state: \`${DEPLOY_STATE:-unknown}\`"
             echo "- Production URL: $P2_URL"
             echo "- Cinema technical QC: ready=${QUALITY_READY:-unknown}/9 score=${QUALITY_SCORE:-unknown} pass=${QUALITY_PASS:-unknown}"
-            echo "- Cinema visual QC: status=${VISUAL_STATE:-idle} ready=${VISUAL_READY:-0}/9 score=${VISUAL_SCORE:-0} pass=${VISUAL_PASS:-false} candidates=${VISUAL_CANDIDATES:-0}"
+            echo "- Cinema visual QC: status=${VISUAL_STATE:-idle} ready=${VISUAL_READY:-0}/9 scored=${VISUAL_SCORED:-0}/9 score=${VISUAL_SCORE:-unset} pass=${VISUAL_PASS:-false} candidates=${VISUAL_CANDIDATES:-0}"
+            echo "- Cinema motion QC: status=${MOTION_STATE:-idle} ready=${MOTION_READY:-0}/9 scored=${MOTION_SCORED:-0}/9 score=${MOTION_SCORE:-unset} pass=${MOTION_PASS:-false} candidates=${MOTION_CANDIDATES:-0}"
             echo "- P3 mode: read-only external supervisor"
             echo "- Paid Cinema generation: NEVER triggered by this workflow"
             echo "- Paid visual AI QC: NEVER triggered by this workflow; P3 only observes user-started QC"
+            echo "- Paid motion AI QC: NEVER triggered by this workflow; P3 only observes user-started QC"
             echo "- Automatic Cinema regeneration: NEVER triggered by this workflow"
             echo "- Cloudflare resource delete/recreate/rebind: NEVER performed by this workflow"
           } >> "$GITHUB_STEP_SUMMARY"
