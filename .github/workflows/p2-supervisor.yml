@@ -27,6 +27,7 @@ jobs:
     timeout-minutes: 8
     env:
       P2_REPO: starpoint9083-dotcom/my-life-room-v13-app
+      P2_DEPLOY_WORKFLOW_REFERENCE: deploy-cloudflare.yml
       P2_URL: https://my-life-room-v13-live-0910.starpoint9083.workers.dev
     steps:
       - name: Checkout P3 policy
@@ -72,6 +73,7 @@ jobs:
           set -euo pipefail
           echo "state=success" >> "$GITHUB_OUTPUT"
           echo "run_url=runtime-direct-probe" >> "$GITHUB_OUTPUT"
+          echo "P2 deployment owner workflow reference: $P2_DEPLOY_WORKFLOW_REFERENCE"
           echo "P3 intentionally avoids cross-repository Actions API polling. P2 owns deployment; P3 verifies the actual production runtime directly."
 
       - name: Verify real P2 health URL
