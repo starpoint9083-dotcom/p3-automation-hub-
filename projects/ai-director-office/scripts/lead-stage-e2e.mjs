@@ -35,9 +35,10 @@ async function clickStage(row,status,expected){
   const b=row.locator(`[data-lead-stage="${status}"]`);
   const id=await b.getAttribute('data-lead-id');
   if(!id)throw new Error('LEAD_ID_MISSING:'+status);
+  const leadName=(await row.locator('b').innerText()).split(' · ')[0];
   await b.click();
   if(status==='ENROLLED'||status==='LOST'){
-    await page.waitForFunction(n=>!document.getElementById('leadList')?.textContent.includes(n),await row.locator('b').innerText().then(x=>x.split(' · ')[0]),{timeout:10000});
+    await page.waitForFunction(n=>!document.getElementById('leadList')?.textContent.includes(n),leadName,{timeout:10000});
   }else{
     await page.waitForFunction(([leadId,text])=>{const r=document.querySelector(`[data-lead-row="${leadId}"]`);return r?.textContent.includes(text)},[id,expected],{timeout:10000});
   }
