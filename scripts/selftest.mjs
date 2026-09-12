@@ -9,9 +9,9 @@ const env = {
 const cases = [
   ["https://local.test/health", 200, b => b.ok && b.service === "p3-automation-hub" && b.integration === "p1-p2-supervisor" && b.version === "0.4.0"],
   ["https://local.test/healthz", 200, b => b.ok && b.stage === "deployment-channel"],
-  ["https://local.test/preflight", 200, b => b.ok && b.checks.workerRuntime === true && b.checks.p2SupervisorConfigured === true && b.checks.p2TechnicalQualityGateConfigured === true && b.safety?.paidVisualAIFromP3 === false],
+  ["https://local.test/preflight", 200, b => b.ok && b.checks.workerRuntime === true && b.checks.p2SupervisorConfigured === true && b.checks.p2TechnicalQualityGateConfigured === true && b.checks.p2FlowManifestObservationConfigured === true && b.safety?.p2CinemaBaselineLocked === true && b.safety?.paidVisualAIFromP3 === false],
   ["https://local.test/projects", 200, b => b.ok && Array.isArray(b.projects) && b.projects.some(p => p.project === "P2")],
-  ["https://local.test/projects/p2", 200, b => b.ok && b.project === "P2" && b.control?.mode === "read-only-supervisor" && b.probes?.quality === "/api/cinema/batch/quality-public" && b.quality_gate?.technical === "automatic-read-only" && b.quality_gate?.autoRegeneration === false],
+  ["https://local.test/projects/p2", 200, b => b.ok && b.project === "P2" && b.control?.mode === "read-only-supervisor" && b.probes?.quality === "/api/cinema/batch/quality-public" && b.probes?.flows === "/assets/cinema_flow_manifest_v1.json" && b.cinema_flow?.baseline === "P2 Cinema Pilot Baseline v1" && b.cinema_flow?.baselineLocked === true && b.cinema_flow?.clipSlots === 9 && b.cinema_flow?.logicalCombinations === 27 && b.quality_gate?.technical === "automatic-read-only" && b.quality_gate?.autoRegeneration === false],
   ["https://local.test/nope", 404, b => b.error === "NOT_FOUND"]
 ];
 
@@ -28,4 +28,4 @@ if (post.status !== 405) {
   console.error("SELFTEST FAILED method guard", post.status);
   process.exit(1);
 }
-console.log("SELFTEST PASS (7/7) P2 quality gate descriptor + paid-AI guard");
+console.log("SELFTEST PASS (7/7) P2 quality gate + locked 9-clip/27-flow descriptor + paid-AI guard");

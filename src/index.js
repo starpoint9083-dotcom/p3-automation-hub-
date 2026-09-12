@@ -8,6 +8,8 @@ const DEFAULT_P1_BASE_URL = "https://k-stella-shorts-factory.k-stella-p1.workers
 const ALLOWED_P1_HOST = "k-stella-shorts-factory.k-stella-p1.workers.dev";
 const DEFAULT_P2_BASE_URL = "https://my-life-room-v13-live-0910.starpoint9083.workers.dev";
 const ALLOWED_P2_HOST = "my-life-room-v13-live-0910.starpoint9083.workers.dev";
+const P2_FLOW_MANIFEST_PATH = "/assets/cinema_flow_manifest_v1.json";
+const P2_FLOW_BASELINE = "P2 Cinema Pilot Baseline v1";
 
 function json(data, status = 200) {
   return new Response(JSON.stringify(data, null, 2), { status, headers: JSON_HEADERS });
@@ -58,6 +60,7 @@ function preflight(env) {
       p2TechnicalQualityGateConfigured: p2UrlValid,
       p2VisualQualityObservationConfigured: p2UrlValid,
       p2MotionQualityObservationConfigured: p2UrlValid,
+      p2FlowManifestObservationConfigured: p2UrlValid,
       d1: Boolean(env.P3_DB),
       r2: Boolean(env.P3_ASSETS),
       workersAI: Boolean(env.AI)
@@ -65,13 +68,15 @@ function preflight(env) {
     safety: {
       p2Mode: "read-only-supervisor",
       p2OwnsDeployment: true,
+      p2OwnsPlayback: true,
+      p2CinemaBaselineLocked: true,
       paidCinemaGenerationFromP3: false,
       paidVisualAIFromP3: false,
       paidMotionAIFromP3: false,
       autoCinemaRegenerationFromP3: false,
       resourceMutationFromP3: false
     },
-    note: "P3 supervises P2 through strict allowlisted HTTPS GET probes. P3 may observe user-started visual and sampled-motion QC results but never starts paid AI or regeneration."
+    note: "P3 supervises P2 through strict allowlisted HTTPS GET probes, including the locked 9-clip/27-flow Cinema manifest. P3 never starts paid AI, playback mutations, regeneration, or resource changes."
   };
 }
 
@@ -133,7 +138,16 @@ function p2Descriptor(env) {
       cinema: "/api/cinema/batch/latest-public",
       quality: "/api/cinema/batch/quality-public",
       visualQc: "/api/cinema/batch/visual-qc/latest-public",
-      motionQc: "/api/cinema/batch/motion-qc/latest-public"
+      motionQc: "/api/cinema/batch/motion-qc/latest-public",
+      flows: P2_FLOW_MANIFEST_PATH
+    },
+    cinema_flow: {
+      baseline: P2_FLOW_BASELINE,
+      baselineLocked: true,
+      clipSlots: 9,
+      logicalCombinations: 27,
+      p2OwnsPlayback: true,
+      p3ReadOnlySupervisor: true
     },
     protected_resources: [
       "worker:my-life-room-v13-live-0910",
@@ -150,7 +164,7 @@ function p2Descriptor(env) {
     control: {
       enabled: false,
       mode: "read-only-supervisor",
-      reason: "P2 owns deployment and mutations. P3 never auto-calls paid Cinema generation, visual AI, sampled-motion AI, or regeneration endpoints."
+      reason: "P2 owns deployment, playback, and mutations. P3 never auto-calls paid Cinema generation, visual AI, sampled-motion AI, or regeneration endpoints."
     }
   };
 }
@@ -382,6 +396,65 @@ async function p2MotionQc(env) {
   }
 }
 
+function validateFlowManifest(b) {
+  const slots = Array.isArray(b?.clipSlots) ? b.clipSlots.map(String) : [];
+  const flows = Array.isArray(b?.flows) ? b.flows : [];
+  const bases = Array.isArray(b?.axes?.base) ? b.axes.base.map(String) : [];
+  const states = Array.isArray(b?.axes?.state) ? b.axes.state.map(String) : [];
+  const actions = Array.isArray(b?.axes?.action) ? b.axes.action.map(String) : [];
+  const uniqueSlots = new Set(slots);
+  const ids = flows.map(f => String(f?.id || ""));
+  const uniqueIds = new Set(ids);
+  const expectedIds = new Set(bases.flatMap(base => states.flatMap(state => actions.map(action => `${base}.${state}.${action}`))));
+  const allExpected = ids.length === expectedIds.size && ids.every(id => expectedIds.has(id));
+  const policy = b?.runtimePolicy || {};
+  const qc = b?.qcBaseline || {};
+  const safe = b?.version === "1.0.0" && b?.baseline === P2_FLOW_BASELINE && b?.locked === true &&
+    slots.length === 9 && uniqueSlots.size === 9 && bases.length === 3 && states.length === 3 && actions.length === 3 &&
+    Number(b?.logicalCombinations) === 27 && flows.length === 27 && uniqueIds.size === 27 && allExpected &&
+    policy.reuseExistingNineClips === true && policy.autoRegeneration === false && policy.paidGenerationOnRuntime === false &&
+    policy.p2OwnsPlayback === true && policy.p3ReadOnlySupervisor === true && qc.technical === "pass" && qc.visual === "pass" && qc.motion === "pass";
+  return { safe, slots, flows, bases, states, actions, ids, policy, qc };
+}
+
+async function p2Flows(env) {
+  try {
+    const upstream = await upstreamJson(p2BaseUrl(env), P2_FLOW_MANIFEST_PATH);
+    const connected = upstream.ok && upstream.body && typeof upstream.body === "object";
+    const b = upstream.body || {};
+    const v = validateFlowManifest(b);
+    return json({
+      ok: connected && v.safe,
+      project: "P2",
+      connected,
+      upstream_status: upstream.status,
+      latency_ms: upstream.latency_ms,
+      cinemaFlow: connected ? {
+        version: b.version ?? null,
+        baseline: b.baseline ?? null,
+        baselineLocked: b.locked === true,
+        clipSlots: v.slots,
+        clipSlotCount: v.slots.length,
+        logicalCombinations: Number(b.logicalCombinations || 0),
+        axes: { base: v.bases, state: v.states, action: v.actions },
+        flowIds: v.ids,
+        qcBaseline: v.qc,
+        runtimePolicy: v.policy
+      } : b,
+      safe: connected && v.safe,
+      safety: {
+        p2OwnsPlayback: v.policy?.p2OwnsPlayback === true,
+        p3ReadOnlySupervisor: v.policy?.p3ReadOnlySupervisor === true,
+        p3TriggeredPaidGeneration: false,
+        p3TriggeredRegeneration: false,
+        observationOnly: true
+      }
+    }, connected && v.safe ? 200 : 502);
+  } catch (error) {
+    return json({ ok: false, project: "P2", connected: false, error: error?.name === "AbortError" ? "P2_FLOWS_TIMEOUT" : (error?.message || "P2_FLOWS_UNREACHABLE") }, 502);
+  }
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -397,6 +470,7 @@ export default {
     if (url.pathname === "/projects/p2/quality") return p2Quality(env);
     if (url.pathname === "/projects/p2/visual-qc") return p2VisualQc(env);
     if (url.pathname === "/projects/p2/motion-qc") return p2MotionQc(env);
+    if (url.pathname === "/projects/p2/flows") return p2Flows(env);
     return json({ ok: false, error: "NOT_FOUND", path: url.pathname }, 404);
   }
 };
