@@ -1,6 +1,7 @@
 import {CLIENT_JS as V3} from './client-v3.js';
 
 export const CLIENT_JS=V3
+  .replace("INTERNAL_ERROR:'처리 중 문제가 생겼습니다. 잠시 후 다시 시도해주세요.'", "AI_QUOTA_EXHAUSTED:'오늘의 무료 AI 사용량을 모두 사용했습니다. 다음 일일 초기화(한국시간 오전 9시) 후 다시 시도하거나 AI 사용 플랜을 연결해주세요.',INTERNAL_ERROR:'처리 중 문제가 생겼습니다. 잠시 후 다시 시도해주세요.'")
   .replace("let currentMission=null,currentNeeds=[];", "let currentMission=null,currentNeeds=[],currentRun=null;")
   .replace("$('pNaver').value=d.profile?.naver_blog_url||'';", "$('pYoutube').value=d.profile?.youtube_channel_url||'';$('pNaver').value=d.profile?.naver_blog_url||'';")
   .replace("naver_blog_url:val('pNaver'),instagram_handle:val('pInstagram'),daangn_profile:val('pDaangn')", "youtube_channel_url:val('pYoutube'),naver_blog_url:val('pNaver'),instagram_handle:val('pInstagram'),daangn_profile:val('pDaangn')")
