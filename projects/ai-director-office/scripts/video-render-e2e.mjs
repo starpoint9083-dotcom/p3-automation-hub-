@@ -61,6 +61,7 @@ try{
   await internalPost('/api/internal/p3-cleanup');await internalPost('/api/internal/p3-ui-fixture');
   await page.reload({waitUntil:'domcontentloaded',timeout:30000});await page.waitForFunction(()=>window.__AI_OFFICE_READY__===true,{timeout:30000});
   await page.locator('.mobilebar [data-view="recruitment"]').click();await page.locator('#recruitment').waitFor({state:'visible'});
+  await page.waitForFunction(()=>{const el=document.getElementById('missionResult');return !!el&&el.style.display!=='none'&&Boolean((el.textContent||'').trim())},{timeout:15000});
   const shortsVisible=await page.locator('#makeShortsVideo').isVisible(),reelsVisible=await page.locator('#makeReelsVideo').isVisible();if(!shortsVisible||!reelsVisible)throw new Error('SEPARATE_VIDEO_BUTTONS_MISSING');
   const instagramLabel=(await page.locator('#chInstagram').locator('xpath=..').textContent())||'';if(!instagramLabel.includes('인스타 릴스'))throw new Error('REELS_LABEL_MISSING');
   const mp4=await page.evaluate(()=>({supported:window.__AI_OFFICE_MP4_SUPPORTED__===true,candidates:['video/mp4;codecs="avc1.42E01E,mp4a.40.2"','video/mp4;codecs="vp9,opus"','video/mp4'].filter(x=>window.MediaRecorder?.isTypeSupported?.(x))}));
