@@ -16,6 +16,7 @@ async function videoCreate(channel,button){if(!currentMission){toast('먼저 이
 
 let PATCHED=V13.replace('function bind(){',VIDEO_FUNCTIONS+`function bind(){if($('makeShortsVideo'))$('makeShortsVideo').onclick=()=>videoCreate('YOUTUBE',$('makeShortsVideo'));if($('makeReelsVideo'))$('makeReelsVideo').onclick=()=>videoCreate('INSTAGRAM',$('makeReelsVideo'));window.__AI_OFFICE_MP4_SUPPORTED__=Boolean(videoMp4Mime());`);
 if(PATCHED===V13)throw new Error('VIDEO_RENDER_BIND_PATCH_MISSING');
-if(!PATCHED.includes("videoCreate('YOUTUBE'")||!PATCHED.includes("videoCreate('INSTAGRAM'")||!PATCHED.includes("canvas.width=1080")||!PATCHED.includes("canvas.height=1920")||!PATCHED.includes('MP4_RENDER_UNSUPPORTED')||PATCHED.includes('video/webm'))throw new Error('STRICT_MP4_VIDEO_PATCH_MISSING');
+const forbiddenVideoMime='video/'+'webm';
+if(!PATCHED.includes("videoCreate('YOUTUBE'")||!PATCHED.includes("videoCreate('INSTAGRAM'")||!PATCHED.includes("canvas.width=1080")||!PATCHED.includes("canvas.height=1920")||!PATCHED.includes('MP4_RENDER_UNSUPPORTED')||PATCHED.includes(forbiddenVideoMime))throw new Error('STRICT_MP4_VIDEO_PATCH_MISSING');
 new Function(PATCHED);
 export const CLIENT_JS=PATCHED;
