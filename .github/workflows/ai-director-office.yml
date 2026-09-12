@@ -7,6 +7,12 @@ on:
       - "projects/ai-director-office/**"
       - ".github/workflows/ai-director-office.yml"
   workflow_dispatch:
+    inputs:
+      full_ai:
+        description: "Run expensive 4-channel + image Full AI release verification"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -64,9 +70,6 @@ jobs:
       - name: Install dependencies
         run: npm install --no-audit --no-fund
 
-      - name: Install Chromium for real UI verification
-        run: npx playwright install --with-deps chromium
-
       - name: Syntax check
         run: npm run check
 
@@ -95,16 +98,24 @@ jobs:
           test -n "$DEPLOY_URL"
           echo "url=$DEPLOY_URL" >> "$GITHUB_OUTPUT"
 
-      - name: API and security E2E
+      - name: Quota-safe API and security E2E
         env:
           DEPLOY_URL: ${{ steps.deploy.outputs.url }}
           ADMIN_PASSWORD: ${{ secrets.AI_OFFICE_ADMIN_PASSWORD }}
-          E2E_ATTEMPTS: 8
-          E2E_DELAY_MS: 4000
         run: npm run verify
 
-      - name: Real mobile browser E2E
+      - name: Install Chromium for quota-free mobile UI verification
+        run: npx playwright install --with-deps chromium
+
+      - name: Quota-free real mobile browser E2E
         env:
           DEPLOY_URL: ${{ steps.deploy.outputs.url }}
           ADMIN_PASSWORD: ${{ secrets.AI_OFFICE_ADMIN_PASSWORD }}
         run: npm run verify:browser
+
+      - name: Full AI release E2E
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.full_ai }}
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+          ADMIN_PASSWORD: ${{ secrets.AI_OFFICE_ADMIN_PASSWORD }}
+        run: npm run verify:full-ai
