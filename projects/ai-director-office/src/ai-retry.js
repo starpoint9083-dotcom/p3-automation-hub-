@@ -4,7 +4,8 @@ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 
 function quotaExhausted(error){
   const msg=String(error?.message||error||'').toLowerCase();
-  return msg.includes('4006')||msg.includes('daily free allocation')||msg.includes('used up your daily free allocation');
+  const status=Number(error?.status||error?.statusCode||error?.cause?.status||0);
+  return msg.includes('3036')||msg.includes('4006')||msg.includes('daily free allocation')||msg.includes('used up your daily free allocation')||msg.includes('account limited')||(status===429&&msg.includes('allocation'));
 }
 function permanentError(error){
   if(quotaExhausted(error))return true;
