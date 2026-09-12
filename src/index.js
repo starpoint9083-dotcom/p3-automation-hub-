@@ -57,6 +57,7 @@ function preflight(env) {
       p2SupervisorConfigured: p2UrlValid,
       p2TechnicalQualityGateConfigured: p2UrlValid,
       p2VisualQualityObservationConfigured: p2UrlValid,
+      p2MotionQualityObservationConfigured: p2UrlValid,
       d1: Boolean(env.P3_DB),
       r2: Boolean(env.P3_ASSETS),
       workersAI: Boolean(env.AI)
@@ -66,10 +67,11 @@ function preflight(env) {
       p2OwnsDeployment: true,
       paidCinemaGenerationFromP3: false,
       paidVisualAIFromP3: false,
+      paidMotionAIFromP3: false,
       autoCinemaRegenerationFromP3: false,
       resourceMutationFromP3: false
     },
-    note: "P3 supervises P2 through strict allowlisted HTTPS GET probes. P3 may observe a user-started visual QC result but never starts paid visual AI or regeneration."
+    note: "P3 supervises P2 through strict allowlisted HTTPS GET probes. P3 may observe user-started visual and sampled-motion QC results but never starts paid AI or regeneration."
   };
 }
 
@@ -130,7 +132,8 @@ function p2Descriptor(env) {
       health: "/api/health",
       cinema: "/api/cinema/batch/latest-public",
       quality: "/api/cinema/batch/quality-public",
-      visualQc: "/api/cinema/batch/visual-qc/latest-public"
+      visualQc: "/api/cinema/batch/visual-qc/latest-public",
+      motionQc: "/api/cinema/batch/motion-qc/latest-public"
     },
     protected_resources: [
       "worker:my-life-room-v13-live-0910",
@@ -141,12 +144,13 @@ function p2Descriptor(env) {
     quality_gate: {
       technical: "automatic-read-only",
       visual: "user-started-paid-qc-read-only-observation",
+      motion: "user-started-paid-four-checkpoint-qc-read-only-observation",
       autoRegeneration: false
     },
     control: {
       enabled: false,
       mode: "read-only-supervisor",
-      reason: "P2 owns deployment and mutations. P3 never auto-calls paid Cinema generation, visual AI, or regeneration endpoints."
+      reason: "P2 owns deployment and mutations. P3 never auto-calls paid Cinema generation, visual AI, sampled-motion AI, or regeneration endpoints."
     }
   };
 }
@@ -313,7 +317,7 @@ async function p2VisualQc(env) {
         model: b.model ?? null,
         candidates: Array.isArray(b.candidates) ? b.candidates.map(String).slice(0,9) : [],
         clips,
-        motionReview: b.motionReview ?? "pending-middle-frame-pass",
+        motionReview: b.motionReview ?? "pending-sampled-motion-pass",
         updatedAt: b.updatedAt ?? null
       } : b,
       safety: {
@@ -324,6 +328,57 @@ async function p2VisualQc(env) {
     }, connected ? 200 : 502);
   } catch (error) {
     return json({ ok: false, project: "P2", connected: false, error: error?.name === "AbortError" ? "P2_VISUAL_QC_TIMEOUT" : (error?.message || "P2_VISUAL_QC_UNREACHABLE") }, 502);
+  }
+}
+
+async function p2MotionQc(env) {
+  try {
+    const upstream = await upstreamJson(p2BaseUrl(env), "/api/cinema/batch/motion-qc/latest-public");
+    const connected = upstream.ok && upstream.body?.ok === true;
+    const b = upstream.body || {};
+    const clips = Array.isArray(b.clips) ? b.clips.map(c => {
+      const scored = c?.scored === true;
+      return {
+        slot: String(c?.slot || ""),
+        scored,
+        score: scored && c?.score !== null && c?.score !== undefined ? Number(c.score) : null,
+        pass: scored && Boolean(c?.pass),
+        regenerationCandidate: scored && Boolean(c?.regenerationCandidate),
+        issues: Array.isArray(c?.issues) ? c.issues.map(x=>String(x).slice(0,180)).slice(0,5) : [],
+        error: scored ? null : (c?.error ? String(c.error).slice(0,180) : null)
+      };
+    }) : [];
+    const scoredCount = Number.isFinite(Number(b.scoredCount)) ? Number(b.scoredCount) : clips.filter(c=>c.scored).length;
+    const motionScore = b.motionScore === null || b.motionScore === undefined ? null : Number(b.motionScore);
+    return json({
+      ok: connected,
+      project: "P2",
+      connected,
+      upstream_status: upstream.status,
+      latency_ms: upstream.latency_ms,
+      motionQc: connected ? {
+        status: b.status ?? "unknown",
+        ready: Number(b.ready || 0),
+        scoredCount,
+        total: Number(b.total || 9),
+        complete: Boolean(b.complete),
+        motionScore,
+        pass: Boolean(b.pass),
+        error: b.error ?? null,
+        model: b.model ?? null,
+        sampling: b.sampling ?? "4-checkpoint-contact-sheet",
+        candidates: Array.isArray(b.candidates) ? b.candidates.map(String).slice(0,9) : [],
+        clips,
+        updatedAt: b.updatedAt ?? null
+      } : b,
+      safety: {
+        p3TriggeredPaidMotionAI: false,
+        p3TriggeredRegeneration: false,
+        observationOnly: true
+      }
+    }, connected ? 200 : 502);
+  } catch (error) {
+    return json({ ok: false, project: "P2", connected: false, error: error?.name === "AbortError" ? "P2_MOTION_QC_TIMEOUT" : (error?.message || "P2_MOTION_QC_UNREACHABLE") }, 502);
   }
 }
 
@@ -341,6 +396,7 @@ export default {
     if (url.pathname === "/projects/p2/cinema") return p2Cinema(env);
     if (url.pathname === "/projects/p2/quality") return p2Quality(env);
     if (url.pathname === "/projects/p2/visual-qc") return p2VisualQc(env);
+    if (url.pathname === "/projects/p2/motion-qc") return p2MotionQc(env);
     return json({ ok: false, error: "NOT_FOUND", path: url.pathname }, 404);
   }
 };

@@ -1,0 +1,84 @@
+name: P2 Motion QC Observer
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/10 * * * *"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p3-p2-motion-qc-observer
+  cancel-in-progress: true
+
+jobs:
+  observe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    env:
+      P2_URL: https://my-life-room-v13-live-0910.starpoint9083.workers.dev
+    steps:
+      - name: Checkout P3 policy
+        uses: actions/checkout@v4
+
+      - name: Enforce zero-mutation motion QC policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs=require('fs');
+          const c=JSON.parse(fs.readFileSync('config/p2-my-life-room.json','utf8'));
+          if(c.automationPolicy?.mode!=='external-supervisor') throw new Error('external-supervisor required');
+          if(c.automationPolicy?.paidMotionAIInCI!==false) throw new Error('paid motion AI must remain disabled in P3 CI');
+          if(c.qualityPolicy?.autoRegeneration!==false) throw new Error('auto regeneration must remain disabled');
+          if(!(c.automationPolicy?.paidEndpointsNeverAutoCall||[]).includes('/api/cinema/batch/motion-qc/start')) throw new Error('motion QC paid start endpoint must remain denylisted');
+          console.log('P2 motion QC observer policy: PASS');
+          NODE
+
+      - name: Read P2 sampled motion QC result
+        id: motion
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fsSL --max-time 15 -H 'cache-control: no-cache' "$P2_URL/api/cinema/batch/motion-qc/latest-public" > motion.json
+          node - <<'NODE'
+          const fs=require('fs');
+          const b=JSON.parse(fs.readFileSync('motion.json','utf8'));
+          if(b.ok!==true || Number(b.total)!==9 || !Array.isArray(b.clips) || !Array.isArray(b.candidates)) {
+            console.error(b); process.exit(2);
+          }
+          if(b.autoRegeneration!==false) throw new Error('P2 motion QC unexpectedly enabled auto regeneration');
+          const status=String(b.status||'unknown');
+          const ready=Number(b.ready||0);
+          const scored=Number(b.scoredCount||0);
+          const score=b.motionScore==null?'null':String(b.motionScore);
+          const candidates=b.candidates.length;
+          fs.appendFileSync(process.env.GITHUB_OUTPUT,`status=${status}\nready=${ready}\nscored=${scored}\nscore=${score}\ncandidates=${candidates}\npass=${b.pass===true}\n`);
+          console.log(`P2 MOTION QC OBSERVE status=${status} ready=${ready}/9 scored=${scored}/9 score=${score} candidates=${candidates}`);
+          console.log('P3 performed GET-only observation; no paid AI and no regeneration was triggered.');
+          NODE
+
+      - name: Report motion QC snapshot
+        if: always()
+        shell: bash
+        env:
+          STATUS: ${{ steps.motion.outputs.status }}
+          READY: ${{ steps.motion.outputs.ready }}
+          SCORED: ${{ steps.motion.outputs.scored }}
+          SCORE: ${{ steps.motion.outputs.score }}
+          CANDIDATES: ${{ steps.motion.outputs.candidates }}
+          PASS: ${{ steps.motion.outputs.pass }}
+        run: |
+          {
+            echo "### P2 Cinema sampled motion QC"
+            echo "- status: \`${STATUS:-unknown}\`"
+            echo "- ready: ${READY:-0}/9"
+            echo "- scored: ${SCORED:-0}/9"
+            echo "- motion score: ${SCORE:-null}"
+            echo "- pass: ${PASS:-false}"
+            echo "- regeneration candidates: ${CANDIDATES:-0}"
+            echo "- P3 action: GET-only observation"
+            echo "- Paid motion AI from P3: NEVER"
+            echo "- Automatic regeneration from P3: NEVER"
+          } >> "$GITHUB_STEP_SUMMARY"
