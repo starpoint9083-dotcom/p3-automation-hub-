@@ -21,6 +21,9 @@ on:
       - 'scripts/p1-process-waiting-queues.mjs'
       - 'scripts/p1-pre-render-media-audit.mjs'
       - 'scripts/p1-quality-gate.mjs'
+      - 'scripts/p1-use-suno-preview.mjs'
+      - 'scripts/p1-download-preview.mjs'
+      - 'ops/suno-preview/**'
       - '.github/workflows/p1-browser-factory.yml'
 
 permissions:
@@ -44,6 +47,14 @@ jobs:
         run: npm run security
       - name: P3 preflight
         run: npm run preflight
+      - name: Validate Suno preview transport
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat ops/suno-preview/part_*.b64 | tr -d '\n\r ' | base64 -d > /tmp/p1-suno-preview.ogg
+          test "$(sha256sum /tmp/p1-suno-preview.ogg | awk '{print $1}')" = "b42916af36c76599c91cfae8d8b569e5e25f398d0fe8f94ca70403227df31be3"
+          test "$(head -c4 /tmp/p1-suno-preview.ogg)" = "OggS"
+          echo "Existing Suno preview transport PASS"
 
   factory:
     if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
@@ -92,6 +103,9 @@ jobs:
           echo "CHROME_PATH=$CHROME_PATH" >> "$GITHUB_ENV"
           "$CHROME_PATH" --version
 
+      - name: Use existing Suno music asset in P1
+        run: node scripts/p1-use-suno-preview.mjs
+
       - name: Inspect P1 live queue state
         run: node scripts/p1-live-queue-inspector.mjs
 
@@ -104,11 +118,15 @@ jobs:
       - name: Run P1 end-to-end factory
         run: node scripts/p1-browser-factory.mjs
 
+      - name: Download rendered P1 preview
+        if: always()
+        run: node scripts/p1-download-preview.mjs
+
       - name: P1 zero-cost quality gate
         if: always()
         run: npm run p1:quality
 
-      - name: Upload factory summary and quality gate
+      - name: Upload factory summary, preview, and quality gate
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -116,5 +134,7 @@ jobs:
           path: |
             p1_factory_summary.json
             p1_quality_gate.json
+            p1_preview.webm
+            p1_preview.json
           if-no-files-found: ignore
           retention-days: 14
