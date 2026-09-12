@@ -7,6 +7,10 @@ on:
         description: 'Target duration per short in seconds (50-70)'
         required: false
         default: '60'
+      run_mode:
+        description: 'factory or inspect-assets'
+        required: false
+        default: 'factory'
   push:
     branches: [main]
     paths:
@@ -18,6 +22,7 @@ on:
       - 'scripts/preflight.mjs'
       - 'scripts/p1-browser-factory.mjs'
       - 'scripts/p1-live-queue-inspector.mjs'
+      - 'scripts/p1-reference-asset-inspector.mjs'
       - 'scripts/p1-process-waiting-queues.mjs'
       - 'scripts/p1-pre-render-media-audit.mjs'
       - 'scripts/p1-quality-gate.mjs'
@@ -78,6 +83,20 @@ jobs:
         with:
           node-version: 22
 
+      - name: Resolve run mode
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            mode="${{ inputs.run_mode || 'factory' }}"
+          else
+            mode="$(sed -n 's/^mode=//p' ops/p1-factory-live-test.trigger | tail -1)"
+            [ -n "$mode" ] || mode="factory"
+          fi
+          case "$mode" in factory|inspect-assets) ;; *) echo "Unsupported run mode: $mode" >&2; exit 1;; esac
+          echo "P1_RUN_MODE=$mode" >> "$GITHUB_ENV"
+          echo "P1 run mode: $mode"
+
       - name: Verify GitHub OIDC environment
         shell: bash
         run: |
@@ -88,10 +107,16 @@ jobs:
           fi
           echo "GitHub OIDC identity is available for P1 session exchange."
 
+      - name: Inspect P1 Stella/reference assets
+        if: env.P1_RUN_MODE == 'inspect-assets'
+        run: node scripts/p1-reference-asset-inspector.mjs
+
       - name: Install browser controller
+        if: env.P1_RUN_MODE == 'factory'
         run: npm install --no-audit --no-fund --no-save puppeteer-core@24.16.0
 
       - name: Locate Chrome
+        if: env.P1_RUN_MODE == 'factory'
         shell: bash
         run: |
           set -euo pipefail
@@ -104,30 +129,35 @@ jobs:
           "$CHROME_PATH" --version
 
       - name: Use existing Suno music asset in P1
+        if: env.P1_RUN_MODE == 'factory'
         run: node scripts/p1-use-suno-preview.mjs
 
       - name: Inspect P1 live queue state
+        if: env.P1_RUN_MODE == 'factory'
         run: node scripts/p1-live-queue-inspector.mjs
 
       - name: Rebuild and process P1 waiting queues
+        if: env.P1_RUN_MODE == 'factory'
         run: node scripts/p1-process-waiting-queues.mjs
 
       - name: Audit selected P1 media before rendering
+        if: env.P1_RUN_MODE == 'factory'
         run: node scripts/p1-pre-render-media-audit.mjs
 
       - name: Run P1 end-to-end factory
+        if: env.P1_RUN_MODE == 'factory'
         run: node scripts/p1-browser-factory.mjs
 
       - name: Download rendered P1 preview
-        if: always()
+        if: always() && env.P1_RUN_MODE == 'factory'
         run: node scripts/p1-download-preview.mjs
 
       - name: P1 zero-cost quality gate
-        if: always()
+        if: always() && env.P1_RUN_MODE == 'factory'
         run: npm run p1:quality
 
       - name: Upload factory summary, preview, and quality gate
-        if: always()
+        if: always() && env.P1_RUN_MODE == 'factory'
         uses: actions/upload-artifact@v4
         with:
           name: p1-factory-summary-${{ github.run_number }}
