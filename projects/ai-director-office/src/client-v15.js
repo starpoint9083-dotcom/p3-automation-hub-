@@ -15,9 +15,9 @@ const replacements=[
   ['완성 MP4를 학원 전용 자산에 저장 중…','완성 영상을 학원 보관함에 저장하고 있어요…']
 ];
 for(const [from,to] of replacements)PATCHED=PATCHED.replaceAll(from,to);
-const INIT="$('sEnrolled').value=seoulDate();bind();window.__AI_OFFICE_READY__=true;";
-const INIT_HOME="if('scrollRestoration' in history)history.scrollRestoration='manual';$('sEnrolled').value=seoulDate();bind();setView('today');window.scrollTo(0,0);window.__AI_OFFICE_READY__=true;";
-PATCHED=PATCHED.replace(INIT,INIT_HOME);
+const BIND='function bind(){';
+const BIND_HOME="function bind(){if('scrollRestoration' in history)history.scrollRestoration='manual';setView('today');window.scrollTo(0,0);";
+PATCHED=PATCHED.replace(BIND,BIND_HOME);
 if(PATCHED===V14)throw new Error('FRIENDLY_CLIENT_PATCH_MISSING');
 if(!PATCHED.includes("setView('today')")||!PATCHED.includes("history.scrollRestoration='manual'"))throw new Error('TODAY_HOME_PATCH_MISSING');
 new Function(PATCHED);
