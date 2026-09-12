@@ -149,6 +149,12 @@ jobs:
           ADMIN_PASSWORD: ${{ secrets.AI_OFFICE_ADMIN_PASSWORD }}
         run: npm run verify:gallery-upload
 
+      - name: Shorts Reels MP4 mobile E2E
+        env:
+          DEPLOY_URL: ${{ steps.deploy.outputs.url }}
+          ADMIN_PASSWORD: ${{ secrets.AI_OFFICE_ADMIN_PASSWORD }}
+        run: npm run verify:video-render
+
       - name: Full AI release E2E
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.full_ai }}
         env:
