@@ -40,8 +40,49 @@ function toTime(value) {
   return Number.isFinite(n) ? n : 0;
 }
 
+function validRank(value) {
+  return Number.isInteger(value) && value > 0 ? value : null;
+}
+
 function rankText(rank) {
-  return Number.isInteger(rank) && rank > 0 ? `${rank}위` : '미확인';
+  return validRank(rank) !== null ? `${rank}위` : '미확인';
+}
+
+function historicalRecord(history, latest, daysAgo, toleranceHours) {
+  const anchor = toTime(latest?.checkedAt);
+  if (!anchor) return null;
+  const target = anchor - daysAgo * 86400000;
+  let best = null;
+  let bestDistance = Number.POSITIVE_INFINITY;
+  for (const item of history) {
+    if (validRank(item?.rank) === null) continue;
+    const time = toTime(item?.checkedAt);
+    if (!time) continue;
+    const distance = Math.abs(time - target);
+    if (distance < bestDistance) {
+      best = item;
+      bestDistance = distance;
+    }
+  }
+  return bestDistance <= toleranceHours * 3600000 ? best : null;
+}
+
+function comparison(history, latest, latestRank, daysAgo, toleranceHours) {
+  const baseline = historicalRecord(history, latest, daysAgo, toleranceHours);
+  const baselineRank = validRank(baseline?.rank);
+  const delta = latestRank !== null && baselineRank !== null ? baselineRank - latestRank : null;
+  return {
+    daysAgo,
+    baselineRank,
+    baselineCheckedAt: baseline?.checkedAt || null,
+    delta
+  };
+}
+
+function moveText(label, item, latestRank) {
+  if (!item || item.baselineRank === null || item.delta === null || latestRank === null) return `${label} —`;
+  const move = item.delta > 0 ? `▲${item.delta}` : item.delta < 0 ? `▼${Math.abs(item.delta)}` : '동일';
+  return `${label} ${item.baselineRank}위→${latestRank}위 ${move}`;
 }
 
 const generatedAt = new Date();
@@ -65,17 +106,20 @@ const rows = keywords.map((keyword) => {
     .filter((item) => item?.keywordId === keyword?.id)
     .sort((a, b) => toTime(b?.checkedAt) - toTime(a?.checkedAt));
   const latest = history[0] || null;
-  const previous = history[1] || null;
-  const latestRank = Number.isInteger(latest?.rank) && latest.rank > 0 ? latest.rank : null;
-  const previousRank = Number.isInteger(previous?.rank) && previous.rank > 0 ? previous.rank : null;
-  const delta = latestRank !== null && previousRank !== null ? previousRank - latestRank : null;
+  const latestRank = validRank(latest?.rank);
+  const previousDay = comparison(history, latest, latestRank, 1, 20);
+  const sevenDays = comparison(history, latest, latestRank, 7, 36);
+  const thirtyDays = comparison(history, latest, latestRank, 30, 60);
   const latestAgeHours = latest?.checkedAt ? (generatedAt.getTime() - toTime(latest.checkedAt)) / 3600000 : null;
   return {
     keywordId: keyword.id,
     keyword: keyword.name,
     latestRank,
-    previousRank,
-    delta,
+    comparisons: {
+      previousDay,
+      sevenDays,
+      thirtyDays
+    },
     status: latest?.status || 'no-record',
     note: latest?.note || '측정 기록 없음',
     checkedAt: latest?.checkedAt || null,
@@ -90,11 +134,12 @@ const healthOk = health?.message === 'Success';
 const storeOk = dashboard?.storeName === config.storeName;
 const measurementCount = rows.filter((row) => row.checkedAt).length;
 const freshCount = rows.filter((row) => row.freshWithin36Hours).length;
-const sharpMoves = rows.filter((row) => typeof row.delta === 'number' && Math.abs(row.delta) >= 5);
+const sharpThreshold = Number(config.policy?.sharpMoveThreshold || 5);
+const sharpMoves = rows.filter((row) => typeof row.comparisons.previousDay.delta === 'number' && Math.abs(row.comparisons.previousDay.delta) >= sharpThreshold);
 const status = healthOk && storeOk && missingKeywords.length === 0 ? (measurementCount > 0 ? 'PASS' : 'WARN') : 'FAIL';
 
 const report = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   generatedAt: generatedAt.toISOString(),
   status,
   module: config.module,
@@ -106,10 +151,12 @@ const report = {
     healthOk,
     storeOk,
     requiredKeywordsPresent: missingKeywords.length === 0,
+    requiredKeywordCount: requiredKeywords.length,
     measurementCount,
     freshWithin36HoursCount: freshCount,
     fabricatedRanksForbidden: config.policy?.fabricatedRanksForbidden === true,
-    p3ReadOnlySupervisor: config.policy?.p3ReadOnlySupervisor === true
+    p3ReadOnlySupervisor: config.policy?.p3ReadOnlySupervisor === true,
+    comparisonWindowsDays: config.policy?.comparisonWindowsDays || [1, 7, 30]
   },
   missingKeywords,
   sharpMoves,
@@ -123,27 +170,28 @@ const lines = [
   '',
   `- 생성: ${report.generatedAt}`,
   `- 매장: ${config.storeName}`,
+  `- 필수 추적 키워드: ${requiredKeywords.length}개`,
   `- 순위 자동 측정: 매일 ${config.rankingScheduleKst} KST`,
   `- P3 감독: 매일 ${config.supervisorScheduleKst} KST`,
   `- 측정 기록: ${measurementCount}개 / 최근 36시간 기록: ${freshCount}개`,
   `- P3 모드: 읽기 전용 감독`,
   `- 확인 불가 순위: 숫자를 만들지 않고 ‘미확인’ 유지`,
   '',
-  '## 대표 키워드'
+  '## 키워드 현황'
 ];
 for (const row of rows) {
-  const move = typeof row.delta === 'number' ? (row.delta > 0 ? ` ▲${row.delta}` : row.delta < 0 ? ` ▼${Math.abs(row.delta)}` : ' 동일') : '';
-  lines.push(`- ${row.keyword}: **${rankText(row.latestRank)}${move}** · ${row.checkedAt || '기록 없음'} · ${row.note}`);
+  const p = row.comparisons;
+  lines.push(`- ${row.keyword}: **${rankText(row.latestRank)}** · ${moveText('전일', p.previousDay, row.latestRank)} · ${moveText('7일', p.sevenDays, row.latestRank)} · ${moveText('30일', p.thirtyDays, row.latestRank)} · ${row.checkedAt || '기록 없음'}`);
 }
 if (missingKeywords.length) {
   lines.push('', '## 누락 키워드', ...missingKeywords.map((name) => `- ${name}`));
 }
 if (sharpMoves.length) {
-  lines.push('', '## 급변 감지', ...sharpMoves.map((row) => `- ${row.keyword}: ${rankText(row.previousRank)} → ${rankText(row.latestRank)} (${row.delta > 0 ? '+' : ''}${row.delta})`));
+  lines.push('', `## 급변 감지 (${sharpThreshold}계단 이상)`, ...sharpMoves.map((row) => `- ${row.keyword}: ${moveText('전일', row.comparisons.previousDay, row.latestRank)}`));
 }
 lines.push('', status === 'FAIL' ? '## 결과\n연결 또는 필수 키워드 검증 실패.' : status === 'WARN' ? '## 결과\n연결은 정상이나 아직 측정 기록이 없습니다.' : '## 결과\nP3 일일 감독 정상.');
 
 await writeFile('p3-store-ranking-report.json', `${JSON.stringify(report, null, 2)}\n`, 'utf8');
 await writeFile('p3-store-ranking-report.md', `${lines.join('\n')}\n`, 'utf8');
-console.log(`STORE RANKING SUPERVISOR ${status} measurements=${measurementCount} fresh=${freshCount} missing=${missingKeywords.length}`);
+console.log(`STORE RANKING SUPERVISOR ${status} required=${requiredKeywords.length} measurements=${measurementCount} fresh=${freshCount} missing=${missingKeywords.length}`);
 if (status === 'FAIL') process.exit(1);
