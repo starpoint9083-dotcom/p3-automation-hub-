@@ -303,7 +303,7 @@ async function openCenteredSearch(page, keyword, latitude, longitude) {
     if (typeof el.select === 'function') el.select();
   });
   await page.keyboard.press('Backspace');
-  await page.keyboard.insertText(keyword);
+  await page.keyboard.type(keyword);
   await page.keyboard.press('Enter');
   await sleep(4500);
   try { await input.dispose(); } catch {}
