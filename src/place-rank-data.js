@@ -1,0 +1,25 @@
+export const placeRankData = {
+  version: '1.0.0',
+  store: '스타포인트안경원',
+  generatedAt: '2026-09-13T14:00:00+09:00',
+  history: [
+    {
+      date: '2026-09-13',
+      checkedAt: '2026-09-13T14:00:00+09:00',
+      source: 'cashnote-seed',
+      note: 'Initial seed from user-provided Cashnote screenshots. Automated Naver Map scanning starts after deployment.',
+      results: [
+        { keyword: '수영역 안경', rank: 14, status: 'seed', resultCount: null },
+        { keyword: '수영구안경점', rank: 27, status: 'seed', resultCount: null },
+        { keyword: '수영구 안경원', rank: null, status: 'pending', resultCount: null },
+        { keyword: '광안동 안경', rank: null, status: 'pending', resultCount: null },
+        { keyword: '광안리 안경점', rank: null, status: 'pending', resultCount: null },
+        { keyword: '수영구 누진다초점', rank: null, status: 'pending', resultCount: null },
+        { keyword: '광안리 누진다초점', rank: null, status: 'pending', resultCount: null },
+        { keyword: '수영구 시력검사', rank: null, status: 'pending', resultCount: null },
+        { keyword: '수영구 변색렌즈', rank: null, status: 'pending', resultCount: null },
+        { keyword: '수영구 어린이안경', rank: null, status: 'pending', resultCount: null }
+      ]
+    }
+  ]
+};
