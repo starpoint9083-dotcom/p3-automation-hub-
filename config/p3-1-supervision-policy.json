@@ -1,0 +1,94 @@
+{
+  "schemaVersion": 1,
+  "relationship": "P3-supervises-P3-1",
+  "p3Role": "production-governor-and-final-approver",
+  "p31Role": "isolated-rnd-self-improvement-lab",
+  "expectedRepository": "starpoint9083-dotcom/p3-1",
+  "separation": {
+    "separateRepository": true,
+    "separateActions": true,
+    "separateSecrets": true,
+    "separateDeploymentTarget": true,
+    "productionCredentialsShared": false,
+    "directProductionWriteAccess": false,
+    "directP1WriteAccess": false,
+    "directP2WriteAccess": false,
+    "directP3MainWriteAccess": false
+  },
+  "p31Freedom": {
+    "1_lowRiskAutoRepairResearch": true,
+    "2_p3SelfRecoveryResearch": true,
+    "3_nightOperationsPlannerResearch": true,
+    "4_experienceMemoryLearningResearch": true,
+    "5_selfPerformanceScoreboardResearch": true,
+    "mayCreateBranches": true,
+    "mayCreateTests": true,
+    "mayRunSandboxExperiments": true,
+    "mayGenerateRepairCandidates": true,
+    "mayCompareCandidateVsBaseline": true
+  },
+  "alwaysForbiddenForP31": [
+    "read-or-write-production-secrets",
+    "change-billing-or-paid-plans",
+    "expand-permissions",
+    "delete-or-recreate-production-resources",
+    "mutate-production-databases",
+    "write-directly-to-p1-production",
+    "write-directly-to-p2-production",
+    "write-directly-to-p3-main",
+    "weaken-security-safety-preflight-tests",
+    "self-approve-own-candidate",
+    "self-merge-into-production"
+  ],
+  "candidateContract": {
+    "required": [
+      "candidate-id",
+      "problem-statement",
+      "root-cause",
+      "files-changed",
+      "risk-tier",
+      "rollback-plan",
+      "tests-run",
+      "test-results",
+      "baseline-comparison",
+      "security-impact",
+      "cost-impact",
+      "known-limitations"
+    ],
+    "outputMode": "candidate-only-no-production-application"
+  },
+  "p3ApprovalGate": {
+    "requiredChecks": [
+      "syntax",
+      "security",
+      "safety-gate",
+      "selftest",
+      "preflight",
+      "dry-run",
+      "isolated-e2e",
+      "regression-comparison"
+    ],
+    "rejectIf": [
+      "candidate-weakens-guard",
+      "candidate-needs-unapproved-paid-action",
+      "candidate-needs-secret-change",
+      "candidate-needs-permission-expansion",
+      "candidate-is-destructive",
+      "candidate-has-no-rollback-plan",
+      "candidate-has-insufficient-test-evidence"
+    ],
+    "productionUse": "only-after-p3-approval-and-user-approval-when-risk-tier-requires"
+  },
+  "riskTiers": {
+    "A1": "low-risk-reversible-candidate-may-be-validated-by-P3",
+    "A2": "production-mutation-or-paid-action-requires-user-approval",
+    "A3": "secrets-permissions-billing-data-deletion-or-destructive-change-always-user-approved"
+  },
+  "loopGuards": {
+    "maxRepairAttemptsPerIssue": 2,
+    "maxCandidateFilesChangedDefault": 5,
+    "maxCandidateChangedLinesDefault": 300,
+    "mustStopAfterRepeatedFailure": true,
+    "mustEscalateUnknownRisk": true
+  }
+}
