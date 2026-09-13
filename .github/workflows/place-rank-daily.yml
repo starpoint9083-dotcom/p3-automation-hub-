@@ -9,6 +9,7 @@ on:
     paths:
       - 'config/place-rank.json'
       - 'scripts/place-rank-scan.mjs'
+      - 'scripts/place-rank-verify.mjs'
       - 'src/place-rank.js'
       - 'src/index-place-rank.js'
       - '.github/workflows/place-rank-daily.yml'
@@ -21,6 +22,7 @@ on:
       - 'src/place-rank.js'
       - 'src/index-place-rank.js'
       - 'scripts/place-rank-scan.mjs'
+      - 'scripts/place-rank-verify.mjs'
       - '.github/workflows/place-rank-daily.yml'
       - 'package.json'
 
@@ -49,6 +51,7 @@ jobs:
           npm run check
           npm run security
           npm run safety
+          node --check scripts/place-rank-verify.mjs
           npm test
           npm run preflight
 
@@ -87,6 +90,9 @@ jobs:
       - name: Scan Naver Map rankings
         run: node scripts/place-rank-scan.mjs
 
+      - name: Verify captured ranking evidence
+        run: node scripts/place-rank-verify.mjs
+
       - name: Add run summary
         if: always()
         shell: bash
@@ -105,6 +111,10 @@ jobs:
           console.log('|---|---:|---|---:|---:|');
           for (const item of latest?.results || []) {
             console.log(`| ${item.keyword} | ${item.rank ?? '-'} | ${item.status} | ${item.resultCount ?? '-'} | ${item.networkResponses ?? '-'} |`);
+          }
+          if (latest?.verification) {
+            console.log('');
+            console.log(`검증 안전장치: ${latest.verification.strategy} · 미검증 전환 ${latest.verification.corrected ?? 0}건`);
           }
           NODE
           fi
