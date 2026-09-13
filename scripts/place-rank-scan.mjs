@@ -298,8 +298,10 @@ async function openCenteredSearch(page, keyword, latitude, longitude) {
 
   const capture = createNetworkCapture(page);
   const input = await findVisibleSearchInput(page);
-  await input.click({ clickCount: 3 });
-  await page.keyboard.press('Control+A');
+  await input.evaluate(el => {
+    el.focus();
+    if (typeof el.select === 'function') el.select();
+  });
   await page.keyboard.press('Backspace');
   await page.keyboard.insertText(keyword);
   await page.keyboard.press('Enter');
