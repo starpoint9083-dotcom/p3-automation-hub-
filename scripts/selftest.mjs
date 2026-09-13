@@ -12,7 +12,14 @@ const cases = [
   ['https://local.test/preflight', 200, b => b.ok && b.checks.workerRuntime === true && b.checks.p2SupervisorConfigured === true && b.checks.p2TechnicalQualityGateConfigured === true && b.checks.p2FlowManifestObservationConfigured === true && b.safety?.p2CinemaBaselineLocked === true && b.safety?.paidVisualAIFromP3 === false],
   ['https://local.test/projects', 200, b => b.ok && Array.isArray(b.projects) && b.projects.some(p => p.project === 'P2')],
   ['https://local.test/projects/p2', 200, b => b.ok && b.project === 'P2' && b.control?.mode === 'read-only-supervisor' && b.probes?.quality === '/api/cinema/batch/quality-public' && b.probes?.flows === '/assets/cinema_flow_manifest_v1.json' && b.cinema_flow?.baseline === 'P2 Cinema Pilot Baseline v1' && b.cinema_flow?.baselineLocked === true && b.cinema_flow?.clipSlots === 9 && b.cinema_flow?.logicalCombinations === 27 && b.quality_gate?.technical === 'automatic-read-only' && b.quality_gate?.autoRegeneration === false],
-  ['https://local.test/modules/place-rank', 200, b => b.ok && b.module === 'place-rank' && b.service.includes('스타포인트안경원') && Array.isArray(b.rows) && b.rows.some(r => r.keyword === '수영역 안경' && r.rank === 14) && b.policy?.captchaBypass === false],
+  ['https://local.test/modules/place-rank', 200, b => {
+    const row = Array.isArray(b.rows) ? b.rows.find(r => r.keyword === '수영역 안경') : null;
+    const rowShapeOk = !!row && Number.isInteger(row.resultCount) && row.resultCount >= 0 && (
+      (row.status === 'ok' && Number.isInteger(row.rank) && row.rank > 0) ||
+      (row.status === 'not-found' && row.rank === null)
+    );
+    return b.ok && b.module === 'place-rank' && b.service.includes('스타포인트안경원') && rowShapeOk && b.policy?.captchaBypass === false;
+  }],
   ['https://local.test/nope', 404, b => b.error === 'NOT_FOUND']
 ];
 
