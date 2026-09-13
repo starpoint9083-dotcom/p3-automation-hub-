@@ -3,7 +3,7 @@ name: P3 K-YouTube Android APK
 on:
   workflow_dispatch:
   push:
-    branches: [main]
+    branches: [main, feature/k-youtube-v5-local-dubbing]
     paths:
       - 'android/k-youtube-app/**'
       - 'config/k-youtube-free.json'
