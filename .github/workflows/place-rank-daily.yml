@@ -1,0 +1,124 @@
+name: P3 Place Rank Daily
+
+on:
+  schedule:
+    - cron: '10 5 * * *'
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'config/place-rank.json'
+      - 'data/place-rank-history.json'
+      - 'src/place-rank-data.js'
+      - 'scripts/place-rank-scan.mjs'
+      - '.github/workflows/place-rank-daily.yml'
+      - 'package.json'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: p3-place-rank-daily
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: P3 syntax and safety checks
+        run: |
+          npm run check
+          npm run security
+          npm run safety
+          npm test
+          npm run preflight
+
+  scan:
+    if: github.event_name != 'pull_request'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install browser controller
+        run: npm install --no-audit --no-fund --no-save puppeteer-core@24.16.0
+
+      - name: Locate Chrome
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [ -z "$CHROME_PATH" ]; then
+            echo "Chrome/Chromium was not found on the runner." >&2
+            exit 1
+          fi
+          echo "CHROME_PATH=$CHROME_PATH" >> "$GITHUB_ENV"
+          "$CHROME_PATH" --version
+
+      - name: Scan Naver Map rankings
+        run: node scripts/place-rank-scan.mjs
+
+      - name: Add run summary
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f data/place-rank-history.json ]; then
+            node - <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          const fs = require('fs');
+          const doc = JSON.parse(fs.readFileSync('data/place-rank-history.json', 'utf8'));
+          const latest = doc.history?.[doc.history.length - 1];
+          console.log('## 스타포인트안경원 네이버 플레이스 일일 순위');
+          console.log('');
+          console.log(`검사시각: ${latest?.checkedAt || 'unknown'}`);
+          console.log('');
+          console.log('| 키워드 | 순위 | 상태 | 확인 결과 수 |');
+          console.log('|---|---:|---|---:|');
+          for (const item of latest?.results || []) {
+            console.log(`| ${item.keyword} | ${item.rank ?? '-'} | ${item.status} | ${item.resultCount ?? '-'} |`);
+          }
+          NODE
+          fi
+
+      - name: Upload diagnostic screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: place-rank-diagnostics-${{ github.run_number }}
+          path: artifacts/place-rank/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Commit verified daily snapshot
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "p3-automation-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/place-rank-history.json src/place-rank-data.js
+          if git diff --cached --quiet; then
+            echo "No rank data changes to commit."
+            exit 0
+          fi
+          DATE_KST="$(TZ=Asia/Seoul date +%F)"
+          git commit -m "data(place-rank): daily Naver snapshot ${DATE_KST}"
+          git push origin HEAD:main
