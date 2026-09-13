@@ -6,8 +6,8 @@
   "workers_dev": true,
   "observability": { "enabled": true },
   "vars": {
-    "P3_VERSION": "0.5.0",
-    "P3_MODE": "p1-p2-supervisor+place-rank",
+    "P3_VERSION": "0.4.0",
+    "P3_MODE": "p1-p2-supervisor",
     "P1_BASE_URL": "https://k-stella-shorts-factory.k-stella-p1.workers.dev",
     "P2_BASE_URL": "https://my-life-room-v13-live-0910.starpoint9083.workers.dev"
   }
