@@ -1,0 +1,51 @@
+name: P3 Store Ranking Supervisor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '25 5 * * *'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p3-store-ranking-supervisor
+  cancel-in-progress: true
+
+jobs:
+  supervise:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Syntax check
+        run: node --check scripts/store-ranking-supervisor.mjs
+
+      - name: Read-only store ranking supervision
+        run: node scripts/store-ranking-supervisor.mjs
+
+      - name: Publish daily summary
+        if: always()
+        shell: bash
+        run: |
+          if [ -f p3-store-ranking-report.md ]; then
+            cat p3-store-ranking-report.md >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Archive daily ranking report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p3-store-ranking-${{ github.run_number }}
+          path: |
+            p3-store-ranking-report.json
+            p3-store-ranking-report.md
+          retention-days: 30
+          if-no-files-found: warn
