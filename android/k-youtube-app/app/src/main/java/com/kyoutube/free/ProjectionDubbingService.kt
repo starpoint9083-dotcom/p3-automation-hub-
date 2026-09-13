@@ -20,6 +20,7 @@ import android.os.IBinder
 import android.os.Looper
 import android.os.SystemClock
 import android.speech.tts.TextToSpeech
+import android.speech.tts.UtteranceProgressListener
 import android.widget.Toast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -42,12 +43,21 @@ class ProjectionDubbingService : Service() {
         const val ACTION_STOP = "com.kyoutube.free.action.STOP_DUBBING"
         const val EXTRA_RESULT_CODE = "projection_result_code"
         const val EXTRA_RESULT_DATA = "projection_result_data"
+        const val EXTRA_DUBBING_MODE = "dubbing_mode"
+        const val MODE_FAST = "fast"
+        const val MODE_STABLE = "stable"
 
         private const val CHANNEL_ID = "k_youtube_local_dubbing"
         private const val NOTIFICATION_ID = 5205
         private const val SAMPLE_RATE = 16_000
-        private const val CHUNK_SAMPLES = 48_000 // 3.0 seconds: V6 low-latency target
+        private const val FAST_MIN_SAMPLES = 24_000 // 1.5 seconds
+        private const val FAST_MAX_SAMPLES = 32_000 // 2.0 seconds
+        private const val STABLE_MIN_SAMPLES = 40_000 // 2.5 seconds
+        private const val STABLE_MAX_SAMPLES = 48_000 // 3.0 seconds
+        private const val OVERLAP_SAMPLES = 8_000 // 0.5 seconds of context overlap
+        private const val TAIL_SILENCE_SAMPLES = 3_200 // 0.2 seconds
         private const val SILENCE_ABS_AVERAGE = 110
+        private const val TAIL_SILENCE_ABS_AVERAGE = 78
         private const val TTS_READY_TIMEOUT_MS = 5_000L
 
         @Volatile
@@ -71,6 +81,10 @@ class ProjectionDubbingService : Service() {
     private var processJob: Job? = null
     private var tts: TextToSpeech? = null
     private var ttsReady = false
+    private var ttsSpeaking = false
+    private var pendingTtsText: String? = null
+    private var currentMode = MODE_FAST
+    private var segmentConfig = SegmentConfig.fast()
 
     override fun onCreate() {
         super.onCreate()
@@ -80,7 +94,20 @@ class ProjectionDubbingService : Service() {
             if (status == TextToSpeech.SUCCESS) {
                 val result = tts?.setLanguage(Locale.KOREAN) ?: TextToSpeech.LANG_NOT_SUPPORTED
                 ttsReady = result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED
-                tts?.setSpeechRate(1.18f)
+                tts?.setSpeechRate(segmentConfig.ttsRate)
+                tts?.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                    override fun onStart(utteranceId: String?) {
+                        mainHandler.post { ttsSpeaking = true }
+                    }
+
+                    override fun onDone(utteranceId: String?) {
+                        onTtsFinished()
+                    }
+
+                    override fun onError(utteranceId: String?) {
+                        onTtsFinished()
+                    }
+                })
             }
         }
     }
@@ -100,7 +127,15 @@ class ProjectionDubbingService : Service() {
             return START_NOT_STICKY
         }
 
-        startProjectionForeground("자동 한국어 음성 준비 중")
+        currentMode = if (intent.getStringExtra(EXTRA_DUBBING_MODE) == MODE_STABLE) {
+            MODE_STABLE
+        } else {
+            MODE_FAST
+        }
+        segmentConfig = if (currentMode == MODE_STABLE) SegmentConfig.stable() else SegmentConfig.fast()
+        tts?.setSpeechRate(segmentConfig.ttsRate)
+
+        startProjectionForeground("자동 한국어 음성 준비 중 · ${segmentConfig.label}")
 
         val resultCode = intent.getIntExtra(EXTRA_RESULT_CODE, 0)
         val projectionData = if (Build.VERSION.SDK_INT >= 33) {
@@ -132,7 +167,7 @@ class ProjectionDubbingService : Service() {
         }, mainHandler)
 
         running = true
-        showToast("자동 한국어 음성을 준비합니다. 준비 완료 안내가 뜨면 영상을 재생하세요.")
+        showToast("${segmentConfig.label} 자동 한국어 음성을 준비합니다. 준비 완료 안내가 뜨면 영상을 재생하세요.")
 
         scope.launch {
             try {
@@ -140,7 +175,7 @@ class ProjectionDubbingService : Service() {
                     updateNotification("$message · $progress%")
                 }
                 waitForTtsReady()
-                updateNotification("저지연 자동 한국어 음성 동작 중 · 3초 단위")
+                updateNotification("${segmentConfig.label} 자동 한국어 음성 동작 중")
                 showToast("준비 완료. 이제 영어 영상을 재생하세요.")
                 startAudioPipeline()
             } catch (t: Throwable) {
@@ -166,6 +201,7 @@ class ProjectionDubbingService : Service() {
     @SuppressLint("MissingPermission")
     private fun startAudioPipeline() {
         val projection = mediaProjection ?: return
+        val config = segmentConfig
         val minBuffer = AudioRecord.getMinBufferSize(
             SAMPLE_RATE,
             AudioFormat.CHANNEL_IN_MONO,
@@ -201,9 +237,9 @@ class ProjectionDubbingService : Service() {
         recorder.startRecording()
 
         captureJob = scope.launch {
-            val chunk = ShortArray(CHUNK_SAMPLES)
+            val segmentBuffer = ShortArray(config.maxSamples)
             val readBuffer = ShortArray(4096)
-            var chunkPosition = 0
+            var segmentPosition = 0
 
             while (isActive && running) {
                 val read = recorder.read(readBuffer, 0, readBuffer.size)
@@ -211,25 +247,42 @@ class ProjectionDubbingService : Service() {
 
                 var sourcePosition = 0
                 while (sourcePosition < read) {
-                    val copyCount = minOf(read - sourcePosition, chunk.size - chunkPosition)
-                    System.arraycopy(readBuffer, sourcePosition, chunk, chunkPosition, copyCount)
+                    val copyCount = minOf(read - sourcePosition, segmentBuffer.size - segmentPosition)
+                    System.arraycopy(readBuffer, sourcePosition, segmentBuffer, segmentPosition, copyCount)
                     sourcePosition += copyCount
-                    chunkPosition += copyCount
+                    segmentPosition += copyCount
 
-                    if (chunkPosition == chunk.size) {
-                        if (hasSpeechSignal(chunk)) {
-                            val samples = FloatArray(chunk.size)
-                            for (i in chunk.indices) {
-                                samples[i] = chunk[i] / 32768.0f
+                    val reachedMinimum = segmentPosition >= config.minSamples
+                    val reachedMaximum = segmentPosition >= config.maxSamples
+                    val naturalPause = reachedMinimum && hasTrailingSilence(segmentBuffer, segmentPosition)
+
+                    if (reachedMinimum && (reachedMaximum || naturalPause)) {
+                        val currentSegment = segmentBuffer.copyOf(segmentPosition)
+                        if (hasSpeechSignal(currentSegment)) {
+                            val samples = FloatArray(currentSegment.size)
+                            for (i in currentSegment.indices) {
+                                samples[i] = currentSegment[i] / 32768.0f
                             }
                             audioQueue.trySend(
                                 CapturedChunk(
                                     samples = samples,
-                                    capturedAtMillis = SystemClock.elapsedRealtime()
+                                    capturedAtMillis = SystemClock.elapsedRealtime(),
+                                    segmentSeconds = currentSegment.size.toDouble() / SAMPLE_RATE
                                 )
                             )
                         }
-                        chunkPosition = 0
+
+                        val keep = minOf(config.overlapSamples, segmentPosition)
+                        if (keep > 0) {
+                            System.arraycopy(
+                                segmentBuffer,
+                                segmentPosition - keep,
+                                segmentBuffer,
+                                0,
+                                keep
+                            )
+                        }
+                        segmentPosition = keep
                     }
                 }
             }
@@ -240,9 +293,9 @@ class ProjectionDubbingService : Service() {
                 if (!isActive || !running) break
                 try {
                     val result = engine.transcribeAndTranslate(chunk.samples) ?: continue
-                    val latencyMs = SystemClock.elapsedRealtime() - chunk.capturedAtMillis
+                    val processingLatencyMs = SystemClock.elapsedRealtime() - chunk.capturedAtMillis
                     updateNotification(
-                        "지연 ${(latencyMs / 100) / 10.0}s · ${result.english.take(30)} → ${result.korean.take(30)}"
+                        "${segmentConfig.label} · 구간 ${"%.1f".format(Locale.US, chunk.segmentSeconds)}s · 처리 ${(processingLatencyMs / 100) / 10.0}s"
                     )
                     speakKorean(result.korean)
                 } catch (t: Throwable) {
@@ -253,20 +306,56 @@ class ProjectionDubbingService : Service() {
     }
 
     private fun hasSpeechSignal(chunk: ShortArray): Boolean {
+        if (chunk.isEmpty()) return false
         var sum = 0L
         for (sample in chunk) sum += abs(sample.toInt())
         return (sum / chunk.size) >= SILENCE_ABS_AVERAGE
     }
 
+    private fun hasTrailingSilence(buffer: ShortArray, validLength: Int): Boolean {
+        if (validLength <= 0) return true
+        val start = max(0, validLength - TAIL_SILENCE_SAMPLES)
+        var sum = 0L
+        for (i in start until validLength) {
+            sum += abs(buffer[i].toInt())
+        }
+        val count = validLength - start
+        return count > 0 && (sum / count) < TAIL_SILENCE_ABS_AVERAGE
+    }
+
     private fun speakKorean(text: String) {
         if (!ttsReady || text.isBlank()) return
         mainHandler.post {
-            tts?.speak(
-                text,
-                TextToSpeech.QUEUE_ADD,
-                null,
-                "k-youtube-dub-${System.currentTimeMillis()}"
-            )
+            if (ttsSpeaking) {
+                pendingTtsText = text
+                return@post
+            }
+            speakNow(text)
+        }
+    }
+
+    private fun speakNow(text: String) {
+        val currentTts = tts ?: return
+        ttsSpeaking = true
+        val result = currentTts.speak(
+            text,
+            TextToSpeech.QUEUE_FLUSH,
+            null,
+            "k-youtube-dub-${System.currentTimeMillis()}"
+        )
+        if (result == TextToSpeech.ERROR) {
+            ttsSpeaking = false
+        }
+    }
+
+    private fun onTtsFinished() {
+        mainHandler.post {
+            ttsSpeaking = false
+            val next = pendingTtsText
+            pendingTtsText = null
+            if (!next.isNullOrBlank() && running && ttsReady) {
+                speakNow(next)
+            }
         }
     }
 
@@ -336,6 +425,8 @@ class ProjectionDubbingService : Service() {
         }
         audioRecord?.release()
         audioRecord = null
+        pendingTtsText = null
+        ttsSpeaking = false
     }
 
     override fun onDestroy() {
@@ -361,7 +452,34 @@ class ProjectionDubbingService : Service() {
     }
 }
 
+private data class SegmentConfig(
+    val label: String,
+    val minSamples: Int,
+    val maxSamples: Int,
+    val overlapSamples: Int,
+    val ttsRate: Float
+) {
+    companion object {
+        fun fast() = SegmentConfig(
+            label = "초고속 1.5~2초",
+            minSamples = 24_000,
+            maxSamples = 32_000,
+            overlapSamples = 8_000,
+            ttsRate = 1.24f
+        )
+
+        fun stable() = SegmentConfig(
+            label = "안정 2.5~3초",
+            minSamples = 40_000,
+            maxSamples = 48_000,
+            overlapSamples = 8_000,
+            ttsRate = 1.18f
+        )
+    }
+}
+
 private data class CapturedChunk(
     val samples: FloatArray,
-    val capturedAtMillis: Long
+    val capturedAtMillis: Long,
+    val segmentSeconds: Double
 )
