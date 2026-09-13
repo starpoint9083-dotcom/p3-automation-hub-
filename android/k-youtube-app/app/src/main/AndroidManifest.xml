@@ -18,6 +18,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- YouTube links remain an explicit first-class entry path. -->
             <intent-filter android:priority="999">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -29,6 +30,17 @@
                 <data android:host="m.youtube.com" />
                 <data android:host="music.youtube.com" />
                 <data android:host="youtu.be" />
+            </intent-filter>
+
+            <!-- Browser-gateway mode: when K-YouTube is chosen as the default browser,
+                 external http/https links arrive here first. Non-YouTube URLs are
+                 immediately forwarded to Chrome or Samsung Internet. -->
+            <intent-filter android:priority="500">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
             </intent-filter>
 
             <intent-filter>
