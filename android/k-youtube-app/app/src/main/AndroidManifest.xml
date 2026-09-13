@@ -18,6 +18,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
+            <!-- Explicitly advertise this Activity as a browser app. Some Samsung
+                 chooser surfaces use CATEGORY_APP_BROWSER instead of a plain VIEW
+                 query, so this declaration is required for K-YouTube to appear. -->
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.APP_BROWSER" />
+            </intent-filter>
+
             <!-- YouTube links remain an explicit first-class entry path. -->
             <intent-filter android:priority="999">
                 <action android:name="android.intent.action.VIEW" />
