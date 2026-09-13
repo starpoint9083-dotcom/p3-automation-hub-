@@ -1,7 +1,7 @@
 {
-  "version": "1.1.0",
+  "version": "1.2.0",
   "store": "스타포인트안경원",
-  "generatedAt": "2026-09-13T14:00:00+09:00",
+  "generatedAt": "2026-09-14T05:09:20.434+09:00",
   "history": [
     {
       "date": "2026-09-13",
@@ -9,17 +9,458 @@
       "source": "cashnote-seed",
       "note": "Initial seed uses only ranks explicitly shown in user-provided Cashnote screenshots. All other keywords remain pending until direct Naver Map scanning.",
       "results": [
-        { "keyword": "누진다초점안경", "rank": null, "status": "pending", "resultCount": null },
-        { "keyword": "도수수경", "rank": null, "status": "pending", "resultCount": null },
-        { "keyword": "편광선글라스", "rank": null, "status": "pending", "resultCount": null },
-        { "keyword": "변색렌즈", "rank": null, "status": "pending", "resultCount": null },
-        { "keyword": "수영구안경점", "rank": 27, "status": "seed", "resultCount": null },
-        { "keyword": "수영구 누진다초점안경", "rank": null, "status": "pending", "resultCount": null },
-        { "keyword": "수영구 도수수경", "rank": null, "status": "pending", "resultCount": null },
-        { "keyword": "수영구 편광선글라스", "rank": null, "status": "pending", "resultCount": null },
-        { "keyword": "수영구 변색렌즈", "rank": null, "status": "pending", "resultCount": null },
-        { "keyword": "수영역 안경", "rank": 14, "status": "seed", "resultCount": null },
-        { "keyword": "광안동 안경", "rank": null, "status": "pending", "resultCount": null }
+        {
+          "keyword": "누진다초점안경",
+          "rank": null,
+          "status": "pending",
+          "resultCount": null
+        },
+        {
+          "keyword": "도수수경",
+          "rank": null,
+          "status": "pending",
+          "resultCount": null
+        },
+        {
+          "keyword": "편광선글라스",
+          "rank": null,
+          "status": "pending",
+          "resultCount": null
+        },
+        {
+          "keyword": "변색렌즈",
+          "rank": null,
+          "status": "pending",
+          "resultCount": null
+        },
+        {
+          "keyword": "수영구안경점",
+          "rank": 27,
+          "status": "seed",
+          "resultCount": null
+        },
+        {
+          "keyword": "수영구 누진다초점안경",
+          "rank": null,
+          "status": "pending",
+          "resultCount": null
+        },
+        {
+          "keyword": "수영구 도수수경",
+          "rank": null,
+          "status": "pending",
+          "resultCount": null
+        },
+        {
+          "keyword": "수영구 편광선글라스",
+          "rank": null,
+          "status": "pending",
+          "resultCount": null
+        },
+        {
+          "keyword": "수영구 변색렌즈",
+          "rank": null,
+          "status": "pending",
+          "resultCount": null
+        },
+        {
+          "keyword": "수영역 안경",
+          "rank": 14,
+          "status": "seed",
+          "resultCount": null
+        },
+        {
+          "keyword": "광안동 안경",
+          "rank": null,
+          "status": "pending",
+          "resultCount": null
+        }
+      ]
+    },
+    {
+      "date": "2026-09-14",
+      "checkedAt": "2026-09-14T05:09:20.434+09:00",
+      "source": "naver-map-browser-network",
+      "location": {
+        "latitude": 35.162229994409,
+        "longitude": 129.11140681898,
+        "accuracyMeters": 40,
+        "basis": "부산광역시 수영구 광일로 23-1"
+      },
+      "results": [
+        {
+          "keyword": "누진다초점안경",
+          "rank": null,
+          "status": "not-found",
+          "resultCount": 50,
+          "url": "https://map.naver.com/p/search/%EB%88%84%EC%A7%84%EB%8B%A4%EC%B4%88%EC%A0%90%EC%95%88%EA%B2%BD",
+          "networkResponses": 1,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 60,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EB%88%84%EC%A7%84%EB%8B%A4%EC%B4%88%EC%A0%90%EC%95%88%EA%B2%BD&type=all&searchCoord=126.97825%3B37.566551&boundary=&sscode=svc.mapv5.search&token=1Zf7fb4liqKWF4H4VOGOlpbNxKQkztEwjwwXI3h8NMU%3D"
+            }
+          ],
+          "sample": [
+            "두잉누진다초점광화문안경원",
+            "아이패밀리 영풍문고종각종로본점",
+            "남대문 삼익패션안경",
+            "가넷안경원",
+            "다비치안경 명동점",
+            "007안경원",
+            "조은안경",
+            "도깨비안경",
+            "믿음안경",
+            "남문안경콘택트",
+            "반도안경",
+            "아이닥안경"
+          ]
+        },
+        {
+          "keyword": "도수수경",
+          "rank": null,
+          "status": "not-found",
+          "resultCount": 50,
+          "url": "https://map.naver.com/p/search/%EB%8F%84%EC%88%98%EC%88%98%EA%B2%BD",
+          "networkResponses": 2,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 60,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EB%8F%84%EC%88%98%EC%88%98%EA%B2%BD&type=all&searchCoord=126.97825%3B37.566551&boundary=&sscode=svc.mapv5.search&token=c_J2M0GlK7ofJ0xYaKn8uoO2sWdOyc-WaL4YdJmxvTE%3D"
+            },
+            {
+              "type": "graphql",
+              "count": 16,
+              "url": "https://pcmap-api.place.naver.com/graphql"
+            }
+          ],
+          "sample": [
+            "비춤안경 길음역점",
+            "안경나라 미아점",
+            "모리안경원",
+            "으뜸50안경 잠실새내역점",
+            "베토벤안경",
+            "안경기업 퇴계원점",
+            "보다안경원 안양점",
+            "박철웅 안경원",
+            "키즈아이안경원",
+            "글라스타안경 부천시청역점",
+            "맑은눈안경원 월피점",
+            "센트럴안경 송도점"
+          ]
+        },
+        {
+          "keyword": "편광선글라스",
+          "rank": null,
+          "status": "not-found",
+          "resultCount": 50,
+          "url": "https://map.naver.com/p/search/%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4",
+          "networkResponses": 3,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 60,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4&type=all&searchCoord=126.97825%3B37.566551&boundary=&sscode=svc.mapv5.search&token=45acPc9kZklXelBMsBhf9YQJQ-7boKQhhwmmwUzD2TQ%3D"
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql",
+              "count": 16,
+              "url": "https://pcmap-api.place.naver.com/graphql"
+            }
+          ],
+          "sample": [
+            "오엔에이치",
+            "레보선글라스",
+            "맥코인",
+            "제우스안경원",
+            "대승옵티칼",
+            "올웨이즈별",
+            "썬가드광학직영몰",
+            "시야스포츠",
+            "올에이지",
+            "아이둘",
+            "썬가드 광학",
+            "눈스터"
+          ]
+        },
+        {
+          "keyword": "변색렌즈",
+          "rank": null,
+          "status": "not-found",
+          "resultCount": 50,
+          "url": "https://map.naver.com/p/search/%EB%B3%80%EC%83%89%EB%A0%8C%EC%A6%88",
+          "networkResponses": 3,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 60,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EB%B3%80%EC%83%89%EB%A0%8C%EC%A6%88&type=all&searchCoord=126.97825%3B37.566551&boundary=&sscode=svc.mapv5.search&token=w97BsqAeYzE8ziKOSW2wkUHOoDWRGDbzpi3-Okc_FIs%3D"
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql",
+              "count": 16,
+              "url": "https://pcmap-api.place.naver.com/graphql"
+            }
+          ],
+          "sample": [
+            "반도안경",
+            "링스안경",
+            "아이데코안경 남대문점",
+            "글라스타 동국대점",
+            "아이글라스안경",
+            "e안경마켓",
+            "뭍 연남점",
+            "씨웰안경원",
+            "으뜸50안경 녹번점",
+            "아이수안경 위드렌즈 목동점",
+            "그랑프리안경 강남점",
+            "안경과사람들"
+          ]
+        },
+        {
+          "keyword": "수영구안경점",
+          "rank": null,
+          "status": "not-found",
+          "resultCount": 50,
+          "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EA%B5%AC%EC%95%88%EA%B2%BD%EC%A0%90",
+          "networkResponses": 1,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 60,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC%EC%95%88%EA%B2%BD%EC%A0%90&type=all&searchCoord=126.97825%3B37.566551&boundary=&sscode=svc.mapv5.search&token=qFcNbHGg3tCwO0OG_Vok034s0-AVbYBs4nMKRBYcuPw%3D"
+            }
+          ],
+          "sample": [
+            "다비치안경 수영로타리점",
+            "으뜸플러스안경 부산광안역점",
+            "오렌즈 부산광안리점",
+            "으뜸50안경 수영점",
+            "옵장안경원",
+            "오렌즈 부산수영역점",
+            "안경나라 위드렌즈 부산광안점",
+            "아이젠트리 수영점",
+            "으뜸플러스안경 부산수영점",
+            "파프리카안경 수영점",
+            "갤러리안경 망미점",
+            "뉴페이스안경원"
+          ]
+        },
+        {
+          "keyword": "수영구 누진다초점안경",
+          "rank": 7,
+          "status": "ok",
+          "resultCount": 50,
+          "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EA%B5%AC%20%EB%88%84%EC%A7%84%EB%8B%A4%EC%B4%88%EC%A0%90%EC%95%88%EA%B2%BD",
+          "networkResponses": 3,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 60,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC+%EB%88%84%EC%A7%84%EB%8B%A4%EC%B4%88%EC%A0%90%EC%95%88%EA%B2%BD&type=all&searchCoord=126.97825%3B37.566551&boundary=&sscode=svc.mapv5.search&token=75Jt4ilSawx1JbboqW8p8YF6QwrEi9O004XAsHjYGUg%3D"
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql",
+              "count": 16,
+              "url": "https://pcmap-api.place.naver.com/graphql"
+            }
+          ],
+          "sample": [
+            "옵장안경원",
+            "갤러리안경 망미점",
+            "안경본데이 부산수영점",
+            "수아이안경",
+            "뉴욕안경콘택트",
+            "아이뷰안경 망미점",
+            "스타포인트안경원",
+            "안경세상",
+            "다비치안경 경성대부경대소방서옆점",
+            "으뜸아이안경 대연점",
+            "1001안경콘택트 연산로타리점",
+            "으뜸50안경 부산못골점"
+          ]
+        },
+        {
+          "keyword": "수영구 도수수경",
+          "rank": 1,
+          "status": "ok",
+          "resultCount": 50,
+          "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EA%B5%AC%20%EB%8F%84%EC%88%98%EC%88%98%EA%B2%BD",
+          "networkResponses": 3,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 6,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC+%EB%8F%84%EC%88%98%EC%88%98%EA%B2%BD&type=all&searchCoord=126.97825%3B37.566551&boundary=&sscode=svc.mapv5.search&token=LGJzWHDlmc4HruibV0WNeMfYEQghPVsp7cqYiY6Gdmc%3D"
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql",
+              "count": 16,
+              "url": "https://pcmap-api.place.naver.com/graphql"
+            }
+          ],
+          "sample": [
+            "스타포인트안경원",
+            "더으뜸안경 경성대점",
+            "거리순",
+            "관련도순",
+            "반경1km",
+            "반경2km",
+            "반경3km",
+            "반경4km",
+            "반경5km",
+            "반경10km",
+            "로그인",
+            "내정보 보기"
+          ]
+        },
+        {
+          "keyword": "수영구 편광선글라스",
+          "rank": 1,
+          "status": "ok",
+          "resultCount": 50,
+          "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EA%B5%AC%20%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4",
+          "networkResponses": 1,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 3,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC+%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4&type=all&searchCoord=126.97825%3B37.566551&boundary=&sscode=svc.mapv5.search&token=8JFoNlbk9jchCCmnMtE-fh3_EvPc1zMoBdCJbfL_IN4%3D"
+            }
+          ],
+          "sample": [
+            "스타포인트안경원",
+            "로그인",
+            "내정보 보기",
+            "(임직원혜택)",
+            "프로필 사진 변경",
+            "로그아웃",
+            "@naver.com",
+            "네이버ID",
+            "보안설정",
+            "내인증서",
+            "네이버 멤버쉽",
+            "내 페이포인트"
+          ]
+        },
+        {
+          "keyword": "수영구 변색렌즈",
+          "rank": 1,
+          "status": "ok",
+          "resultCount": 50,
+          "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EA%B5%AC%20%EB%B3%80%EC%83%89%EB%A0%8C%EC%A6%88",
+          "networkResponses": 2,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 6,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC+%EB%B3%80%EC%83%89%EB%A0%8C%EC%A6%88&type=all&searchCoord=126.97825%3B37.566551&boundary=&sscode=svc.mapv5.search&token=g42jedbDtgFJEZGNfed3Gac2N32hy7UaNoHlvaLl7nQ%3D"
+            },
+            {
+              "type": "graphql",
+              "count": 16,
+              "url": "https://pcmap-api.place.naver.com/graphql"
+            }
+          ],
+          "sample": [
+            "스타포인트안경원",
+            "아이뷰안경 망미점",
+            "거리순",
+            "관련도순",
+            "반경1km",
+            "반경2km",
+            "반경3km",
+            "반경4km",
+            "반경5km",
+            "반경10km",
+            "로그인",
+            "내정보 보기"
+          ]
+        },
+        {
+          "keyword": "수영역 안경",
+          "rank": 14,
+          "status": "ok",
+          "resultCount": 50,
+          "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EC%97%AD%20%EC%95%88%EA%B2%BD",
+          "networkResponses": 1,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 60,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EC%97%AD+%EC%95%88%EA%B2%BD&type=all&searchCoord=126.97825%3B37.566551&boundary=&sscode=svc.mapv5.search&token=8mjwG95dzKePD4ZXHwMTgqMLa9XTPVS1d_bK6dFFA_Q%3D"
+            }
+          ],
+          "sample": [
+            "다비치안경 수영로타리점",
+            "으뜸50안경 수영점",
+            "아이젠트리 수영점",
+            "으뜸플러스안경 부산수영점",
+            "파프리카안경 수영점",
+            "오렌즈 부산수영역점",
+            "으뜸안경마트",
+            "오스카안경",
+            "시선안경 부산수영점",
+            "신세계안경",
+            "안경본데이 부산수영점",
+            "ING안경원광안홈플러스점"
+          ]
+        },
+        {
+          "keyword": "광안동 안경",
+          "rank": 12,
+          "status": "ok",
+          "resultCount": 50,
+          "url": "https://map.naver.com/p/search/%EA%B4%91%EC%95%88%EB%8F%99%20%EC%95%88%EA%B2%BD",
+          "networkResponses": 1,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 60,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EA%B4%91%EC%95%88%EB%8F%99+%EC%95%88%EA%B2%BD&type=all&searchCoord=126.97825%3B37.566551&boundary=&sscode=svc.mapv5.search&token=0E5WHSePKrDO1wSdP3aiIo2vtBHqOb8SyGFi6X5sbfs%3D"
+            }
+          ],
+          "sample": [
+            "다비치안경 수영로타리점",
+            "으뜸플러스안경 부산광안역점",
+            "으뜸50안경 수영점",
+            "안경나라 위드렌즈 부산광안점",
+            "뉴페이스안경원",
+            "080안경광안점",
+            "안경본데이 부산수영점",
+            "ING안경원광안홈플러스점",
+            "수아이안경",
+            "초이스안경 광안점",
+            "으뜸안경마트",
+            "스타포인트안경원"
+          ]
+        }
       ]
     }
   ]
