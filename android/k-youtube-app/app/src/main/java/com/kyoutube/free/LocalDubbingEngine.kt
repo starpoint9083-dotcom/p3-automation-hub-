@@ -14,6 +14,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
 import java.net.URL
+import java.util.Locale
 
 class LocalDubbingEngine(private val context: Context) {
     companion object {
@@ -27,6 +28,7 @@ class LocalDubbingEngine(private val context: Context) {
     private var whisper: WhisperContext? = null
     private var translatorReady = false
     private var warmedUp = false
+    private var previousEnglish = ""
 
     private val translator: Translator = Translation.getClient(
         TranslatorOptions.Builder()
@@ -61,18 +63,23 @@ class LocalDubbingEngine(private val context: Context) {
             warmedUp = true
         }
 
-        onProgress(100, "저지연 자동 한국어 음성 준비 완료")
+        previousEnglish = ""
+        onProgress(100, "초저지연 자동 한국어 음성 준비 완료")
     }
 
     suspend fun transcribeAndTranslate(samples: FloatArray): DubbingResult? {
         val ctx = whisper ?: return null
-        val english = withContext(Dispatchers.Default) {
+        val rawEnglish = withContext(Dispatchers.Default) {
             ctx.transcribeData(samples, printTimestamp = false)
         }
             .replace("[BLANK_AUDIO]", "", ignoreCase = true)
             .replace(Regex("\\s+"), " ")
             .trim()
 
+        if (rawEnglish.length < 3) return null
+
+        val english = removeRepeatedOverlap(previousEnglish, rawEnglish)
+        previousEnglish = rawEnglish
         if (english.length < 3) return null
 
         if (!translatorReady) {
@@ -86,10 +93,45 @@ class LocalDubbingEngine(private val context: Context) {
         return DubbingResult(english, korean)
     }
 
+    private fun removeRepeatedOverlap(previous: String, current: String): String {
+        if (previous.isBlank()) return current
+
+        val previousTokens = previous.split(Regex("\\s+")).filter { it.isNotBlank() }
+        val currentTokens = current.split(Regex("\\s+")).filter { it.isNotBlank() }
+        if (previousTokens.isEmpty() || currentTokens.isEmpty()) return current
+
+        val previousNormalized = previousTokens.map(::normalizeToken)
+        val currentNormalized = currentTokens.map(::normalizeToken)
+
+        if (previousNormalized == currentNormalized) return ""
+
+        val maxOverlap = minOf(10, previousTokens.size, currentTokens.size)
+        for (count in maxOverlap downTo 2) {
+            val previousStart = previousNormalized.size - count
+            var matches = true
+            for (i in 0 until count) {
+                if (previousNormalized[previousStart + i] != currentNormalized[i]) {
+                    matches = false
+                    break
+                }
+            }
+            if (matches) {
+                return currentTokens.drop(count).joinToString(" ").trim()
+            }
+        }
+
+        return current
+    }
+
+    private fun normalizeToken(token: String): String = token
+        .lowercase(Locale.US)
+        .replace(Regex("[^a-z0-9']"), "")
+
     suspend fun close() {
         val current = whisper
         whisper = null
         warmedUp = false
+        previousEnglish = ""
         if (current != null) {
             current.release()
         }
@@ -118,7 +160,7 @@ class LocalDubbingEngine(private val context: Context) {
                 connectTimeout = 30_000
                 readTimeout = 120_000
                 requestMethod = "GET"
-                setRequestProperty("User-Agent", "K-YouTube-Free/0.6")
+                setRequestProperty("User-Agent", "K-YouTube-Free/0.7")
             }
 
             try {
