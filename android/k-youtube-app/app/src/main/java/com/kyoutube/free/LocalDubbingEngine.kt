@@ -52,7 +52,7 @@ class LocalDubbingEngine(private val context: Context) {
         }
 
         previousEnglish = ""
-        onProgress(100, "초저지연 자동 한국어 음성 준비 완료")
+        onProgress(100, "실시간 한국어 자막 준비 완료")
     }
 
     suspend fun transcribeAndTranslate(samples: FloatArray): DubbingResult? {
@@ -147,7 +147,7 @@ class LocalDubbingEngine(private val context: Context) {
                 connectTimeout = 30_000
                 readTimeout = 120_000
                 requestMethod = "GET"
-                setRequestProperty("User-Agent", "K-YouTube-Free/0.7.1")
+                setRequestProperty("User-Agent", "K-YouTube-Free/0.8.0")
             }
 
             try {
