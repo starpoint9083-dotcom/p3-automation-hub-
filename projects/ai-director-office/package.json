@@ -1,0 +1,26 @@
+{
+  "name": "ai-director-office",
+  "version": "0.6.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --check src/lib.js && node --check src/auth.js && node --check src/auth-ui.js && node --check src/ai-retry.js && node --check src/p3-diagnostics.js && node --check src/p3-fixtures.js && node --check src/services.js && node --check src/student-admin.js && node --check src/lead-admin.js && node --check src/growth-report-admin.js && node --check src/promo.js && node --check src/promo-v2.js && node --check src/promo-engine.js && node --check src/promo-upload.js && node --check src/promo-video.js && node --check src/video-production.js && node --check src/promo-scheduler.js && node --check src/cleanup.js && node --check src/ui-v3.js && node --check src/ui-v4.js && node --check src/ui-v5.js && node --check src/ui-v6.js && node --check src/ui-v7.js && node --check src/client-v3.js && node --check src/client-v4.js && node --check src/client-v5.js && node --check src/client-v6.js && node --check src/client-v7.js && node --check src/client-v8.js && node --check src/client-v9.js && node --check src/client-v10.js && node --check src/client-v11.js && node --check src/client-v12.js && node --check src/client-v13.js && node --check src/client-v14.js && node --check src/app.js && node --check scripts/selftest.mjs && node --check scripts/preflight.mjs && node --check scripts/e2e.mjs && node --check scripts/full-ai-e2e.mjs && node --check scripts/browser-e2e.mjs && node --check scripts/student-edit-e2e.mjs && node --check scripts/student-metric-e2e.mjs && node --check scripts/growth-report-e2e.mjs && node --check scripts/lead-stage-e2e.mjs && node --check scripts/lead-edit-delete-e2e.mjs && node --check scripts/gallery-upload-e2e.mjs && node --check scripts/video-render-e2e.mjs && node --check scripts/prepare-wrangler.mjs",
+    "test": "node scripts/selftest.mjs",
+    "preflight": "node scripts/preflight.mjs",
+    "prepare:wrangler": "node scripts/prepare-wrangler.mjs",
+    "dry-run": "wrangler deploy --config wrangler.generated.jsonc --dry-run --outdir dist",
+    "deploy": "wrangler deploy --config wrangler.generated.jsonc",
+    "verify": "node scripts/e2e.mjs",
+    "verify:full-ai": "node scripts/full-ai-e2e.mjs",
+    "verify:browser": "node scripts/browser-e2e.mjs",
+    "verify:student-edit": "node scripts/student-edit-e2e.mjs",
+    "verify:student-metric": "node scripts/student-metric-e2e.mjs",
+    "verify:growth-report": "node scripts/growth-report-e2e.mjs",
+    "verify:lead-stage": "node scripts/lead-stage-e2e.mjs",
+    "verify:lead-edit-delete": "node scripts/lead-edit-delete-e2e.mjs",
+    "verify:gallery-upload": "node scripts/gallery-upload-e2e.mjs",
+    "verify:video-render": "node scripts/video-render-e2e.mjs"
+  },
+  "devDependencies": {"playwright":"1.55.0","wrangler":"4.130.0"},
+  "engines": {"node":">=20"}
+}
