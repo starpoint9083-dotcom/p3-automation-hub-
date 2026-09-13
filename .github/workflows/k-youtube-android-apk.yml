@@ -118,7 +118,7 @@ jobs:
           echo "apk=$APK" >> "$GITHUB_OUTPUT"
           echo "size_bytes=$(stat -c%s "$APK")" >> "$GITHUB_OUTPUT"
 
-      - name: Verify V5 browser and local dubbing declarations
+      - name: Verify V6 low-latency local dubbing
         shell: bash
         run: |
           set -euo pipefail
@@ -127,7 +127,7 @@ jobs:
           "$AAPT" dump badging "$APK" > /tmp/k-youtube-badging.txt
           "$AAPT" dump xmltree "$APK" AndroidManifest.xml > /tmp/k-youtube-manifest.txt
           grep -F "package: name='com.kyoutube.free'" /tmp/k-youtube-badging.txt
-          grep -F "versionName='0.5.0'" /tmp/k-youtube-badging.txt
+          grep -F "versionName='0.6.0'" /tmp/k-youtube-badging.txt
           grep -F 'android.intent.category.APP_BROWSER' /tmp/k-youtube-manifest.txt
           grep -F 'android.intent.category.BROWSABLE' /tmp/k-youtube-manifest.txt
           grep -F 'android.permission.RECORD_AUDIO' /tmp/k-youtube-manifest.txt
@@ -135,13 +135,16 @@ jobs:
           grep -F 'com.kyoutube.free.ProjectionDubbingService' /tmp/k-youtube-manifest.txt
           unzip -l "$APK" | grep -E 'lib/arm64-v8a/libwhisper(_v8fp16_va)?\.so'
           grep -F 'AudioPlaybackCaptureConfiguration' android/k-youtube-app/app/src/main/java/com/kyoutube/free/ProjectionDubbingService.kt
-          grep -F 'ggml-tiny.en-q5_1.bin' android/k-youtube-app/app/src/main/java/com/kyoutube/free/LocalDubbingEngine.kt
+          grep -F 'CHUNK_SAMPLES = 48_000' android/k-youtube-app/app/src/main/java/com/kyoutube/free/ProjectionDubbingService.kt
+          grep -F 'BufferOverflow.DROP_OLDEST' android/k-youtube-app/app/src/main/java/com/kyoutube/free/ProjectionDubbingService.kt
+          grep -F 'TextToSpeech.QUEUE_ADD' android/k-youtube-app/app/src/main/java/com/kyoutube/free/ProjectionDubbingService.kt
+          grep -F 'WARMUP_SAMPLE_COUNT = 16_000' android/k-youtube-app/app/src/main/java/com/kyoutube/free/LocalDubbingEngine.kt
           grep -F 'TranslateLanguage.KOREAN' android/k-youtube-app/app/src/main/java/com/kyoutube/free/LocalDubbingEngine.kt
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: k-youtube-free-v5-local-dubbing-apk
+          name: k-youtube-free-v6-low-latency-apk
           path: ${{ steps.verify.outputs.apk }}
           if-no-files-found: error
           retention-days: 14
@@ -150,14 +153,16 @@ jobs:
         if: always()
         run: |
           {
-            echo '### K-YouTube Android V5 ↔ P3'
+            echo '### K-YouTube Android V6 ↔ P3'
             echo '- Existing share → K-YouTube handoff: preserved'
             echo '- Local playback capture: Android AudioPlaybackCapture + MediaProjection'
-            echo '- Local ASR: pinned whisper.cpp, tiny.en q5_1 model downloaded on first use (~32MB)'
+            echo '- Local ASR: pinned whisper.cpp tiny.en q5_1'
+            echo '- Low-latency segmentation: 3.0-second chunks with latest-chunk backlog control'
+            echo '- First-phrase optimization: Whisper + ML Kit warm-up before capture starts'
             echo '- Translation: ML Kit English → Korean on-device model'
-            echo '- Voice: Android Korean TextToSpeech'
+            echo '- Voice: Android Korean TextToSpeech at 1.18x, queued phrases'
             echo '- Paid translation/dubbing/TTS API calls: none'
             echo '- Stable debug signing key: k-youtube-debug-keystore-v1'
             echo '- Existing K-YouTube AppDeploy web app: preserved'
-            echo '- Build output: k-youtube-free-v5-local-dubbing-apk'
+            echo '- Build output: k-youtube-free-v6-low-latency-apk'
           } >> "$GITHUB_STEP_SUMMARY"
