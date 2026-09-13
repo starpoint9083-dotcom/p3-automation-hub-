@@ -1,18 +1,26 @@
 package com.kyoutube.free;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.graphics.Color;
+import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.view.Gravity;
+import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import java.util.List;
@@ -25,19 +33,45 @@ public class MainActivity extends Activity {
     private static final String APP_HOST = "k-youtube-free-r0zsy7.v2.appdeploy.ai";
     private static final String CHROME_PACKAGE = "com.android.chrome";
     private static final String SAMSUNG_BROWSER_PACKAGE = "com.sec.android.app.sbrowser";
+    private static final int REQUEST_RECORD_AUDIO = 5201;
+    private static final int REQUEST_MEDIA_PROJECTION = 5202;
     private static final Pattern SHARED_YOUTUBE_URL = Pattern.compile(
             "https?://(?:www\\.|m\\.|music\\.)?(?:youtube\\.com|youtu\\.be)/[^\\s]+",
             Pattern.CASE_INSENSITIVE
     );
 
     private WebView webView;
+    private Button dubbingButton;
+    private boolean dubbingRequested = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        FrameLayout root = new FrameLayout(this);
         webView = new WebView(this);
-        setContentView(webView);
+        root.addView(webView, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+        ));
+
+        dubbingButton = new Button(this);
+        dubbingButton.setText("한국어 자동음성");
+        dubbingButton.setTextColor(Color.WHITE);
+        dubbingButton.setTextSize(14f);
+        dubbingButton.setAllCaps(false);
+        dubbingButton.setBackgroundColor(Color.rgb(220, 55, 64));
+        dubbingButton.setContentDescription("무료 한국어 자동음성 실험모드 시작");
+        dubbingButton.setOnClickListener(v -> toggleLocalDubbing());
+
+        FrameLayout.LayoutParams dubbingParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                dp(52)
+        );
+        dubbingParams.gravity = Gravity.END | Gravity.BOTTOM;
+        dubbingParams.setMargins(dp(16), dp(16), dp(16), dp(24));
+        root.addView(dubbingButton, dubbingParams);
+        setContentView(root);
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -60,6 +94,101 @@ public class MainActivity extends Activity {
         });
 
         loadFromIntent(getIntent());
+    }
+
+    private int dp(int value) {
+        return Math.round(value * getResources().getDisplayMetrics().density);
+    }
+
+    private void toggleLocalDubbing() {
+        if (ProjectionDubbingService.isRunning() || dubbingRequested) {
+            stopLocalDubbing();
+            return;
+        }
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            Toast.makeText(this, "자동 한국어 음성은 Android 10 이상에서 지원됩니다.", Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO}, REQUEST_RECORD_AUDIO);
+            return;
+        }
+
+        requestProjectionPermission();
+    }
+
+    private void requestProjectionPermission() {
+        MediaProjectionManager manager =
+                (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
+        dubbingRequested = true;
+        dubbingButton.setText("오디오 승인 대기");
+        startActivityForResult(manager.createScreenCaptureIntent(), REQUEST_MEDIA_PROJECTION);
+    }
+
+    private void startLocalDubbing(int resultCode, Intent resultData) {
+        Intent serviceIntent = new Intent(this, ProjectionDubbingService.class);
+        serviceIntent.setAction(ProjectionDubbingService.ACTION_START);
+        serviceIntent.putExtra(ProjectionDubbingService.EXTRA_RESULT_CODE, resultCode);
+        serviceIntent.putExtra(ProjectionDubbingService.EXTRA_RESULT_DATA, resultData);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(serviceIntent);
+        } else {
+            startService(serviceIntent);
+        }
+        dubbingRequested = false;
+        dubbingButton.setText("한국어 자동음성 중지");
+        Toast.makeText(
+                this,
+                "무료 자동음성 엔진을 준비합니다. 첫 실행은 모델 다운로드 때문에 조금 걸릴 수 있습니다.",
+                Toast.LENGTH_LONG
+        ).show();
+    }
+
+    private void stopLocalDubbing() {
+        dubbingRequested = false;
+        Intent stopIntent = new Intent(this, ProjectionDubbingService.class);
+        stopIntent.setAction(ProjectionDubbingService.ACTION_STOP);
+        startService(stopIntent);
+        dubbingButton.setText("한국어 자동음성");
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == REQUEST_RECORD_AUDIO) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                requestProjectionPermission();
+            } else {
+                dubbingRequested = false;
+                Toast.makeText(this, "영상 소리를 인식하려면 오디오 권한이 필요합니다.", Toast.LENGTH_LONG).show();
+            }
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_MEDIA_PROJECTION) {
+            if (resultCode == RESULT_OK && data != null) {
+                startLocalDubbing(resultCode, data);
+            } else {
+                dubbingRequested = false;
+                dubbingButton.setText("한국어 자동음성");
+                Toast.makeText(this, "오디오 캡처 승인이 취소되었습니다.", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (dubbingButton != null && !dubbingRequested) {
+            dubbingButton.setText(
+                    ProjectionDubbingService.isRunning() ? "한국어 자동음성 중지" : "한국어 자동음성"
+            );
+        }
     }
 
     @Override
@@ -108,7 +237,6 @@ public class MainActivity extends Activity {
                 Uri direct = Uri.parse(trimmed);
                 if (isYouTubeHost(direct.getHost())) return trimmed;
             } catch (Exception ignored) {
-                // Fall through to URL extraction from shared text.
             }
 
             Matcher matcher = SHARED_YOUTUBE_URL.matcher(sharedText);
@@ -205,7 +333,6 @@ public class MainActivity extends Activity {
                 openExternalBrowser(Uri.parse(fallback));
             }
         } catch (Exception ignored) {
-            // Keep the K-YouTube screen open if no fallback is available.
         }
     }
 
@@ -216,5 +343,17 @@ public class MainActivity extends Activity {
         } else {
             super.onBackPressed();
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (isFinishing() && ProjectionDubbingService.isRunning()) {
+            stopLocalDubbing();
+        }
+        if (webView != null) {
+            webView.destroy();
+            webView = null;
+        }
+        super.onDestroy();
     }
 }

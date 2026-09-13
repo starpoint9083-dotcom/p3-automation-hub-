@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION" />
 
     <application
         android:allowBackup="true"
+        android:allowAudioPlaybackCapture="true"
         android:label="K-YouTube"
         android:supportsRtl="true"
         android:theme="@android:style/Theme.DeviceDefault.Light.NoActionBar">
@@ -18,15 +22,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- Explicitly advertise this Activity as a browser app. Some Samsung
-                 chooser surfaces use CATEGORY_APP_BROWSER instead of a plain VIEW
-                 query, so this declaration is required for K-YouTube to appear. -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.APP_BROWSER" />
             </intent-filter>
 
-            <!-- YouTube links remain an explicit first-class entry path. -->
             <intent-filter android:priority="999">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -40,9 +40,6 @@
                 <data android:host="youtu.be" />
             </intent-filter>
 
-            <!-- Browser-gateway mode: when K-YouTube is chosen as the default browser,
-                 external http/https links arrive here first. Non-YouTube URLs are
-                 immediately forwarded to Chrome or Samsung Internet. -->
             <intent-filter android:priority="500">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
@@ -57,5 +54,10 @@
                 <data android:mimeType="text/plain" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".ProjectionDubbingService"
+            android:exported="false"
+            android:foregroundServiceType="mediaProjection" />
     </application>
 </manifest>
