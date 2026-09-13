@@ -1,13 +1,13 @@
 import worker from '../src/index-place-rank.js';
 
 const env = {
-  P3_VERSION: '0.5.0',
-  P3_MODE: 'p1-p2-supervisor+place-rank',
+  P3_VERSION: '0.4.0',
+  P3_MODE: 'p1-p2-supervisor',
   P1_BASE_URL: 'https://k-stella-shorts-factory.k-stella-p1.workers.dev',
   P2_BASE_URL: 'https://my-life-room-v13-live-0910.starpoint9083.workers.dev'
 };
 const cases = [
-  ['https://local.test/health', 200, b => b.ok && b.service === 'p3-automation-hub' && b.integration === 'p1-p2-supervisor' && b.version === '0.5.0' && b.mode === 'p1-p2-supervisor+place-rank'],
+  ['https://local.test/health', 200, b => b.ok && b.service === 'p3-automation-hub' && b.integration === 'p1-p2-supervisor' && b.version === '0.4.0' && b.mode === 'p1-p2-supervisor'],
   ['https://local.test/healthz', 200, b => b.ok && b.stage === 'deployment-channel'],
   ['https://local.test/preflight', 200, b => b.ok && b.checks.workerRuntime === true && b.checks.p2SupervisorConfigured === true && b.checks.p2TechnicalQualityGateConfigured === true && b.checks.p2FlowManifestObservationConfigured === true && b.safety?.p2CinemaBaselineLocked === true && b.safety?.paidVisualAIFromP3 === false],
   ['https://local.test/projects', 200, b => b.ok && Array.isArray(b.projects) && b.projects.some(p => p.project === 'P2')],
