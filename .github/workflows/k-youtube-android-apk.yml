@@ -1,0 +1,78 @@
+name: P3 K-YouTube Android APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'android/k-youtube-app/**'
+      - 'config/k-youtube-free.json'
+      - 'ops/K_YOUTUBE_ANDROID.md'
+      - '.github/workflows/k-youtube-android-apk.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p3-k-youtube-android-apk
+  cancel-in-progress: true
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK 35
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+
+      - name: Build debug APK
+        working-directory: android/k-youtube-app
+        run: gradle --no-daemon clean assembleDebug
+
+      - name: Verify APK exists
+        id: verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK='android/k-youtube-app/app/build/outputs/apk/debug/app-debug.apk'
+          test -s "$APK"
+          echo "apk=$APK" >> "$GITHUB_OUTPUT"
+          echo "size_bytes=$(stat -c%s "$APK")" >> "$GITHUB_OUTPUT"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: k-youtube-free-debug-apk
+          path: ${{ steps.verify.outputs.apk }}
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Report
+        if: always()
+        run: |
+          {
+            echo '### K-YouTube Android ↔ P3'
+            echo '- Purpose: receive YouTube links and open K-YouTube automatically'
+            echo '- Web engine: https://k-youtube-free-r0zsy7.v2.appdeploy.ai/'
+            echo '- Paid translation/dubbing/TTS APIs: disabled'
+            echo '- Build output: k-youtube-free-debug-apk'
+            echo '- Existing K-YouTube AppDeploy app: preserved'
+          } >> "$GITHUB_STEP_SUMMARY"
