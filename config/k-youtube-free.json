@@ -28,7 +28,27 @@
     "preferKoreanCaptions": true,
     "useExistingKoreanAudioTrackWhenAvailable": true,
     "browserKoreanTtsAssist": true,
+    "androidYoutubeLinkReceiver": true,
+    "androidShareTarget": true,
+    "androidAutomaticVerifiedDomainOwnership": false,
     "universalFreeLiveDubbing": false
+  },
+  "androidApp": {
+    "packageId": "com.kyoutube.free",
+    "sourcePath": "android/k-youtube-app",
+    "webEngineUrl": "https://k-youtube-free-r0zsy7.v2.appdeploy.ai/",
+    "handoffQueryParameter": "youtube",
+    "buildWorkflow": "P3 K-YouTube Android APK",
+    "artifactName": "k-youtube-free-debug-apk",
+    "acceptedHosts": [
+      "youtube.com",
+      "www.youtube.com",
+      "m.youtube.com",
+      "music.youtube.com",
+      "youtu.be"
+    ],
+    "supportsShareText": true,
+    "verifiedYouTubeDomainOwner": false
   },
   "protected": {
     "neverDeleteOrRename": ["appdeploy:k-youtube-free-r0zsy7"],
@@ -37,6 +57,7 @@
   "automationPolicy": {
     "p3MayObserve": true,
     "p3MayVerifyPublicUrl": true,
+    "p3MayBuildAndroidApk": true,
     "p3MayCallPaidServices": false,
     "p3MayReplaceDeploymentPipeline": false,
     "onFailure": "retry-then-report"
