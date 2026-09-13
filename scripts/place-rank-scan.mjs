@@ -134,9 +134,21 @@ const browser = await puppeteer.launch({
   headless: true,
   args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage', '--lang=ko-KR', '--window-size=1440,1200']
 });
+const context = browser.defaultBrowserContext();
+const location = config.location || {};
+const latitude = Number(location.latitude);
+const longitude = Number(location.longitude);
+const accuracy = Number(location.accuracyMeters || 40);
+if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+  await context.overridePermissions('https://map.naver.com', ['geolocation']);
+}
 const page = await browser.newPage();
 await page.setViewport({ width: 1440, height: 1200, deviceScaleFactor: 1 });
 await page.setExtraHTTPHeaders({ 'accept-language': 'ko-KR,ko;q=0.9,en;q=0.5' });
+if (Number.isFinite(latitude) && Number.isFinite(longitude)) {
+  await page.setGeolocation({ latitude, longitude, accuracy });
+  console.log(`PLACE_RANK_LOCATION lat=${latitude} lon=${longitude} accuracy=${accuracy}`);
+}
 
 const aliases = Array.from(new Set([config.store.name, ...(config.store.aliases || [])]));
 const results = [];
@@ -160,10 +172,16 @@ try {
 }
 
 const checkedAt = kstIso();
-const snapshot = { date: checkedAt.slice(0, 10), checkedAt, source: 'naver-map-browser', results };
+const snapshot = {
+  date: checkedAt.slice(0, 10),
+  checkedAt,
+  source: 'naver-map-browser',
+  location: Number.isFinite(latitude) && Number.isFinite(longitude) ? { latitude, longitude, accuracyMeters: accuracy, basis: location.basis || config.store.address } : null,
+  results
+};
 const previous = Array.isArray(historyDoc.history) ? historyDoc.history : [];
 const history = [...previous.filter(item => item?.date !== snapshot.date), snapshot].slice(-90);
-const nextDoc = { version: '1.0.0', store: config.store.name, generatedAt: checkedAt, history };
+const nextDoc = { version: '1.1.0', store: config.store.name, generatedAt: checkedAt, history };
 await fs.writeFile(historyPath, `${JSON.stringify(nextDoc, null, 2)}\n`, 'utf8');
 await fs.writeFile(generatedPath, `export const placeRankData = ${JSON.stringify(nextDoc, null, 2)};\n`, 'utf8');
 
