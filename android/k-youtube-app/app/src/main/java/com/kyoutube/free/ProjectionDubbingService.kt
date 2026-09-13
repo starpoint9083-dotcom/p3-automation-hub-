@@ -18,6 +18,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.os.SystemClock
 import android.speech.tts.TextToSpeech
 import android.widget.Toast
 import kotlinx.coroutines.CoroutineScope
@@ -27,6 +28,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.BufferOverflow
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -44,8 +46,9 @@ class ProjectionDubbingService : Service() {
         private const val CHANNEL_ID = "k_youtube_local_dubbing"
         private const val NOTIFICATION_ID = 5205
         private const val SAMPLE_RATE = 16_000
-        private const val CHUNK_SECONDS = 6
+        private const val CHUNK_SAMPLES = 48_000 // 3.0 seconds: V6 low-latency target
         private const val SILENCE_ABS_AVERAGE = 110
+        private const val TTS_READY_TIMEOUT_MS = 5_000L
 
         @Volatile
         private var running = false
@@ -56,7 +59,7 @@ class ProjectionDubbingService : Service() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mainHandler = Handler(Looper.getMainLooper())
-    private val audioQueue = Channel<FloatArray>(
+    private val audioQueue = Channel<CapturedChunk>(
         capacity = 1,
         onBufferOverflow = BufferOverflow.DROP_OLDEST
     )
@@ -77,7 +80,7 @@ class ProjectionDubbingService : Service() {
             if (status == TextToSpeech.SUCCESS) {
                 val result = tts?.setLanguage(Locale.KOREAN) ?: TextToSpeech.LANG_NOT_SUPPORTED
                 ttsReady = result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED
-                tts?.setSpeechRate(1.08f)
+                tts?.setSpeechRate(1.18f)
             }
         }
     }
@@ -129,15 +132,16 @@ class ProjectionDubbingService : Service() {
         }, mainHandler)
 
         running = true
-        showToast("처음 한 번은 무료 음성인식 모델을 준비합니다. 영상은 잠시 멈춰두면 좋습니다.")
+        showToast("자동 한국어 음성을 준비합니다. 준비 완료 안내가 뜨면 영상을 재생하세요.")
 
         scope.launch {
             try {
                 engine.prepare { progress, message ->
                     updateNotification("$message · $progress%")
                 }
-                updateNotification("자동 한국어 음성 동작 중")
-                showToast("준비 완료. 영어 영상을 재생하세요.")
+                waitForTtsReady()
+                updateNotification("저지연 자동 한국어 음성 동작 중 · 3초 단위")
+                showToast("준비 완료. 이제 영어 영상을 재생하세요.")
                 startAudioPipeline()
             } catch (t: Throwable) {
                 updateNotification("준비 실패: ${t.message ?: "알 수 없는 오류"}")
@@ -147,6 +151,16 @@ class ProjectionDubbingService : Service() {
         }
 
         return START_NOT_STICKY
+    }
+
+    private suspend fun waitForTtsReady() {
+        val started = SystemClock.elapsedRealtime()
+        while (!ttsReady && SystemClock.elapsedRealtime() - started < TTS_READY_TIMEOUT_MS) {
+            delay(100)
+        }
+        if (!ttsReady) {
+            throw IllegalStateException("한국어 음성 엔진을 준비할 수 없습니다.")
+        }
     }
 
     @SuppressLint("MissingPermission")
@@ -187,7 +201,7 @@ class ProjectionDubbingService : Service() {
         recorder.startRecording()
 
         captureJob = scope.launch {
-            val chunk = ShortArray(SAMPLE_RATE * CHUNK_SECONDS)
+            val chunk = ShortArray(CHUNK_SAMPLES)
             val readBuffer = ShortArray(4096)
             var chunkPosition = 0
 
@@ -208,7 +222,12 @@ class ProjectionDubbingService : Service() {
                             for (i in chunk.indices) {
                                 samples[i] = chunk[i] / 32768.0f
                             }
-                            audioQueue.trySend(samples)
+                            audioQueue.trySend(
+                                CapturedChunk(
+                                    samples = samples,
+                                    capturedAtMillis = SystemClock.elapsedRealtime()
+                                )
+                            )
                         }
                         chunkPosition = 0
                     }
@@ -217,11 +236,14 @@ class ProjectionDubbingService : Service() {
         }
 
         processJob = scope.launch {
-            for (samples in audioQueue) {
+            for (chunk in audioQueue) {
                 if (!isActive || !running) break
                 try {
-                    val result = engine.transcribeAndTranslate(samples) ?: continue
-                    updateNotification("${result.english.take(42)} → ${result.korean.take(42)}")
+                    val result = engine.transcribeAndTranslate(chunk.samples) ?: continue
+                    val latencyMs = SystemClock.elapsedRealtime() - chunk.capturedAtMillis
+                    updateNotification(
+                        "지연 ${(latencyMs / 100) / 10.0}s · ${result.english.take(30)} → ${result.korean.take(30)}"
+                    )
                     speakKorean(result.korean)
                 } catch (t: Throwable) {
                     updateNotification("변환 재시도 중: ${t.message ?: "오류"}")
@@ -241,7 +263,7 @@ class ProjectionDubbingService : Service() {
         mainHandler.post {
             tts?.speak(
                 text,
-                TextToSpeech.QUEUE_FLUSH,
+                TextToSpeech.QUEUE_ADD,
                 null,
                 "k-youtube-dub-${System.currentTimeMillis()}"
             )
@@ -338,3 +360,8 @@ class ProjectionDubbingService : Service() {
         super.onDestroy()
     }
 }
+
+private data class CapturedChunk(
+    val samples: FloatArray,
+    val capturedAtMillis: Long
+)
