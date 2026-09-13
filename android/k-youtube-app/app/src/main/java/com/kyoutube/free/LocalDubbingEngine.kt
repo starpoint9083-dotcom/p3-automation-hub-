@@ -21,10 +21,12 @@ class LocalDubbingEngine(private val context: Context) {
         private const val MODEL_URL =
             "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en-q5_1.bin?download=true"
         private const val MIN_VALID_MODEL_BYTES = 30_000_000L
+        private const val WARMUP_SAMPLE_COUNT = 16_000
     }
 
     private var whisper: WhisperContext? = null
     private var translatorReady = false
+    private var warmedUp = false
 
     private val translator: Translator = Translation.getClient(
         TranslatorOptions.Builder()
@@ -36,24 +38,37 @@ class LocalDubbingEngine(private val context: Context) {
     suspend fun prepare(onProgress: (Int, String) -> Unit) {
         val model = ensureWhisperModel(onProgress)
         if (whisper == null) {
-            onProgress(94, "영어 음성 인식 엔진을 여는 중")
+            onProgress(93, "영어 음성 인식 엔진을 여는 중")
             whisper = withContext(Dispatchers.Default) {
                 WhisperContext.createContextFromFile(model.absolutePath)
             }
         }
 
         if (!translatorReady) {
-            onProgress(96, "영어→한국어 번역 모델을 준비하는 중")
+            onProgress(95, "영어→한국어 번역 모델을 준비하는 중")
             val conditions = DownloadConditions.Builder().build()
             translator.downloadModelIfNeeded(conditions).await()
             translatorReady = true
         }
-        onProgress(100, "자동 한국어 음성 준비 완료")
+
+        if (!warmedUp) {
+            onProgress(97, "첫 문장 지연을 줄이기 위해 엔진 예열 중")
+            val ctx = whisper ?: throw IllegalStateException("음성 인식 엔진이 준비되지 않았습니다.")
+            withContext(Dispatchers.Default) {
+                ctx.transcribeData(FloatArray(WARMUP_SAMPLE_COUNT), printTimestamp = false)
+            }
+            translator.translate("hello").await()
+            warmedUp = true
+        }
+
+        onProgress(100, "저지연 자동 한국어 음성 준비 완료")
     }
 
     suspend fun transcribeAndTranslate(samples: FloatArray): DubbingResult? {
         val ctx = whisper ?: return null
-        val english = ctx.transcribeData(samples, printTimestamp = false)
+        val english = withContext(Dispatchers.Default) {
+            ctx.transcribeData(samples, printTimestamp = false)
+        }
             .replace("[BLANK_AUDIO]", "", ignoreCase = true)
             .replace(Regex("\\s+"), " ")
             .trim()
@@ -74,6 +89,7 @@ class LocalDubbingEngine(private val context: Context) {
     suspend fun close() {
         val current = whisper
         whisper = null
+        warmedUp = false
         if (current != null) {
             current.release()
         }
@@ -102,7 +118,7 @@ class LocalDubbingEngine(private val context: Context) {
                 connectTimeout = 30_000
                 readTimeout = 120_000
                 requestMethod = "GET"
-                setRequestProperty("User-Agent", "K-YouTube-Free/0.5")
+                setRequestProperty("User-Agent", "K-YouTube-Free/0.6")
             }
 
             try {
