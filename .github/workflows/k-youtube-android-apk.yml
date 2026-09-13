@@ -38,6 +38,34 @@ jobs:
       - name: Install Android SDK 35
         run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
 
+      - name: Restore stable debug signing key
+        id: debug-key-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.android/debug.keystore
+          key: k-youtube-debug-keystore-v1
+
+      - name: Ensure stable debug signing key
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.android"
+          if [ ! -s "$HOME/.android/debug.keystore" ]; then
+            keytool -genkeypair -v \
+              -keystore "$HOME/.android/debug.keystore" \
+              -storepass android \
+              -alias androiddebugkey \
+              -keypass android \
+              -dname "CN=Android Debug,O=Android,C=US" \
+              -keyalg RSA \
+              -keysize 2048 \
+              -validity 10000
+          fi
+          keytool -list -v \
+            -keystore "$HOME/.android/debug.keystore" \
+            -storepass android \
+            -alias androiddebugkey | grep 'SHA256:'
+
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
@@ -66,7 +94,7 @@ jobs:
           "$AAPT" dump badging "$APK" > /tmp/k-youtube-badging.txt
           "$AAPT" dump xmltree "$APK" AndroidManifest.xml > /tmp/k-youtube-manifest.txt
           grep -F "package: name='com.kyoutube.free'" /tmp/k-youtube-badging.txt
-          grep -F "versionName='0.3.0'" /tmp/k-youtube-badging.txt
+          grep -F "versionName='0.4.0'" /tmp/k-youtube-badging.txt
           grep -F 'android.intent.category.APP_BROWSER' /tmp/k-youtube-manifest.txt
           grep -F 'android.intent.category.BROWSABLE' /tmp/k-youtube-manifest.txt
           grep -F 'youtu.be' /tmp/k-youtube-manifest.txt
@@ -86,7 +114,8 @@ jobs:
           {
             echo '### K-YouTube Android ↔ P3'
             echo '- Purpose: receive YouTube links and open K-YouTube automatically'
-            echo '- Android V3: APP_BROWSER declaration verified inside built APK'
+            echo '- Android V4: APP_BROWSER declaration verified inside built APK'
+            echo '- Stable debug signing key: cached as k-youtube-debug-keystore-v1'
             echo '- Web engine: https://k-youtube-free-r0zsy7.v2.appdeploy.ai/'
             echo '- Paid translation/dubbing/TTS APIs: disabled'
             echo '- Build output: k-youtube-free-debug-apk'
