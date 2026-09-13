@@ -2,7 +2,10 @@ package com.kyoutube.free;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.webkit.WebChromeClient;
@@ -10,7 +13,9 @@ import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.Toast;
 
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -18,6 +23,8 @@ import java.util.regex.Pattern;
 public class MainActivity extends Activity {
     private static final String APP_URL = "https://k-youtube-free-r0zsy7.v2.appdeploy.ai/";
     private static final String APP_HOST = "k-youtube-free-r0zsy7.v2.appdeploy.ai";
+    private static final String CHROME_PACKAGE = "com.android.chrome";
+    private static final String SAMSUNG_BROWSER_PACKAGE = "com.sec.android.app.sbrowser";
     private static final Pattern SHARED_YOUTUBE_URL = Pattern.compile(
             "https?://(?:www\\.|m\\.|music\\.)?(?:youtube\\.com|youtu\\.be)/[^\\s]+",
             Pattern.CASE_INSENSITIVE
@@ -63,6 +70,14 @@ public class MainActivity extends Activity {
     }
 
     private void loadFromIntent(Intent intent) {
+        if (intent != null && Intent.ACTION_VIEW.equals(intent.getAction())) {
+            Uri incoming = intent.getData();
+            if (incoming != null && isHttpUrl(incoming) && !isYouTubeHost(incoming.getHost())) {
+                openExternalBrowser(incoming);
+                return;
+            }
+        }
+
         String youtubeUrl = extractIncomingYouTubeUrl(intent);
         if (youtubeUrl == null || youtubeUrl.isEmpty()) {
             webView.loadUrl(APP_URL);
@@ -103,6 +118,12 @@ public class MainActivity extends Activity {
         return null;
     }
 
+    private boolean isHttpUrl(Uri uri) {
+        if (uri == null) return false;
+        String scheme = uri.getScheme();
+        return "http".equalsIgnoreCase(scheme) || "https".equalsIgnoreCase(scheme);
+    }
+
     private boolean isYouTubeHost(String host) {
         if (host == null) return false;
         String normalized = host.toLowerCase(Locale.ROOT);
@@ -134,12 +155,54 @@ public class MainActivity extends Activity {
         return false;
     }
 
+    private void openExternalBrowser(Uri uri) {
+        if (tryOpenPackage(uri, CHROME_PACKAGE)) {
+            finish();
+            return;
+        }
+
+        if (tryOpenPackage(uri, SAMSUNG_BROWSER_PACKAGE)) {
+            finish();
+            return;
+        }
+
+        PackageManager packageManager = getPackageManager();
+        Intent generic = new Intent(Intent.ACTION_VIEW, uri);
+        List<ResolveInfo> candidates = packageManager.queryIntentActivities(generic, PackageManager.MATCH_DEFAULT_ONLY);
+
+        for (ResolveInfo candidate : candidates) {
+            if (candidate.activityInfo == null) continue;
+            String packageName = candidate.activityInfo.packageName;
+            if (getPackageName().equals(packageName)) continue;
+
+            Intent explicit = new Intent(Intent.ACTION_VIEW, uri);
+            explicit.setComponent(new ComponentName(packageName, candidate.activityInfo.name));
+            startActivity(explicit);
+            finish();
+            return;
+        }
+
+        Toast.makeText(this, "일반 웹주소를 열 브라우저를 찾지 못했습니다.", Toast.LENGTH_LONG).show();
+        webView.loadUrl(APP_URL);
+    }
+
+    private boolean tryOpenPackage(Uri uri, String packageName) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            intent.setPackage(packageName);
+            startActivity(intent);
+            return true;
+        } catch (ActivityNotFoundException ignored) {
+            return false;
+        }
+    }
+
     private void openBrowserFallback(String intentUrl) {
         try {
             Intent parsed = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
             String fallback = parsed.getStringExtra("browser_fallback_url");
             if (fallback != null) {
-                startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(fallback)));
+                openExternalBrowser(Uri.parse(fallback));
             }
         } catch (Exception ignored) {
             // Keep the K-YouTube screen open if no fallback is available.
