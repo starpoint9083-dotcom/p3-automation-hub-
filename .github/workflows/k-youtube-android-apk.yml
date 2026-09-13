@@ -57,6 +57,21 @@ jobs:
           echo "apk=$APK" >> "$GITHUB_OUTPUT"
           echo "size_bytes=$(stat -c%s "$APK")" >> "$GITHUB_OUTPUT"
 
+      - name: Verify browser intent declarations
+        shell: bash
+        run: |
+          set -euo pipefail
+          APK='android/k-youtube-app/app/build/outputs/apk/debug/app-debug.apk'
+          AAPT="$ANDROID_HOME/build-tools/35.0.0/aapt"
+          "$AAPT" dump badging "$APK" > /tmp/k-youtube-badging.txt
+          "$AAPT" dump xmltree "$APK" AndroidManifest.xml > /tmp/k-youtube-manifest.txt
+          grep -F "package: name='com.kyoutube.free'" /tmp/k-youtube-badging.txt
+          grep -F "versionName='0.3.0'" /tmp/k-youtube-badging.txt
+          grep -F 'android.intent.category.APP_BROWSER' /tmp/k-youtube-manifest.txt
+          grep -F 'android.intent.category.BROWSABLE' /tmp/k-youtube-manifest.txt
+          grep -F 'youtu.be' /tmp/k-youtube-manifest.txt
+          grep -F 'youtube.com' /tmp/k-youtube-manifest.txt
+
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
@@ -71,6 +86,7 @@ jobs:
           {
             echo '### K-YouTube Android ↔ P3'
             echo '- Purpose: receive YouTube links and open K-YouTube automatically'
+            echo '- Android V3: APP_BROWSER declaration verified inside built APK'
             echo '- Web engine: https://k-youtube-free-r0zsy7.v2.appdeploy.ai/'
             echo '- Paid translation/dubbing/TTS APIs: disabled'
             echo '- Build output: k-youtube-free-debug-apk'
