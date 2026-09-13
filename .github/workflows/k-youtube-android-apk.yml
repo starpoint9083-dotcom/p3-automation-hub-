@@ -9,12 +9,19 @@ on:
       - 'config/k-youtube-free.json'
       - 'ops/K_YOUTUBE_ANDROID.md'
       - '.github/workflows/k-youtube-android-apk.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'android/k-youtube-app/**'
+      - 'config/k-youtube-free.json'
+      - 'ops/K_YOUTUBE_ANDROID.md'
+      - '.github/workflows/k-youtube-android-apk.yml'
 
 permissions:
   contents: read
 
 concurrency:
-  group: p3-k-youtube-android-apk
+  group: p3-k-youtube-android-apk-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
