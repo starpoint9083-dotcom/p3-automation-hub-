@@ -9,25 +9,35 @@ Production web engine:
 
 - https://k-youtube-free-r0zsy7.v2.appdeploy.ai/
 
+## V2 browser-gateway mode
+
+V2 can also register as an Android browser gateway.
+When the user chooses K-YouTube as the default browser for external links:
+
+- YouTube URLs stay inside K-YouTube and are handed to the Korean-first web engine.
+- Non-YouTube http/https URLs are immediately forwarded to Chrome when available.
+- Samsung Internet is the second preferred fallback.
+- Other installed browsers are used only if Chrome and Samsung Internet are unavailable.
+
+This is designed to make external links from messaging apps, search results, email, and other apps enter K-YouTube first without turning K-YouTube into a general-purpose web browser.
+
 ## User flow
 
-1. Tap a YouTube link or use Android Share.
-2. Choose K-YouTube when Android offers an app choice.
-3. K-YouTube opens the existing web engine and passes the video URL automatically.
-4. The web engine opens the official YouTube embed with Korean caption preference.
-5. If needed, use the in-app control to open the original YouTube app.
+1. Tap an external web link or use Android Share.
+2. If K-YouTube is configured as the default browser gateway, Android sends the link to K-YouTube first.
+3. If the URL is YouTube, K-YouTube opens the existing web engine and passes the exact video URL automatically.
+4. If the URL is not YouTube, K-YouTube forwards it to Chrome/Samsung Internet.
+5. The K-YouTube web engine opens the official YouTube embed with Korean caption preference.
 
-## Android default-link limitation
+## Android limitation
 
-YouTube owns and verifies its own `youtube.com` and `youtu.be` domains. A third-party app cannot publish YouTube's `assetlinks.json`, so K-YouTube cannot silently become a verified owner of those domains.
+YouTube owns and verifies its own `youtube.com` and `youtu.be` domains. A third-party app cannot publish YouTube's `assetlinks.json`, so K-YouTube cannot silently become the verified owner of those domains.
 
-On Android/Samsung devices the user may need to change app defaults once:
+V2 avoids relying only on verified YouTube-domain ownership by offering the browser-gateway path. The user may choose K-YouTube as the Android default browser once, then normal external web links reach K-YouTube first. Non-YouTube links are forwarded to the real browser.
 
-- Disable automatic supported-link handling for the official YouTube app if it always takes the link first.
-- Enable supported-link handling for K-YouTube when Android exposes that option.
-- The Share -> K-YouTube path remains available even when domain verification prevents automatic takeover.
+A link clicked from inside an already-open Chrome page can still stay inside Chrome because Chrome may treat that click as internal navigation instead of asking Android to resolve a new external app. This behavior cannot be forcibly overridden by a normal Android app without invasive accessibility/VPN-style interception.
 
-This is an Android platform/domain-ownership restriction, not a P3 or K-YouTube failure.
+The Share -> K-YouTube path remains available as a reliable fallback.
 
 ## Safety and cost policy
 
@@ -44,4 +54,5 @@ GitHub Actions workflow: `P3 K-YouTube Android APK`
 
 Expected artifact: `k-youtube-free-debug-apk`
 
-The initial artifact is a debug APK for direct device testing. A production-signed APK/AAB can be added after the link flow is validated on the target Android device.
+V2 package remains `com.kyoutube.free`, version `0.2.0` / versionCode `2`.
+The current artifact is a debug APK for direct device testing. Because GitHub-hosted debug signing may change between clean CI runners, uninstalling the previous debug APK may be required before installing a newly built debug APK. A stable production signing key should be configured before normal in-place updates are distributed.

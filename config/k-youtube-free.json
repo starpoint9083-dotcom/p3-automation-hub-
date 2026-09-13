@@ -30,11 +30,15 @@
     "browserKoreanTtsAssist": true,
     "androidYoutubeLinkReceiver": true,
     "androidShareTarget": true,
+    "androidDefaultBrowserGateway": true,
+    "androidNonYoutubeForwardToBrowser": true,
     "androidAutomaticVerifiedDomainOwnership": false,
     "universalFreeLiveDubbing": false
   },
   "androidApp": {
     "packageId": "com.kyoutube.free",
+    "versionCode": 2,
+    "versionName": "0.2.0",
     "sourcePath": "android/k-youtube-app",
     "webEngineUrl": "https://k-youtube-free-r0zsy7.v2.appdeploy.ai/",
     "handoffQueryParameter": "youtube",
@@ -48,6 +52,11 @@
       "youtu.be"
     ],
     "supportsShareText": true,
+    "supportsDefaultBrowserGateway": true,
+    "nonYoutubePreferredBrowsers": [
+      "com.android.chrome",
+      "com.sec.android.app.sbrowser"
+    ],
     "verifiedYouTubeDomainOwner": false
   },
   "protected": {
