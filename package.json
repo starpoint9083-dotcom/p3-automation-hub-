@@ -5,7 +5,7 @@
   "description": "Reusable GitHub -> Cloudflare deployment/verification hub for P1/P2/future projects.",
   "type": "module",
   "scripts": {
-    "check": "node --check src/index.js && node --check src/place-rank-data.js && node --check scripts/preflight.mjs && node --check scripts/security-check.mjs && node --check scripts/safety-gate.mjs && node --check scripts/deployment-receipt.mjs && node --check scripts/operations-report.mjs && node --check scripts/failure-triage.mjs && node --check scripts/e2e.mjs && node --check scripts/parse-deploy-url.mjs && node --check scripts/p1-browser-factory.mjs && node --check scripts/p1-live-queue-inspector.mjs && node --check scripts/p1-process-waiting-queues.mjs && node --check scripts/p1-quality-gate.mjs && node --check scripts/place-rank-scan.mjs",
+    "check": "node --check src/index.js && node --check src/index-place-rank.js && node --check src/place-rank.js && node --check src/place-rank-data.js && node --check scripts/preflight.mjs && node --check scripts/security-check.mjs && node --check scripts/safety-gate.mjs && node --check scripts/deployment-receipt.mjs && node --check scripts/operations-report.mjs && node --check scripts/failure-triage.mjs && node --check scripts/e2e.mjs && node --check scripts/parse-deploy-url.mjs && node --check scripts/p1-browser-factory.mjs && node --check scripts/p1-live-queue-inspector.mjs && node --check scripts/p1-process-waiting-queues.mjs && node --check scripts/p1-quality-gate.mjs && node --check scripts/place-rank-scan.mjs",
     "security": "node scripts/security-check.mjs",
     "safety": "node scripts/safety-gate.mjs",
     "receipt": "node scripts/deployment-receipt.mjs",
