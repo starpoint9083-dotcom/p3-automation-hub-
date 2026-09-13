@@ -30,7 +30,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
-import java.util.Locale
 import kotlin.math.abs
 import kotlin.math.max
 
@@ -51,11 +50,6 @@ class ProjectionDubbingService : Service() {
         private const val CHANNEL_ID = "k_youtube_live_captions"
         private const val NOTIFICATION_ID = 5205
         private const val SAMPLE_RATE = 16_000
-        private const val FAST_MIN_SAMPLES = 24_000
-        private const val FAST_MAX_SAMPLES = 32_000
-        private const val STABLE_MIN_SAMPLES = 40_000
-        private const val STABLE_MAX_SAMPLES = 48_000
-        private const val OVERLAP_SAMPLES = 8_000
         private const val TAIL_SILENCE_SAMPLES = 3_200
         private const val SILENCE_ABS_AVERAGE = 70
         private const val TAIL_SILENCE_ABS_AVERAGE = 55
@@ -231,8 +225,7 @@ class ProjectionDubbingService : Service() {
                             audioQueue.trySend(
                                 CapturedChunk(
                                     samples = samples,
-                                    capturedAtMillis = SystemClock.elapsedRealtime(),
-                                    segmentSeconds = currentSegment.size.toDouble() / SAMPLE_RATE
+                                    capturedAtMillis = SystemClock.elapsedRealtime()
                                 )
                             )
                         } else {
@@ -409,22 +402,21 @@ private data class SegmentConfig(
     companion object {
         fun fast() = SegmentConfig(
             label = "빠른 1.5~2초",
-            minSamples = FAST_MIN_SAMPLES,
-            maxSamples = FAST_MAX_SAMPLES,
-            overlapSamples = OVERLAP_SAMPLES
+            minSamples = 24_000,
+            maxSamples = 32_000,
+            overlapSamples = 8_000
         )
 
         fun stable() = SegmentConfig(
             label = "안정 2.5~3초",
-            minSamples = STABLE_MIN_SAMPLES,
-            maxSamples = STABLE_MAX_SAMPLES,
-            overlapSamples = OVERLAP_SAMPLES
+            minSamples = 40_000,
+            maxSamples = 48_000,
+            overlapSamples = 8_000
         )
     }
 }
 
 private data class CapturedChunk(
     val samples: FloatArray,
-    val capturedAtMillis: Long,
-    val segmentSeconds: Double
+    val capturedAtMillis: Long
 )
