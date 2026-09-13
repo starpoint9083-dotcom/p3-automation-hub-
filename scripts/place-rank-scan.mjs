@@ -103,6 +103,24 @@ function mergeNames(target, incoming) {
   return target;
 }
 
+function parseSearchCoordinate(url) {
+  try {
+    const raw = new URL(url).searchParams.get('searchCoord');
+    if (!raw) return null;
+    const [longitude, latitude] = raw.split(';').map(Number);
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) return null;
+    return { latitude, longitude };
+  } catch {
+    return null;
+  }
+}
+
+function coordinateMatches(actual, expectedLatitude, expectedLongitude) {
+  if (!actual || !Number.isFinite(expectedLatitude) || !Number.isFinite(expectedLongitude)) return true;
+  return Math.abs(actual.latitude - expectedLatitude) <= 0.03
+    && Math.abs(actual.longitude - expectedLongitude) <= 0.03;
+}
+
 async function collectNames(frame) {
   return frame.evaluate(() => {
     const selectors = [
@@ -190,7 +208,7 @@ async function detectBlock(page) {
 }
 
 function createNetworkCapture(page) {
-  const state = { names: [], matchedResponses: 0, sources: [], tasks: [], active: true };
+  const state = { names: [], matchedResponses: 0, sources: [], searchCoords: [], tasks: [], active: true };
   const handler = response => {
     if (!state.active) return;
     const url = response.url();
@@ -198,6 +216,10 @@ function createNetworkCapture(page) {
     const isGraphql = url.includes('pcmap-api.place.naver.com/graphql');
     if (!isAllSearch && !isGraphql) return;
     state.matchedResponses += 1;
+    if (isAllSearch) {
+      const searchCoord = parseSearchCoordinate(url);
+      if (searchCoord) state.searchCoords.push(searchCoord);
+    }
     const task = (async () => {
       try {
         const contentType = response.headers()['content-type'] || '';
@@ -234,12 +256,61 @@ async function collectDomNames(page) {
   return names;
 }
 
-async function scanKeyword(page, keyword, aliases, maxResults) {
-  const url = `https://map.naver.com/p/search/${encodeURIComponent(keyword)}`;
-  const capture = createNetworkCapture(page);
-  await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
-  await sleep(4500);
+async function findVisibleSearchInput(page, timeoutMs = 15000) {
+  const selectors = [
+    'input.input_search',
+    'input[type="search"]',
+    'input[placeholder*="검색"]',
+    'input[aria-label*="검색"]'
+  ];
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    for (const frame of page.frames()) {
+      for (const selector of selectors) {
+        let handles = [];
+        try { handles = await frame.$$(selector); } catch { continue; }
+        for (const handle of handles) {
+          let visible = false;
+          try {
+            visible = await handle.evaluate(el => {
+              const rect = el.getBoundingClientRect();
+              const style = getComputedStyle(el);
+              return rect.width > 0 && rect.height > 0 && style.display !== 'none' && style.visibility !== 'hidden';
+            });
+          } catch {}
+          if (visible) return handle;
+          try { await handle.dispose(); } catch {}
+        }
+      }
+    }
+    await sleep(250);
+  }
+  throw new Error('Visible Naver Map search input was not found');
+}
 
+async function openCenteredSearch(page, keyword, latitude, longitude) {
+  const baseUrl = Number.isFinite(latitude) && Number.isFinite(longitude)
+    ? `https://map.naver.com/p?lng=${encodeURIComponent(longitude)}&lat=${encodeURIComponent(latitude)}&c=15.00,0,0,0,dh`
+    : 'https://map.naver.com/p';
+
+  await page.goto(baseUrl, { waitUntil: 'domcontentloaded', timeout: 45000 });
+  await sleep(2500);
+
+  const capture = createNetworkCapture(page);
+  const input = await findVisibleSearchInput(page);
+  await input.click({ clickCount: 3 });
+  await page.keyboard.press('Control+A');
+  await page.keyboard.press('Backspace');
+  await page.keyboard.insertText(keyword);
+  await page.keyboard.press('Enter');
+  await sleep(4500);
+  try { await input.dispose(); } catch {}
+
+  return { capture, baseUrl };
+}
+
+async function scanKeyword(page, keyword, aliases, maxResults, latitude, longitude) {
+  const { capture, baseUrl } = await openCenteredSearch(page, keyword, latitude, longitude);
   let names = [];
   let blocked = await detectBlock(page);
   if (!blocked) {
@@ -279,6 +350,9 @@ async function scanKeyword(page, keyword, aliases, maxResults) {
   const network = await capture.stop();
   mergeNames(names, network.names);
   names = names.slice(0, maxResults);
+  const searchCoord = network.searchCoords.at(-1) || null;
+  const locationMatched = coordinateMatches(searchCoord, latitude, longitude);
+  const url = page.url() || baseUrl;
 
   if (blocked) {
     return {
@@ -287,8 +361,25 @@ async function scanKeyword(page, keyword, aliases, maxResults) {
       status: 'blocked',
       resultCount: names.length,
       url,
+      searchCoord,
+      locationMatched,
       networkResponses: network.matchedResponses,
       captureSources: network.sources.slice(0, 12)
+    };
+  }
+
+  if (!locationMatched) {
+    return {
+      keyword,
+      rank: null,
+      status: 'location-mismatch',
+      resultCount: names.length,
+      url,
+      searchCoord,
+      locationMatched,
+      networkResponses: network.matchedResponses,
+      captureSources: network.sources.slice(0, 12),
+      sample: names.slice(0, 12)
     };
   }
 
@@ -303,6 +394,8 @@ async function scanKeyword(page, keyword, aliases, maxResults) {
     status: rankIndex >= 0 ? 'ok' : (names.length ? 'not-found' : 'no-results'),
     resultCount: names.length,
     url,
+    searchCoord,
+    locationMatched,
     networkResponses: network.matchedResponses,
     captureSources: network.sources.slice(0, 12),
     sample: names.slice(0, 12)
@@ -342,9 +435,10 @@ const results = [];
 try {
   for (const keyword of config.keywords) {
     try {
-      const result = await scanKeyword(page, keyword, aliases, Number(config.maxResults || 50));
+      const result = await scanKeyword(page, keyword, aliases, Number(config.maxResults || 50), latitude, longitude);
       results.push(result);
-      console.log(`PLACE_RANK keyword=${JSON.stringify(keyword)} status=${result.status} rank=${result.rank ?? 'NA'} count=${result.resultCount} network=${result.networkResponses ?? 0}`);
+      const coordText = result.searchCoord ? `${result.searchCoord.latitude},${result.searchCoord.longitude}` : 'NA';
+      console.log(`PLACE_RANK keyword=${JSON.stringify(keyword)} status=${result.status} rank=${result.rank ?? 'NA'} count=${result.resultCount} network=${result.networkResponses ?? 0} searchCoord=${coordText}`);
       if (result.status !== 'ok') await page.screenshot({ path: path.join(artifactDir, `${safeSlug(keyword)}.png`), fullPage: true });
     } catch (error) {
       const message = error?.message || String(error);
@@ -362,19 +456,23 @@ const checkedAt = kstIso();
 const snapshot = {
   date: checkedAt.slice(0, 10),
   checkedAt,
-  source: 'naver-map-browser-network',
+  source: 'naver-map-browser-network-centered',
   location: Number.isFinite(latitude) && Number.isFinite(longitude) ? { latitude, longitude, accuracyMeters: accuracy, basis: location.basis || config.store.address } : null,
   results
 };
 const previous = Array.isArray(historyDoc.history) ? historyDoc.history : [];
 const history = [...previous.filter(item => item?.date !== snapshot.date), snapshot].slice(-90);
-const nextDoc = { version: '1.2.0', store: config.store.name, generatedAt: checkedAt, history };
+const nextDoc = { version: '1.3.0', store: config.store.name, generatedAt: checkedAt, history };
 await fs.writeFile(historyPath, `${JSON.stringify(nextDoc, null, 2)}\n`, 'utf8');
 await fs.writeFile(generatedPath, `export const placeRankData = ${JSON.stringify(nextDoc, null, 2)};\n`, 'utf8');
 
 const okCount = results.filter(item => item.status === 'ok').length;
 const blockedCount = results.filter(item => item.status === 'blocked').length;
 const noResultsCount = results.filter(item => item.status === 'no-results').length;
-console.log(`PLACE_RANK_COMPLETE checked=${results.length} found=${okCount} blocked=${blockedCount} noResults=${noResultsCount} generatedAt=${checkedAt}`);
+const mismatchCount = results.filter(item => item.status === 'location-mismatch').length;
+const errorCount = results.filter(item => item.status === 'error').length;
+console.log(`PLACE_RANK_COMPLETE checked=${results.length} found=${okCount} blocked=${blockedCount} noResults=${noResultsCount} locationMismatch=${mismatchCount} errors=${errorCount} generatedAt=${checkedAt}`);
 if (blockedCount === results.length && results.length > 0) process.exitCode = 3;
 if (noResultsCount === results.length && results.length > 0) process.exitCode = 4;
+if (mismatchCount > 0) process.exitCode = 5;
+if (errorCount > 0) process.exitCode = 6;
