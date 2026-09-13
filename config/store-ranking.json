@@ -13,13 +13,19 @@
     "도수수경",
     "편광선글라스",
     "변색렌즈",
-    "수영구안경점"
+    "수영구안경점",
+    "수영구 누진다초점안경",
+    "수영구 도수수경",
+    "수영구 편광선글라스",
+    "수영구 변색렌즈"
   ],
   "policy": {
     "p3ReadOnlySupervisor": true,
     "p3MayTriggerManualRankCheck": false,
     "p3MayMutateKeywords": false,
     "fabricatedRanksForbidden": true,
-    "unconfirmedRankValue": null
+    "unconfirmedRankValue": null,
+    "comparisonWindowsDays": [1, 7, 30],
+    "sharpMoveThreshold": 5
   }
 }
