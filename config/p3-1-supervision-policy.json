@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "relationship": "P3-supervises-P3-1",
   "p3Role": "production-governor-and-final-approver",
   "p31Role": "isolated-rnd-self-improvement-lab",
@@ -57,6 +57,40 @@
     ],
     "outputMode": "candidate-only-no-production-application"
   },
+  "researchPromotionQuality": {
+    "sourceBaseline": "p3-1-through-fdec186eb94d34a781c4edadcdaaeb1172981929",
+    "candidateEvidence": {
+      "testsRunMustBeActionable": true,
+      "testResultsMustBeActionable": true,
+      "baselineComparisonMustBeActionable": true,
+      "rollbackPlanMustBeActionable": true,
+      "securityImpactMustBeExplicit": true,
+      "costImpactMustBeExplicit": true,
+      "knownLimitationsMayBeEmptyWhenNoneExist": true
+    },
+    "riskConsistency": {
+      "detectedRiskMayRaiseCandidateRisk": true,
+      "candidateMayNotUnderrateDetectedRisk": true,
+      "negatedOrDisabledPolicyTextMustNotCountAsExecutionIntent": true
+    },
+    "experienceMemory": {
+      "normalizeInputsBeforeReuse": true,
+      "deduplicateEquivalentFailurePatterns": true,
+      "preserveFailedAttempts": true,
+      "preserveSuccessfulResolution": true
+    },
+    "scoreboard": {
+      "requireCompletenessSignal": true,
+      "requireConfidenceSignal": true,
+      "allowProvisionalScoreWhenEvidenceIsIncomplete": true,
+      "provisionalScoreMustNotBeTreatedAsFinal": true
+    },
+    "nightPlannerAudit": {
+      "preserveBlockedTasks": true,
+      "preserveBlockReason": true,
+      "neverSilentlyDropUnsafeTask": true
+    }
+  },
   "p3ApprovalGate": {
     "requiredChecks": [
       "syntax",
@@ -75,7 +109,8 @@
       "candidate-needs-permission-expansion",
       "candidate-is-destructive",
       "candidate-has-no-rollback-plan",
-      "candidate-has-insufficient-test-evidence"
+      "candidate-has-insufficient-test-evidence",
+      "candidate-underrates-detected-risk"
     ],
     "productionUse": "only-after-p3-approval-and-user-approval-when-risk-tier-requires"
   },
