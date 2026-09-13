@@ -1,0 +1,25 @@
+{
+  "name": "스타포인트안경원 검색순위",
+  "module": "store-ranking",
+  "deploymentOwner": "P3 store-ranking module",
+  "deployUrl": "https://p3-a3z7a8.v2.appdeploy.ai",
+  "healthPath": "/api/_healthcheck",
+  "dashboardPath": "/api/dashboard",
+  "storeName": "스타포인트안경원",
+  "rankingScheduleKst": "14:10",
+  "supervisorScheduleKst": "14:25",
+  "keywords": [
+    "누진다초점안경",
+    "도수수경",
+    "편광선글라스",
+    "변색렌즈",
+    "수영구안경점"
+  ],
+  "policy": {
+    "p3ReadOnlySupervisor": true,
+    "p3MayTriggerManualRankCheck": false,
+    "p3MayMutateKeywords": false,
+    "fabricatedRanksForbidden": true,
+    "unconfirmedRankValue": null
+  }
+}
