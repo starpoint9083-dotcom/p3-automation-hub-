@@ -3,16 +3,21 @@ package com.kyoutube.free;
 import android.Manifest;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.media.projection.MediaProjectionManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.Gravity;
+import android.view.View;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -20,6 +25,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.FrameLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.List;
@@ -32,8 +38,6 @@ public class MainActivity extends Activity {
     private static final String APP_HOST = "k-youtube-free-r0zsy7.v2.appdeploy.ai";
     private static final String CHROME_PACKAGE = "com.android.chrome";
     private static final String SAMSUNG_BROWSER_PACKAGE = "com.sec.android.app.sbrowser";
-    private static final String PREFS = "k_youtube_prefs";
-    private static final String PREF_FAST_MODE = "fast_mode";
     private static final int REQUEST_RECORD_AUDIO = 5201;
     private static final int REQUEST_MEDIA_PROJECTION = 5202;
     private static final Pattern SHARED_YOUTUBE_URL = Pattern.compile(
@@ -42,16 +46,38 @@ public class MainActivity extends Activity {
     );
 
     private WebView webView;
-    private Button dubbingButton;
-    private Button modeButton;
-    private boolean dubbingRequested = false;
-    private boolean fastMode = true;
+    private Button subtitleButton;
+    private TextView subtitleView;
+    private boolean subtitleRequested = false;
+    private boolean receiverRegistered = false;
+
+    private final BroadcastReceiver subtitleReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent == null) return;
+            String korean = intent.getStringExtra(ProjectionDubbingService.EXTRA_KOREAN);
+            String status = intent.getStringExtra(ProjectionDubbingService.EXTRA_STATUS);
+
+            if (korean != null && !korean.trim().isEmpty()) {
+                subtitleView.setTextSize(20f);
+                subtitleView.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
+                subtitleView.setText(korean.trim());
+                subtitleView.setVisibility(View.VISIBLE);
+                return;
+            }
+
+            if (status != null && !status.trim().isEmpty()) {
+                subtitleView.setTextSize(15f);
+                subtitleView.setTypeface(Typeface.DEFAULT, Typeface.NORMAL);
+                subtitleView.setText(status.trim());
+                subtitleView.setVisibility(View.VISIBLE);
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        fastMode = getSharedPreferences(PREFS, MODE_PRIVATE).getBoolean(PREF_FAST_MODE, true);
 
         FrameLayout root = new FrameLayout(this);
         webView = new WebView(this);
@@ -60,40 +86,43 @@ public class MainActivity extends Activity {
                 FrameLayout.LayoutParams.MATCH_PARENT
         ));
 
-        modeButton = new Button(this);
-        modeButton.setTextColor(Color.WHITE);
-        modeButton.setTextSize(12f);
-        modeButton.setAllCaps(false);
-        modeButton.setBackgroundColor(Color.rgb(45, 45, 45));
-        modeButton.setContentDescription("한국어 자동음성 속도 모드 선택");
-        modeButton.setOnClickListener(v -> toggleDubbingMode());
-        updateModeButtonText();
+        subtitleView = new TextView(this);
+        subtitleView.setTextColor(Color.WHITE);
+        subtitleView.setTextSize(20f);
+        subtitleView.setGravity(Gravity.CENTER);
+        subtitleView.setMaxLines(2);
+        subtitleView.setPadding(dp(14), dp(9), dp(14), dp(9));
+        subtitleView.setBackgroundColor(Color.argb(205, 0, 0, 0));
+        subtitleView.setVisibility(View.GONE);
+        subtitleView.setContentDescription("실시간 한국어 자막");
 
-        FrameLayout.LayoutParams modeParams = new FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.WRAP_CONTENT,
-                dp(42)
+        FrameLayout.LayoutParams subtitleParams = new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
         );
-        modeParams.gravity = Gravity.END | Gravity.BOTTOM;
-        modeParams.setMargins(dp(16), dp(16), dp(16), dp(82));
-        root.addView(modeButton, modeParams);
+        subtitleParams.gravity = Gravity.BOTTOM;
+        subtitleParams.setMargins(dp(12), dp(12), dp(12), dp(92));
+        root.addView(subtitleView, subtitleParams);
 
-        dubbingButton = new Button(this);
-        dubbingButton.setText("한국어 자동음성");
-        dubbingButton.setTextColor(Color.WHITE);
-        dubbingButton.setTextSize(14f);
-        dubbingButton.setAllCaps(false);
-        dubbingButton.setBackgroundColor(Color.rgb(220, 55, 64));
-        dubbingButton.setContentDescription("무료 한국어 자동음성 시작");
-        dubbingButton.setOnClickListener(v -> toggleLocalDubbing());
+        subtitleButton = new Button(this);
+        subtitleButton.setText("한국어 실시간 자막");
+        subtitleButton.setTextColor(Color.WHITE);
+        subtitleButton.setTextSize(14f);
+        subtitleButton.setAllCaps(false);
+        subtitleButton.setBackgroundColor(Color.rgb(220, 55, 64));
+        subtitleButton.setContentDescription("영어 영상을 한국어 자막으로 보기");
+        subtitleButton.setOnClickListener(v -> toggleLiveCaptions());
 
-        FrameLayout.LayoutParams dubbingParams = new FrameLayout.LayoutParams(
+        FrameLayout.LayoutParams buttonParams = new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.WRAP_CONTENT,
                 dp(52)
         );
-        dubbingParams.gravity = Gravity.END | Gravity.BOTTOM;
-        dubbingParams.setMargins(dp(16), dp(16), dp(16), dp(24));
-        root.addView(dubbingButton, dubbingParams);
+        buttonParams.gravity = Gravity.END | Gravity.BOTTOM;
+        buttonParams.setMargins(dp(16), dp(16), dp(16), dp(24));
+        root.addView(subtitleButton, buttonParams);
         setContentView(root);
+
+        registerSubtitleReceiver();
 
         WebSettings settings = webView.getSettings();
         settings.setJavaScriptEnabled(true);
@@ -118,45 +147,29 @@ public class MainActivity extends Activity {
         loadFromIntent(getIntent());
     }
 
+    private void registerSubtitleReceiver() {
+        if (receiverRegistered) return;
+        IntentFilter filter = new IntentFilter(ProjectionDubbingService.ACTION_SUBTITLE);
+        if (Build.VERSION.SDK_INT >= 33) {
+            registerReceiver(subtitleReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
+        } else {
+            registerReceiver(subtitleReceiver, filter);
+        }
+        receiverRegistered = true;
+    }
+
     private int dp(int value) {
         return Math.round(value * getResources().getDisplayMetrics().density);
     }
 
-    private void toggleDubbingMode() {
-        if (ProjectionDubbingService.isRunning() || dubbingRequested) {
-            Toast.makeText(this, "자동음성을 중지한 뒤 속도 모드를 바꿔주세요.", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        fastMode = !fastMode;
-        getSharedPreferences(PREFS, MODE_PRIVATE)
-                .edit()
-                .putBoolean(PREF_FAST_MODE, fastMode)
-                .apply();
-        updateModeButtonText();
-
-        Toast.makeText(
-                this,
-                fastMode
-                        ? "초고속 모드: 1.5~2초 구간 + 0.5초 겹침"
-                        : "안정 모드: 2.5~3초 구간 + 0.5초 겹침",
-                Toast.LENGTH_SHORT
-        ).show();
-    }
-
-    private void updateModeButtonText() {
-        if (modeButton == null) return;
-        modeButton.setText(fastMode ? "속도: 초고속" : "속도: 안정");
-    }
-
-    private void toggleLocalDubbing() {
-        if (ProjectionDubbingService.isRunning() || dubbingRequested) {
-            stopLocalDubbing();
+    private void toggleLiveCaptions() {
+        if (ProjectionDubbingService.isRunning() || subtitleRequested) {
+            stopLiveCaptions();
             return;
         }
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            Toast.makeText(this, "자동 한국어 음성은 Android 10 이상에서 지원됩니다.", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "실시간 한국어 자막은 Android 10 이상에서 지원됩니다.", Toast.LENGTH_LONG).show();
             return;
         }
 
@@ -171,45 +184,37 @@ public class MainActivity extends Activity {
     private void requestProjectionPermission() {
         MediaProjectionManager manager =
                 (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
-        dubbingRequested = true;
-        dubbingButton.setText("오디오 승인 대기");
-        modeButton.setEnabled(false);
+        subtitleRequested = true;
+        subtitleButton.setText("오디오 승인 대기");
+        subtitleView.setText("한국어 자막 준비 중...");
+        subtitleView.setVisibility(View.VISIBLE);
         startActivityForResult(manager.createScreenCaptureIntent(), REQUEST_MEDIA_PROJECTION);
     }
 
-    private void startLocalDubbing(int resultCode, Intent resultData) {
+    private void startLiveCaptions(int resultCode, Intent resultData) {
         Intent serviceIntent = new Intent(this, ProjectionDubbingService.class);
         serviceIntent.setAction(ProjectionDubbingService.ACTION_START);
         serviceIntent.putExtra(ProjectionDubbingService.EXTRA_RESULT_CODE, resultCode);
         serviceIntent.putExtra(ProjectionDubbingService.EXTRA_RESULT_DATA, resultData);
-        serviceIntent.putExtra(
-                ProjectionDubbingService.EXTRA_DUBBING_MODE,
-                fastMode ? ProjectionDubbingService.MODE_FAST : ProjectionDubbingService.MODE_STABLE
-        );
+        serviceIntent.putExtra(ProjectionDubbingService.EXTRA_DUBBING_MODE, ProjectionDubbingService.MODE_FAST);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             startForegroundService(serviceIntent);
         } else {
             startService(serviceIntent);
         }
-        dubbingRequested = false;
-        dubbingButton.setText("한국어 자동음성 중지");
-        modeButton.setEnabled(false);
-        Toast.makeText(
-                this,
-                fastMode
-                        ? "초고속 자동음성을 준비합니다. 준비 완료 후 영상을 재생하세요."
-                        : "안정 자동음성을 준비합니다. 준비 완료 후 영상을 재생하세요.",
-                Toast.LENGTH_LONG
-        ).show();
+        subtitleRequested = false;
+        subtitleButton.setText("한국어 자막 중지");
+        subtitleView.setText("한국어 자막 준비 중...");
+        subtitleView.setVisibility(View.VISIBLE);
     }
 
-    private void stopLocalDubbing() {
-        dubbingRequested = false;
+    private void stopLiveCaptions() {
+        subtitleRequested = false;
         Intent stopIntent = new Intent(this, ProjectionDubbingService.class);
         stopIntent.setAction(ProjectionDubbingService.ACTION_STOP);
         startService(stopIntent);
-        dubbingButton.setText("한국어 자동음성");
-        modeButton.setEnabled(true);
+        subtitleButton.setText("한국어 실시간 자막");
+        subtitleView.setVisibility(View.GONE);
     }
 
     @Override
@@ -219,8 +224,7 @@ public class MainActivity extends Activity {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 requestProjectionPermission();
             } else {
-                dubbingRequested = false;
-                modeButton.setEnabled(true);
+                subtitleRequested = false;
                 Toast.makeText(this, "영상 소리를 인식하려면 오디오 권한이 필요합니다.", Toast.LENGTH_LONG).show();
             }
         }
@@ -231,11 +235,11 @@ public class MainActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQUEST_MEDIA_PROJECTION) {
             if (resultCode == RESULT_OK && data != null) {
-                startLocalDubbing(resultCode, data);
+                startLiveCaptions(resultCode, data);
             } else {
-                dubbingRequested = false;
-                dubbingButton.setText("한국어 자동음성");
-                modeButton.setEnabled(true);
+                subtitleRequested = false;
+                subtitleButton.setText("한국어 실시간 자막");
+                subtitleView.setVisibility(View.GONE);
                 Toast.makeText(this, "오디오 캡처 승인이 취소되었습니다.", Toast.LENGTH_SHORT).show();
             }
         }
@@ -244,10 +248,10 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        if (dubbingButton != null && !dubbingRequested) {
+        if (subtitleButton != null && !subtitleRequested) {
             boolean running = ProjectionDubbingService.isRunning();
-            dubbingButton.setText(running ? "한국어 자동음성 중지" : "한국어 자동음성");
-            if (modeButton != null) modeButton.setEnabled(!running);
+            subtitleButton.setText(running ? "한국어 자막 중지" : "한국어 실시간 자막");
+            if (!running && subtitleView != null) subtitleView.setVisibility(View.GONE);
         }
     }
 
@@ -283,9 +287,7 @@ public class MainActivity extends Activity {
         String action = intent.getAction();
         if (Intent.ACTION_VIEW.equals(action)) {
             Uri data = intent.getData();
-            if (data != null && isYouTubeHost(data.getHost())) {
-                return data.toString();
-            }
+            if (data != null && isYouTubeHost(data.getHost())) return data.toString();
         }
 
         if (Intent.ACTION_SEND.equals(action) && "text/plain".equals(intent.getType())) {
@@ -389,9 +391,7 @@ public class MainActivity extends Activity {
         try {
             Intent parsed = Intent.parseUri(intentUrl, Intent.URI_INTENT_SCHEME);
             String fallback = parsed.getStringExtra("browser_fallback_url");
-            if (fallback != null) {
-                openExternalBrowser(Uri.parse(fallback));
-            }
+            if (fallback != null) openExternalBrowser(Uri.parse(fallback));
         } catch (Exception ignored) {
         }
     }
@@ -408,7 +408,14 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         if (isFinishing() && ProjectionDubbingService.isRunning()) {
-            stopLocalDubbing();
+            stopLiveCaptions();
+        }
+        if (receiverRegistered) {
+            try {
+                unregisterReceiver(subtitleReceiver);
+            } catch (Exception ignored) {
+            }
+            receiverRegistered = false;
         }
         if (webView != null) {
             webView.destroy();
