@@ -1,0 +1,75 @@
+name: P3 K-YouTube Free Supervisor
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 */6 * * *'
+  push:
+    branches: [main]
+    paths:
+      - 'config/k-youtube-free.json'
+      - 'scripts/supervise-k-youtube-free.mjs'
+      - 'ops/K_YOUTUBE_P3_SUPERVISOR_CONTRACT.md'
+      - '.github/workflows/k-youtube-free-supervisor.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: p3-k-youtube-free-supervisor
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate supervisor policy
+        shell: bash
+        run: |
+          set -euo pipefail
+          node - <<'NODE'
+          const fs = require('fs');
+          const c = JSON.parse(fs.readFileSync('config/k-youtube-free.json', 'utf8'));
+          if (c.projectId !== 'K-YOUTUBE') throw new Error('project id mismatch');
+          if (c.mode !== 'external-supervisor') throw new Error('supervisor mode mismatch');
+          if (c.costPolicy?.freeOnly !== true) throw new Error('free-only lock missing');
+          if (c.costPolicy?.paidTranslationApi !== false) throw new Error('paid translation must stay disabled');
+          if (c.costPolicy?.paidDubApi !== false) throw new Error('paid dubbing must stay disabled');
+          if (c.costPolicy?.paidTtsApi !== false) throw new Error('paid TTS must stay disabled');
+          if (c.automationPolicy?.p3MayCallPaidServices !== false) throw new Error('P3 paid-service guard missing');
+          if (c.automationPolicy?.p3MayReplaceDeploymentPipeline !== false) throw new Error('deployment ownership guard missing');
+          if (!String(c.deployUrl || '').startsWith('https://k-youtube-free-r0zsy7.v2.appdeploy.ai/')) throw new Error('unexpected production URL');
+          console.log('K-YOUTUBE POLICY PASS free-only=true external-supervisor=true');
+          NODE
+
+      - name: Verify real public URL with retry
+        id: live
+        run: node scripts/supervise-k-youtube-free.mjs
+
+      - name: Report
+        if: always()
+        env:
+          LIVE_STATUS: ${{ steps.live.outputs.status }}
+          HTTP_STATUS: ${{ steps.live.outputs.http_status }}
+          LATENCY_MS: ${{ steps.live.outputs.latency_ms }}
+          LIVE_URL: ${{ steps.live.outputs.url }}
+        run: |
+          {
+            echo '### K-YouTube Free ↔ P3 supervisor'
+            echo "- Live verification: ${LIVE_STATUS:-failed}"
+            echo "- HTTP: ${HTTP_STATUS:-unknown}"
+            echo "- Latency: ${LATENCY_MS:-unknown} ms"
+            echo "- URL: ${LIVE_URL:-https://k-youtube-free-r0zsy7.v2.appdeploy.ai/}"
+            echo '- Mode: external read-only supervisor'
+            echo '- Paid translation/dubbing/TTS: disabled'
+            echo '- Recovery: retry then report; no destructive action'
+          } >> "$GITHUB_STEP_SUMMARY"
