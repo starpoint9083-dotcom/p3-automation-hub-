@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "p3-automation-hub",
-  "main": "src/index.js",
+  "main": "src/index-place-rank.js",
   "compatibility_date": "2026-09-11",
   "workers_dev": true,
   "observability": { "enabled": true },
