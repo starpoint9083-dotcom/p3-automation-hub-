@@ -118,7 +118,7 @@ jobs:
           echo "apk=$APK" >> "$GITHUB_OUTPUT"
           echo "size_bytes=$(stat -c%s "$APK")" >> "$GITHUB_OUTPUT"
 
-      - name: Verify V7.1 reliable-start local dubbing
+      - name: Verify V8 live Korean captions
         shell: bash
         run: |
           set -euo pipefail
@@ -127,26 +127,25 @@ jobs:
           "$AAPT" dump badging "$APK" > /tmp/k-youtube-badging.txt
           "$AAPT" dump xmltree "$APK" AndroidManifest.xml > /tmp/k-youtube-manifest.txt
           grep -F "package: name='com.kyoutube.free'" /tmp/k-youtube-badging.txt
-          grep -F "versionName='0.7.1'" /tmp/k-youtube-badging.txt
+          grep -F "versionName='0.8.0'" /tmp/k-youtube-badging.txt
           grep -F 'android.intent.category.APP_BROWSER' /tmp/k-youtube-manifest.txt
           grep -F 'android.intent.category.BROWSABLE' /tmp/k-youtube-manifest.txt
           grep -F 'android.permission.RECORD_AUDIO' /tmp/k-youtube-manifest.txt
           grep -F 'android.permission.FOREGROUND_SERVICE_MEDIA_PROJECTION' /tmp/k-youtube-manifest.txt
           grep -F 'com.kyoutube.free.ProjectionDubbingService' /tmp/k-youtube-manifest.txt
           unzip -l "$APK" | grep -E 'lib/arm64-v8a/libwhisper(_v8fp16_va)?\.so'
-          grep -F 'FAST_MIN_SAMPLES = 24_000' android/k-youtube-app/app/src/main/java/com/kyoutube/free/ProjectionDubbingService.kt
-          grep -F 'FAST_MAX_SAMPLES = 32_000' android/k-youtube-app/app/src/main/java/com/kyoutube/free/ProjectionDubbingService.kt
-          grep -F 'OVERLAP_SAMPLES = 8_000' android/k-youtube-app/app/src/main/java/com/kyoutube/free/ProjectionDubbingService.kt
-          grep -F 'removeRepeatedOverlap' android/k-youtube-app/app/src/main/java/com/kyoutube/free/LocalDubbingEngine.kt
-          grep -F 'K-YouTube-Free/0.7.1' android/k-youtube-app/app/src/main/java/com/kyoutube/free/LocalDubbingEngine.kt
-          ! grep -F 'WARMUP_SAMPLE_COUNT' android/k-youtube-app/app/src/main/java/com/kyoutube/free/LocalDubbingEngine.kt
-          ! grep -F 'ctx.transcribeData(FloatArray' android/k-youtube-app/app/src/main/java/com/kyoutube/free/LocalDubbingEngine.kt
-          grep -F '속도: 초고속' android/k-youtube-app/app/src/main/java/com/kyoutube/free/MainActivity.java
+          grep -F 'ACTION_SUBTITLE' android/k-youtube-app/app/src/main/java/com/kyoutube/free/ProjectionDubbingService.kt
+          grep -F 'broadcastSubtitle' android/k-youtube-app/app/src/main/java/com/kyoutube/free/ProjectionDubbingService.kt
+          grep -F '한국어 실시간 자막' android/k-youtube-app/app/src/main/java/com/kyoutube/free/MainActivity.java
+          grep -F 'subtitleView.setText(korean.trim())' android/k-youtube-app/app/src/main/java/com/kyoutube/free/MainActivity.java
+          grep -F 'K-YouTube-Free/0.8.0' android/k-youtube-app/app/src/main/java/com/kyoutube/free/LocalDubbingEngine.kt
+          ! grep -F 'TextToSpeech' android/k-youtube-app/app/src/main/java/com/kyoutube/free/ProjectionDubbingService.kt
+          ! grep -F 'speakKorean' android/k-youtube-app/app/src/main/java/com/kyoutube/free/ProjectionDubbingService.kt
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: k-youtube-free-v7-1-reliable-start-apk
+          name: k-youtube-free-v8-live-korean-captions-apk
           path: ${{ steps.verify.outputs.apk }}
           if-no-files-found: error
           retention-days: 14
@@ -155,17 +154,15 @@ jobs:
         if: always()
         run: |
           {
-            echo '### K-YouTube Android V7.1 ↔ P3'
-            echo '- Priority: actual English → Korean voice output'
-            echo '- Proven V5-style startup restored: no blocking Whisper transcription warm-up before capture'
-            echo '- Fast mode retained: adaptive 1.5–2.0 second segments'
-            echo '- Stable mode retained: adaptive 2.5–3.0 second segments'
+            echo '### K-YouTube Android V8 ↔ P3'
+            echo '- Priority: English video → live Korean subtitle overlay'
+            echo '- Korean voice TTS removed from the runtime path'
+            echo '- Fast mode: adaptive 1.5–2.0 second audio segments'
             echo '- Context overlap: 0.5 seconds with overlap deduplication'
-            echo '- Natural pause trigger: trailing-silence early dispatch'
             echo '- Local ASR: pinned whisper.cpp tiny.en q5_1'
             echo '- Translation: ML Kit English → Korean on-device model'
-            echo '- Voice: Android Korean TextToSpeech'
-            echo '- Paid translation/dubbing/TTS API calls: none'
+            echo '- Output: Korean subtitle overlay inside K-YouTube'
+            echo '- Paid translation/TTS API calls: none'
             echo '- Existing K-YouTube AppDeploy web app: preserved'
-            echo '- Build output: k-youtube-free-v7-1-reliable-start-apk'
+            echo '- Build output: k-youtube-free-v8-live-korean-captions-apk'
           } >> "$GITHUB_STEP_SUMMARY"
