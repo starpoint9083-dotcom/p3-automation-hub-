@@ -4,12 +4,22 @@ on:
   schedule:
     - cron: '10 5 * * *'
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'config/place-rank.json'
+      - 'scripts/place-rank-scan.mjs'
+      - 'src/place-rank.js'
+      - 'src/index-place-rank.js'
+      - '.github/workflows/place-rank-daily.yml'
   pull_request:
     branches: [main]
     paths:
       - 'config/place-rank.json'
       - 'data/place-rank-history.json'
       - 'src/place-rank-data.js'
+      - 'src/place-rank.js'
+      - 'src/index-place-rank.js'
       - 'scripts/place-rank-scan.mjs'
       - '.github/workflows/place-rank-daily.yml'
       - 'package.json'
