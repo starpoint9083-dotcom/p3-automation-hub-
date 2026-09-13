@@ -1,0 +1,44 @@
+{
+  "projectId": "K-YOUTUBE",
+  "name": "K-YouTube Free",
+  "role": "P3 YouTube Korean viewing module",
+  "deploymentOwner": "AppDeploy",
+  "appId": "k-youtube-free-r0zsy7",
+  "deployUrl": "https://k-youtube-free-r0zsy7.v2.appdeploy.ai/",
+  "mode": "external-supervisor",
+  "health": {
+    "type": "frontend-root",
+    "path": "/",
+    "expectedStatus": 200,
+    "expectedHtmlMarkers": ["id=\"root\"", "K-YouTube Free"]
+  },
+  "retryPolicy": {
+    "attempts": 5,
+    "delaySeconds": 12,
+    "timeoutSeconds": 15
+  },
+  "costPolicy": {
+    "paidTranslationApi": false,
+    "paidDubApi": false,
+    "paidTtsApi": false,
+    "freeOnly": true
+  },
+  "capabilities": {
+    "youtubeOfficialEmbed": true,
+    "preferKoreanCaptions": true,
+    "useExistingKoreanAudioTrackWhenAvailable": true,
+    "browserKoreanTtsAssist": true,
+    "universalFreeLiveDubbing": false
+  },
+  "protected": {
+    "neverDeleteOrRename": ["appdeploy:k-youtube-free-r0zsy7"],
+    "neverReplaceDeploymentOwnerWithoutExplicitMigration": true
+  },
+  "automationPolicy": {
+    "p3MayObserve": true,
+    "p3MayVerifyPublicUrl": true,
+    "p3MayCallPaidServices": false,
+    "p3MayReplaceDeploymentPipeline": false,
+    "onFailure": "retry-then-report"
+  }
+}
