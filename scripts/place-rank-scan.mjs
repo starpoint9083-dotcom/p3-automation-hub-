@@ -21,6 +21,7 @@ function visibleName(v) { const t = String(v || '').replace(/\s+/g, ' ').trim();
 function mergeNames(target, incoming) { const seen = new Set(target.map(normalize)); for (const raw of incoming || []) { const n = visibleName(raw); const k = normalize(n); if (n && k && !seen.has(k)) { seen.add(k); target.push(n); } } return target; }
 function parseCoord(url) { try { const raw = new URL(url).searchParams.get('searchCoord'); if (!raw) return null; const [lon, lat] = raw.split(';').map(Number); return Number.isFinite(lat)&&Number.isFinite(lon) ? {latitude:lat, longitude:lon} : null; } catch { return null; } }
 function coordMatches(a, lat, lon) { return !!a && Math.abs(a.latitude-lat)<=0.03 && Math.abs(a.longitude-lon)<=0.03; }
+function toWebMercator(lat, lon) { const r=6378137; const clamped=Math.max(-85.05112878,Math.min(85.05112878,lat)); return { x:r*lon*Math.PI/180, y:r*Math.log(Math.tan(Math.PI/4+clamped*Math.PI/360)) }; }
 function looksLikePlaceObject(o) { if (!o || typeof o !== 'object' || Array.isArray(o)) return false; const name = visibleName(o.name ?? o.title ?? o.displayName ?? o.businessName); return !!name && !!(o.id||o.placeId||o.businessId||o.roadAddress||o.address||o.category||o.categoryName||o.x||o.y||o.phone); }
 function extractNames(payload) {
   const out=[]; const seen=new Set();
@@ -57,14 +58,17 @@ function createCapture(page){
   page.on('response',handler);
   return {state,async stop(){state.active=false;page.off('response',handler);await Promise.allSettled(state.tasks);return state;}};
 }
-async function findInput(page, timeout=15000){ const sels=['input.input_search','input[type="search"]','input[placeholder*="검색"]','input[aria-label*="검색"]']; const until=Date.now()+timeout; while(Date.now()<until){ for(const f of page.frames()) for(const s of sels){ let hs=[]; try{hs=await f.$$(s);}catch{} for(const h of hs){try{const ok=await h.evaluate(el=>{const r=el.getBoundingClientRect(),st=getComputedStyle(el);return r.width>0&&r.height>0&&st.display!=='none'&&st.visibility!=='hidden';}); if(ok) return h;}catch{} try{await h.dispose();}catch{}} } await sleep(250);} throw new Error('Visible Naver Map search input was not found'); }
 async function scrollSearchFrame(page){ const f=page.frames().find(x=>x.name()==='searchIframe')||page.frames().find(x=>x!==page.mainFrame()&&/search|place/.test(x.url())); if(!f) return; try{await f.evaluate(()=>{const el=document.querySelector('#_pcmap_list_scroll_container')||document.querySelector('[role="list"]'); if(el) el.scrollTop=el.scrollHeight; else window.scrollTo(0,document.body.scrollHeight);});}catch{} }
 async function scanKeyword(page, keyword, aliases, maxResults, lat, lon){
   await page.setCacheEnabled(false);
-  const base=`https://map.naver.com/p?lng=${encodeURIComponent(lon)}&lat=${encodeURIComponent(lat)}&c=15.00,0,0,0,dh`;
-  await page.goto(base,{waitUntil:'domcontentloaded',timeout:45000}); await sleep(2200);
-  const capture=createCapture(page); const input=await findInput(page); await input.click({clickCount:3}); await page.keyboard.press('Backspace'); await page.keyboard.type(keyword); await page.keyboard.press('Enter'); try{await input.dispose();}catch{} await sleep(5000);
-  let blocked=await detectBlock(page); for(let i=0;i<4&&!blocked;i++){await scrollSearchFrame(page); await sleep(900); blocked=await detectBlock(page);} const network=await capture.stop();
+  const center=toWebMercator(lat,lon);
+  const base=`https://map.naver.com/p/search/${encodeURIComponent(keyword)}?c=${center.x},${center.y},15.22,0,0,0,dh`;
+  const capture=createCapture(page);
+  await page.goto(base,{waitUntil:'domcontentloaded',timeout:45000});
+  await sleep(5200);
+  let blocked=await detectBlock(page);
+  for(let i=0;i<4&&!blocked;i++){await scrollSearchFrame(page); await sleep(900); blocked=await detectBlock(page);}
+  const network=await capture.stop();
   const networkNames=[]; mergeNames(networkNames,network.names); const domNames=await collectDomPlaceNames(page); const names=[]; mergeNames(names,networkNames); mergeNames(names,domNames); const limited=names.slice(0,maxResults);
   const searchCoord=network.searchCoords.at(-1)||null; const locationMatched=coordMatches(searchCoord,lat,lon); const url=page.url()||base;
   if(blocked) return {keyword,rank:null,status:'blocked',resultCount:limited.length,url,searchCoord,locationMatched:false,networkResponses:network.matchedResponses,captureSources:network.sources.slice(0,12)};
@@ -80,11 +84,11 @@ await fs.mkdir(artifactDir,{recursive:true});
 const browser=await puppeteer.launch({executablePath:chromePath,headless:true,args:['--no-sandbox','--disable-setuid-sandbox','--disable-dev-shm-usage','--lang=ko-KR','--window-size=1440,1200']});
 const context=browser.defaultBrowserContext(); const location=config.location||{}; const latitude=Number(location.latitude), longitude=Number(location.longitude), accuracy=Number(location.accuracyMeters||40);
 if(Number.isFinite(latitude)&&Number.isFinite(longitude)) await context.overridePermissions('https://map.naver.com',['geolocation']);
-const page=await browser.newPage(); await page.setViewport({width:1440,height:1200,deviceScaleFactor:1}); await page.setExtraHTTPHeaders({'accept-language':'ko-KR,ko;q=0.9,en;q=0.5'}); if(Number.isFinite(latitude)&&Number.isFinite(longitude)){await page.setGeolocation({latitude,longitude,accuracy}); console.log(`PLACE_RANK_LOCATION lat=${latitude} lon=${longitude} accuracy=${accuracy}`);}
+const page=await browser.newPage(); await page.setViewport({width:1440,height:1200,deviceScaleFactor:1}); await page.setExtraHTTPHeaders({'accept-language':'ko-KR,ko;q=0.9,en;q=0.5'}); if(Number.isFinite(latitude)&&Number.isFinite(longitude)){await page.setGeolocation({latitude,longitude,accuracy}); const merc=toWebMercator(latitude,longitude); console.log(`PLACE_RANK_LOCATION lat=${latitude} lon=${longitude} mercator=${merc.x},${merc.y} accuracy=${accuracy}`);}
 const aliases=[...new Set([config.store.name,...(config.store.aliases||[])])]; const results=[];
 try{for(const keyword of config.keywords){try{const r=await scanKeyword(page,keyword,aliases,Number(config.maxResults||50),latitude,longitude);results.push(r);const c=r.searchCoord?`${r.searchCoord.latitude},${r.searchCoord.longitude}`:'NA';console.log(`PLACE_RANK keyword=${JSON.stringify(keyword)} status=${r.status} rank=${r.rank??'NA'} count=${r.resultCount} network=${r.networkResponses??0} searchCoord=${c}`);if(r.status!=='ok') await page.screenshot({path:path.join(artifactDir,`${safeSlug(keyword)}.png`),fullPage:true});}catch(e){const m=e?.message||String(e);results.push({keyword,rank:null,status:'error',resultCount:0,error:m.slice(0,300)});console.error(`PLACE_RANK_ERROR keyword=${JSON.stringify(keyword)} error=${m}`);} await sleep(900);}} finally{await browser.close();}
-const checkedAt=kstIso(); const snapshot={date:checkedAt.slice(0,10),checkedAt,source:'naver-map-browser-network-centered-v2',location:{latitude,longitude,accuracyMeters:accuracy,basis:location.basis||config.store.address},results};
-const previous=Array.isArray(historyDoc.history)?historyDoc.history:[]; const history=[...previous.filter(x=>x?.date!==snapshot.date),snapshot].slice(-90); const nextDoc={version:'1.4.0',store:config.store.name,generatedAt:checkedAt,history}; await fs.writeFile(historyPath,`${JSON.stringify(nextDoc,null,2)}\n`,'utf8'); await fs.writeFile(generatedPath,`export const placeRankData = ${JSON.stringify(nextDoc,null,2)};\n`,'utf8');
-const ok=results.filter(x=>x.status==='ok').length, blocked=results.filter(x=>x.status==='blocked').length, nores=results.filter(x=>x.status==='no-results').length, mismatch=results.filter(x=>x.status==='location-mismatch').length, unverified=results.filter(x=>x.status==='unverified').length, errors=results.filter(x=>x.status==='error').length;
-console.log(`PLACE_RANK_COMPLETE checked=${results.length} found=${ok} blocked=${blocked} noResults=${nores} locationMismatch=${mismatch} unverified=${unverified} errors=${errors} generatedAt=${checkedAt}`);
-if(blocked===results.length&&results.length) process.exitCode=3; if(mismatch>0) process.exitCode=5; if(errors>0) process.exitCode=6; if((ok+results.filter(x=>x.status==='not-found').length)===0) process.exitCode=7;
+const checkedAt=kstIso(); const snapshot={date:checkedAt.slice(0,10),checkedAt,source:'naver-map-browser-network-mercator-v3',location:{latitude,longitude,accuracyMeters:accuracy,basis:location.basis||config.store.address},results};
+const previous=Array.isArray(historyDoc.history)?historyDoc.history:[]; const history=[...previous.filter(x=>x?.date!==snapshot.date),snapshot].slice(-90); const nextDoc={version:'1.5.0',store:config.store.name,generatedAt:checkedAt,history}; await fs.writeFile(historyPath,`${JSON.stringify(nextDoc,null,2)}\n`,'utf8'); await fs.writeFile(generatedPath,`export const placeRankData = ${JSON.stringify(nextDoc,null,2)};\n`,'utf8');
+const ok=results.filter(x=>x.status==='ok').length, blocked=results.filter(x=>x.status==='blocked').length, nores=results.filter(x=>x.status==='no-results').length, mismatch=results.filter(x=>x.status==='location-mismatch').length, unverified=results.filter(x=>x.status==='unverified').length, notFound=results.filter(x=>x.status==='not-found').length, errors=results.filter(x=>x.status==='error').length;
+console.log(`PLACE_RANK_COMPLETE checked=${results.length} found=${ok} notFound=${notFound} blocked=${blocked} noResults=${nores} locationMismatch=${mismatch} unverified=${unverified} errors=${errors} generatedAt=${checkedAt}`);
+if(blocked===results.length&&results.length) process.exitCode=3; if(errors>0) process.exitCode=6; if((ok+notFound)===0) process.exitCode=7;
