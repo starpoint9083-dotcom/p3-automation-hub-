@@ -14,7 +14,7 @@ const source=zlib.gunzipSync(compressed).toString('utf8');
 const sha=crypto.createHash('sha256').update(source).digest('hex');
 console.log(`P1 source assembled bytes=${Buffer.byteLength(source)} sha256=${sha}`);
 const lines=source.split(/\r?\n/);
-const needles=['/api/plan','/api/lineups','ensureLineupProjects','lineup_items','createProjectPlan','recover-lineup-queues','rebuildMissingGenerationQueue'];
+const needles=['/api/plan','/api/queue','/api/projects/','/api/video-plan','/api/lineups','ensureLineupProjects','lineup_items','createProjectPlan','recover-lineup-queues','rebuildMissingGenerationQueue'];
 const printed=new Set();
 for(let i=0;i<lines.length;i++){
   if(!needles.some(n=>lines[i].includes(n)))continue;
