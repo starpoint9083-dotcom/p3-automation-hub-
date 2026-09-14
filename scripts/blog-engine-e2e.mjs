@@ -2,6 +2,31 @@ const base = String(process.env.BLOG_ENGINE_URL || '').replace(/\/$/, '');
 if (!base) throw new Error('BLOG_ENGINE_URL missing');
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+const BAD_FOREIGN=/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/u;
+const BAD_PATTERNS=[
+  /가을[^.!?]{0,35}자외선[^.!?]{0,25}(강해|강하|증가|높아)/u,
+  /자외선[^.!?]{0,25}(강해지|증가하|더\s*강)/u,
+  /일조량[^.!?]{0,20}(증가|늘어)/u,
+  /시야[^.!?]{0,20}(개선|향상)/u,
+  /(눈|안구)[^.!?]{0,20}(피로|건강)[^.!?]{0,20}(개선|감소|유지|치료)/u,
+  /(100%|완벽하게|완전히\s*(차단|해결)|걱정\s*끝|필수\s*아이템)/u
+];
+
+function safeText(label, value, min = 1) {
+  if (typeof value !== 'string' || value.trim().length < min) throw new Error(`${label}_invalid`);
+  if (BAD_FOREIGN.test(value)) throw new Error(`${label}_foreign_cjk`);
+  for (const re of BAD_PATTERNS) if (re.test(value)) throw new Error(`${label}_unsafe_claim`);
+}
+function words(s) {
+  return new Set(String(s || '').toLowerCase().replace(/[^0-9a-z가-힣\s]/g, ' ').split(/\s+/).filter(w => w.length >= 2));
+}
+function similarity(a, b) {
+  const A = words(a), B = words(b);
+  if (!A.size || !B.size) return 0;
+  let inter = 0;
+  for (const x of A) if (B.has(x)) inter += 1;
+  return inter / (A.size + B.size - inter);
+}
 
 async function requestJson(path, options = {}) {
   const { retries = 8, timeoutMs = 45000, ...fetchOptions } = options;
@@ -33,6 +58,7 @@ async function requestJson(path, options = {}) {
 const health = await requestJson('/health');
 if (!health.ok || health.service !== 'p3-blog-engine') throw new Error('health_invalid');
 if (!health.ai_bound) throw new Error('workers_ai_not_bound');
+if (health.version !== '0.3.1') throw new Error(`wrong_live_version:${health.version}`);
 
 const trends = await requestJson('/api/trends?limit=10');
 if (!Array.isArray(trends.trends) || trends.trends.length < 1) throw new Error('trends_invalid');
@@ -46,21 +72,32 @@ for (const topic of topics.topics) {
 
 const draft = await requestJson('/api/draft', { method: 'POST', body: '{}', retries: 2, timeoutMs: 120000 });
 if (!draft.ok || !draft.topic?.keyword || !draft.draft) throw new Error('draft_invalid');
-if (!draft.ai_used) throw new Error(`ai_draft_not_used:${draft.error || draft.generation_error || 'unknown'}`);
+if (!draft.ai_used) throw new Error(`ai_draft_not_used:${draft.error || 'unknown'}`);
 if (!draft.structured_output) throw new Error('structured_output_false');
-if (draft.draft.mode !== 'ai-structured-multistage') throw new Error(`wrong_generation_mode:${draft.draft.mode}`);
-if (typeof draft.draft.title !== 'string' || draft.draft.title.length < 8) throw new Error('title_invalid');
-if (typeof draft.draft.intro !== 'string' || draft.draft.intro.length < 40) throw new Error('intro_invalid');
+if (!draft.text_quality_gate_passed) throw new Error('text_quality_gate_false');
+if (draft.draft.mode !== 'ai-structured-multistage-quality-gated') throw new Error(`wrong_generation_mode:${draft.draft.mode}`);
+if (draft.draft.generation_meta?.quality_gate !== 'v0.3.1-korean-fact-distinct') throw new Error('wrong_quality_gate');
+
+safeText('title', draft.draft.title, 8);
+safeText('intro', draft.draft.intro, 40);
 if (!Array.isArray(draft.draft.sections) || draft.draft.sections.length !== 4) throw new Error('section_count_invalid');
 for (const [index, section] of draft.draft.sections.entries()) {
-  if (!section.heading || typeof section.body !== 'string' || section.body.length < 100) {
-    throw new Error(`section_${index + 1}_invalid_len_${section?.body?.length || 0}`);
+  safeText(`section_${index + 1}_heading`, section.heading, 4);
+  safeText(`section_${index + 1}_body`, section.body, 120);
+}
+for (let i = 0; i < draft.draft.sections.length; i += 1) {
+  for (let j = 0; j < i; j += 1) {
+    const sim = similarity(draft.draft.sections[i].body, draft.draft.sections[j].body);
+    if (sim >= 0.62) throw new Error(`section_similarity_${j + 1}_${i + 1}_${sim.toFixed(3)}`);
   }
 }
 if (!Array.isArray(draft.draft.photo_slots) || draft.draft.photo_slots.length < 4) throw new Error('photo_slots_invalid');
 if (!draft.draft.video_plan || !Array.isArray(draft.draft.video_plan.shots) || draft.draft.video_plan.shots.length < 3) throw new Error('video_plan_invalid');
+safeText('video_hook', draft.draft.video_plan.hook, 8);
+safeText('video_caption', draft.draft.video_plan.caption, 4);
 if (!Array.isArray(draft.draft.hashtags) || draft.draft.hashtags.length < 4) throw new Error('hashtags_invalid');
-if (typeof draft.draft.cta !== 'string' || draft.draft.cta.length < 15) throw new Error('cta_invalid');
+safeText('cta', draft.draft.cta, 15);
+if ((draft.draft.generation_meta?.max_section_similarity ?? 1) >= 0.62) throw new Error('generation_similarity_gate_failed');
 
 const preview = {
   title: draft.draft.title,
@@ -82,5 +119,6 @@ console.log(JSON.stringify({
   trend_mode: draft.topic.trend_mode,
   ai_used: draft.ai_used,
   structured_output: draft.structured_output,
+  text_quality_gate_passed: draft.text_quality_gate_passed,
   preview
 }, null, 2));
