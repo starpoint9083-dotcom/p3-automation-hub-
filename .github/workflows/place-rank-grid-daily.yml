@@ -1,0 +1,153 @@
+name: P3 Place Rank Grid Daily
+
+on:
+  schedule:
+    - cron: '25 5 * * *'
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'config/place-rank.json'
+      - 'scripts/place-rank-grid-scan.mjs'
+      - 'src/place-rank-grid-data.js'
+      - 'src/place-rank.js'
+      - '.github/workflows/place-rank-grid-daily.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'config/place-rank.json'
+      - 'data/place-rank-grid-history.json'
+      - 'src/place-rank-grid-data.js'
+      - 'src/place-rank.js'
+      - 'scripts/place-rank-grid-scan.mjs'
+      - '.github/workflows/place-rank-grid-daily.yml'
+      - 'package.json'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: p3-place-rank-grid-daily
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: P3 syntax and safety checks
+        run: |
+          npm run check
+          npm run security
+          npm run safety
+          npm test
+          npm run preflight
+
+  scan:
+    if: github.event_name != 'pull_request'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install browser controller
+        run: npm install --no-audit --no-fund --no-save puppeteer-core@24.16.0
+
+      - name: Locate Chrome
+        shell: bash
+        run: |
+          set -euo pipefail
+          CHROME_PATH="$(command -v google-chrome-stable || command -v google-chrome || command -v chromium || command -v chromium-browser || true)"
+          if [ -z "$CHROME_PATH" ]; then
+            echo "Chrome/Chromium was not found on the runner." >&2
+            exit 1
+          fi
+          echo "CHROME_PATH=$CHROME_PATH" >> "$GITHUB_ENV"
+          "$CHROME_PATH" --version
+
+      - name: Scan 5x5 objective Naver Map grid
+        run: node scripts/place-rank-grid-scan.mjs
+
+      - name: Add geogrid run summary
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f data/place-rank-grid-history.json ]; then
+            node - <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          const fs = require('fs');
+          const doc = JSON.parse(fs.readFileSync('data/place-rank-grid-history.json', 'utf8'));
+          const latest = doc.latest;
+          console.log('## 스타포인트안경원 25지점 객관순위');
+          console.log('');
+          console.log(`검사시각: ${latest?.checkedAt || 'unknown'}`);
+          console.log(`격자: ${latest?.grid?.size || '-'}x${latest?.grid?.size || '-'} · 간격 ${latest?.grid?.spacingMeters || '-'}m`);
+          console.log('');
+          console.log('| 키워드 | 중앙순위 | TOP3 | TOP10 | TOP20 | 노출력 | 매장앞 |');
+          console.log('|---|---:|---:|---:|---:|---:|---:|');
+          for (const item of latest?.summaries || []) {
+            const median = Number.isFinite(item.medianRankCapped) ? item.medianRankCapped : '-';
+            console.log(`| ${item.keyword} | ${median} | ${item.top3Pct ?? '-'}% | ${item.top10Pct ?? '-'}% | ${item.top20Pct ?? '-'}% | ${item.visibilityScore ?? '-'} | ${item.storePointRank ?? '-'} |`);
+          }
+          NODE
+          fi
+
+      - name: Upload geogrid diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: place-rank-grid-diagnostics-${{ github.run_number }}
+          path: artifacts/place-rank-grid/
+          if-no-files-found: ignore
+          retention-days: 14
+
+      - name: Commit verified geogrid snapshot
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "p3-automation-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/place-rank-grid-history.json src/place-rank-grid-data.js
+          if git diff --cached --quiet; then
+            echo "No geogrid data changes to commit."
+            exit 0
+          fi
+          DATE_KST="$(TZ=Asia/Seoul date +%F)"
+          git commit -m "data(place-rank-grid): daily 25-point snapshot ${DATE_KST}"
+
+          for attempt in 1 2 3 4 5; do
+            if git push origin HEAD:main; then
+              echo "Geogrid snapshot pushed to main."
+              exit 0
+            fi
+            echo "Push attempt ${attempt} collided with a newer main; rebasing and retrying."
+            git fetch origin main
+            if ! git rebase origin/main; then
+              git rebase --abort || true
+              echo "Automatic rebase failed; refusing to overwrite main." >&2
+              exit 1
+            fi
+            sleep $((attempt * 2))
+          done
+
+          echo "Unable to push geogrid snapshot after 5 retries." >&2
+          exit 1
