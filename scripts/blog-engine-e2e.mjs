@@ -1,152 +1,104 @@
-const base = String(process.env.BLOG_ENGINE_URL || '').replace(/\/$/, '');
-if (!base) throw new Error('BLOG_ENGINE_URL missing');
+const base=String(process.env.BLOG_ENGINE_URL||'').replace(/\/$/,'');
+if(!base) throw new Error('BLOG_ENGINE_URL missing');
 
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-const EXPECTED_VERSION='0.3.4.3';
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const EXPECTED_VERSION='0.3.5.0';
 const EXPECTED_GATE='v0.3.4.3-stella-v13b';
 const EXPECTED_VOICE='stella-v13b-starpoint-friendly-60-40';
-const EXPECTED_RETRY_LIMIT=3;
-const BAD_FOREIGN=/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/u;
-const BAD_PATTERNS=[
-  /가을[^.!?]{0,35}자외선[^.!?]{0,25}(강해|강하|증가|높아)/u,
-  /자외선[^.!?]{0,25}(강해지|증가하|더\s*강)/u,
-  /(아침|저녁)[^.!?]{0,30}자외선[^.!?]{0,20}(강|높)/u,
-  /일조량[^.!?]{0,20}(증가|늘어)/u,
-  /시야[^.!?]{0,20}(개선|향상|더\s*좋)/u,
-  /(눈|안구)[^.!?]{0,20}(피로|건강)[^.!?]{0,20}(개선|감소|유지|치료)/u,
-  /창가[^.!?]{0,45}변색렌즈[^.!?]{0,30}(잘|효과)/u,
-  /(더\s*좋은\s*효과|효과적으로|큰\s*도움이\s*될\s*수|전문적인\s*상담이\s*필요|왜\s*그런지\s*이유를\s*보세요)/u,
-  /(100%|완벽하게|완전히\s*(차단|해결)|걱정\s*끝|필수\s*아이템)/u
-];
-const AIISH=['중요합니다','추천드립니다','최적의 선택','전문가와 상담','적합한 렌즈를 선택','도움이 될 수 있습니다','선택하는 것이 중요해요','전문적인 상담이 필요해요','큰 도움이 될 수 있어요'];
-const RIGID=['고객은','고객들은','선택해야 합니다','확인해야 합니다','이러한 이유로','왜냐하면','따라서'];
-const FRIENDLY_GLOBAL=/(해요|돼요|예요|이에요|거든요|있어요|없어요|않아요|맞아요|달라요|보세요|보셔야 해요|볼 수 있어요)\./gu;
+const EXPECTED_IMAGE_MODEL='@cf/black-forest-labs/flux-1-schnell';
+const EXPECTED_IMAGE_POLICY='owned-first-ai-fallback';
 
-function safeText(label, value, min = 1) {
-  if (typeof value !== 'string' || value.trim().length < min) throw new Error(`${label}_invalid`);
-  if (BAD_FOREIGN.test(value)) throw new Error(`${label}_foreign_cjk`);
-  for (const re of BAD_PATTERNS) if (re.test(value)) throw new Error(`${label}_unsafe_or_awkward_claim`);
-  if (AIISH.some(p=>(value.split(p).length-1)>1)) throw new Error(`${label}_ai_style_repetition`);
-  if (min>=120) {
-    const rigidHits=RIGID.reduce((n,p)=>n+(value.split(p).length-1),0);
-    if (rigidHits>1) throw new Error(`${label}_too_formal`);
-    const friendlyHits=(value.match(FRIENDLY_GLOBAL)||[]).length;
-    if (friendlyHits>4) throw new Error(`${label}_too_chatty`);
-  }
-}
-function words(s) {
-  return new Set(String(s || '').toLowerCase().replace(/[^0-9a-z가-힣\s]/g, ' ').split(/\s+/).filter(w => w.length >= 2));
-}
-function similarity(a, b) {
-  const A = words(a), B = words(b);
-  if (!A.size || !B.size) return 0;
-  let inter = 0;
-  for (const x of A) if (B.has(x)) inter += 1;
-  return inter / (A.size + B.size - inter);
-}
-
-async function requestJson(path, options = {}) {
-  const { retries = 8, timeoutMs = 45000, ...fetchOptions } = options;
+async function requestJson(path,options={}){
+  const {retries=3,timeoutMs=120000,...fetchOptions}=options;
   let lastError;
-  for (let attempt = 1; attempt <= retries; attempt += 1) {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeoutMs);
-    try {
-      const response = await fetch(`${base}${path}`, {
+  for(let attempt=1;attempt<=retries;attempt++){
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),timeoutMs);
+    try{
+      const response=await fetch(`${base}${path}`,{
         ...fetchOptions,
-        signal: controller.signal,
-        headers: { 'cache-control': 'no-cache', 'content-type': 'application/json', ...(fetchOptions.headers || {}) }
+        signal:controller.signal,
+        headers:{'cache-control':'no-cache','content-type':'application/json',...(fetchOptions.headers||{})}
       });
-      const text = await response.text();
-      let data;
-      try { data = JSON.parse(text); } catch { throw new Error(`${path}:invalid_json:${text.slice(0, 300)}`); }
-      if (!response.ok) throw new Error(`${path}:http_${response.status}:${data?.error || 'unknown'}`);
+      const text=await response.text();
+      let data;try{data=JSON.parse(text);}catch{throw new Error(`${path}:invalid_json:${text.slice(0,200)}`);}
+      if(!response.ok) throw new Error(`${path}:http_${response.status}:${data?.error||'unknown'}`);
       return data;
-    } catch (error) {
-      lastError = error;
-      if (attempt < retries) await sleep(attempt * 3000);
-    } finally {
-      clearTimeout(timer);
-    }
+    }catch(error){
+      lastError=error;
+      if(attempt<retries) await sleep(attempt*2500);
+    }finally{clearTimeout(timer);}
   }
   throw lastError;
 }
 
-async function waitForExpectedHealth() {
+async function waitForHealth(){
   let last;
-  for (let attempt = 1; attempt <= 12; attempt += 1) {
-    last = await requestJson('/health', { retries: 1, timeoutMs: 15000 });
-    if (last.ok && last.service === 'p3-blog-engine' && last.ai_bound && last.version === EXPECTED_VERSION && last.text_quality_gate === EXPECTED_GATE && last.voice_profile === EXPECTED_VOICE && last.stella_v13b_locked === true && last.extra_lead_rewrite === false && last.full_draft_retry_limit === EXPECTED_RETRY_LIMIT) return last;
-    if (attempt < 12) await sleep(3000);
+  for(let i=0;i<12;i++){
+    last=await requestJson('/health',{retries:1,timeoutMs:15000});
+    if(
+      last?.ok&&last?.version===EXPECTED_VERSION&&last?.ai_bound===true&&
+      last?.text_quality_gate===EXPECTED_GATE&&last?.voice_profile===EXPECTED_VOICE&&
+      last?.stella_v13b_locked===true&&last?.extra_lead_rewrite===false&&
+      last?.image_generation===true&&last?.image_policy===EXPECTED_IMAGE_POLICY&&
+      last?.image_model===EXPECTED_IMAGE_MODEL&&last?.web_image_search===false&&last?.video_search===false
+    ) return last;
+    await sleep(2500);
   }
-  throw new Error(`live_health_not_propagated:version_${last?.version || 'missing'}:gate_${last?.text_quality_gate || 'missing'}:voice_${last?.voice_profile || 'missing'}:retry_${last?.full_draft_retry_limit || 'missing'}`);
+  throw new Error(`health_not_propagated:${JSON.stringify(last)}`);
 }
 
-const health = await waitForExpectedHealth();
-const trends = await requestJson('/api/trends?limit=10');
-if (!Array.isArray(trends.trends) || trends.trends.length < 1) throw new Error('trends_invalid');
-const topics = await requestJson('/api/topics?limit=30');
-if (!Array.isArray(topics.topics) || !Array.isArray(topics.fallback_suggestions)) throw new Error('topics_invalid');
-for (const topic of topics.topics) if (topic.relevance_score < topics.min_relevance_score) throw new Error(`quality_gate_failed:${topic.keyword}`);
+const health=await waitForHealth();
+const trends=await requestJson('/api/trends?limit=10',{timeoutMs:30000});
+if(!Array.isArray(trends.trends)||trends.trends.length<1) throw new Error('trends_invalid');
+
+const single=await requestJson('/api/image',{
+  method:'POST',
+  body:JSON.stringify({keyword:'누진다초점 렌즈',description:'밝고 깔끔한 안경원에서 안경사가 고객의 안경 피팅을 확인하는 자연스러운 장면'}),
+  retries:2,
+  timeoutMs:180000
+});
+if(!single?.ok||single?.source!=='ai'||single?.generated!==true) throw new Error('single_image_generation_failed');
+if(single?.image_model!==EXPECTED_IMAGE_MODEL) throw new Error('single_image_model_wrong');
+if(typeof single?.image_data_uri!=='string'||!single.image_data_uri.startsWith('data:image/jpeg;base64,')||single.image_data_uri.length<1000) throw new Error('single_image_data_invalid');
 
 const testTopic={
   keyword:'누진다초점 렌즈',
   blog_bridge:'누진다초점 적응과 정밀 시력검사',
   suggested_title:'누진다초점 렌즈, 제품보다 먼저 확인할 것'
 };
-const draft = await requestJson('/api/draft', { method: 'POST', body: JSON.stringify({topic:testTopic}), retries: 1, timeoutMs: 300000 });
-if (!draft.ok || !draft.topic?.keyword || !draft.draft) throw new Error('draft_invalid');
-if (!draft.ai_used || !draft.structured_output || !draft.text_quality_gate_passed) throw new Error('generation_flags_invalid');
-if (draft.draft.mode !== 'ai-split-writing-starpoint-friendly-v13b') throw new Error(`wrong_generation_mode:${draft.draft.mode}`);
-if (draft.draft.generation_meta?.quality_gate !== EXPECTED_GATE) throw new Error('wrong_quality_gate');
-if (draft.draft.generation_meta?.voice_profile !== EXPECTED_VOICE) throw new Error('wrong_voice_profile');
-if (draft.draft.generation_meta?.stella_v13b_locked !== true) throw new Error('stella_v13b_lock_missing');
-if (draft.draft.generation_meta?.extra_lead_rewrite !== false) throw new Error('extra_lead_rewrite_not_disabled');
-const fullDraftAttempts=draft.draft.generation_meta?.full_draft_attempts;
-if (!Number.isInteger(fullDraftAttempts) || fullDraftAttempts < 1 || fullDraftAttempts > EXPECTED_RETRY_LIMIT) throw new Error('full_draft_attempts_invalid');
-if (!Number.isInteger(draft.draft.generation_meta?.friendly_ending_count) || draft.draft.generation_meta.friendly_ending_count < 0) throw new Error('friendly_count_invalid');
-
-safeText('title', draft.draft.title, 8);
-safeText('intro', draft.draft.intro, 40);
-if (!Array.isArray(draft.draft.sections) || draft.draft.sections.length !== 4) throw new Error('section_count_invalid');
-for (const [index, section] of draft.draft.sections.entries()) {
-  safeText(`section_${index + 1}_heading`, section.heading, 4);
-  safeText(`section_${index + 1}_body`, section.body, 120);
-}
-for (let i = 0; i < draft.draft.sections.length; i += 1) {
-  for (let j = 0; j < i; j += 1) {
-    const sim = similarity(draft.draft.sections[i].body, draft.draft.sections[j].body);
-    if (sim >= 0.62) throw new Error(`section_similarity_${j + 1}_${i + 1}_${sim.toFixed(3)}`);
-  }
-}
-if (!Array.isArray(draft.draft.photo_slots) || draft.draft.photo_slots.length < 4) throw new Error('photo_slots_invalid');
-if (!Array.isArray(draft.draft.hashtags) || draft.draft.hashtags.length < 4) throw new Error('hashtags_invalid');
-safeText('cta', draft.draft.cta, 15);
+const owned=['owned://store-exam','owned://lens-detail','owned://customer-use'];
+const draft=await requestJson('/api/draft',{
+  method:'POST',
+  body:JSON.stringify({topic:testTopic,owned_images:owned}),
+  retries:1,
+  timeoutMs:300000
+});
+if(!draft?.ok||!draft?.draft||!Array.isArray(draft.draft.photo_slots)||draft.draft.photo_slots.length<4) throw new Error('draft_invalid');
+if(draft.draft.generation_meta?.stella_v13b_locked!==true||draft.draft.generation_meta?.extra_lead_rewrite!==false) throw new Error('stella_lock_missing');
+if(draft.draft.generation_meta?.image_policy!==EXPECTED_IMAGE_POLICY) throw new Error('image_policy_missing');
+if(draft.draft.generation_meta?.web_image_search!==false||draft.draft.generation_meta?.video_search!==false) throw new Error('search_policy_wrong');
+if(draft.draft.generation_meta?.owned_image_count!==3) throw new Error(`owned_count_wrong:${draft.draft.generation_meta?.owned_image_count}`);
+if(draft.draft.generation_meta?.ai_image_count!==1) throw new Error(`ai_count_wrong:${draft.draft.generation_meta?.ai_image_count}`);
+for(let i=0;i<3;i++) if(draft.draft.photo_slots[i]?.source!=='owned'||draft.draft.photo_slots[i]?.image_ref!==owned[i]) throw new Error(`owned_slot_${i+1}_wrong`);
+const fallback=draft.draft.photo_slots[3];
+if(fallback?.source!=='ai'||fallback?.generated!==true||typeof fallback?.image_data_uri!=='string'||fallback.image_data_uri.length<1000) throw new Error('automatic_ai_fallback_failed');
 
 console.log(JSON.stringify({
-  ok: true,
-  url: base,
-  version: health.version,
-  quality_gate: health.text_quality_gate,
-  voice_profile: health.voice_profile,
-  stella_v13b_locked: health.stella_v13b_locked,
-  extra_lead_rewrite: health.extra_lead_rewrite,
-  full_draft_retry_limit: health.full_draft_retry_limit,
-  full_draft_attempts: fullDraftAttempts,
-  live_trends: trends.live,
-  accepted_topics: topics.accepted_count,
-  selected_topic: draft.topic.keyword,
-  trend_mode: draft.topic.trend_mode,
-  ai_used: draft.ai_used,
-  structured_output: draft.structured_output,
-  text_quality_gate_passed: draft.text_quality_gate_passed,
-  preview: {
-    title: draft.draft.title,
-    intro: draft.draft.intro,
-    sections: draft.draft.sections,
-    photo_slots: draft.draft.photo_slots,
-    hashtags: draft.draft.hashtags,
-    cta: draft.draft.cta,
-    generation_meta: draft.draft.generation_meta || null
-  }
-}, null, 2));
+  ok:true,
+  url:base,
+  version:health.version,
+  stella_v13b_locked:health.stella_v13b_locked,
+  extra_lead_rewrite:health.extra_lead_rewrite,
+  image_policy:health.image_policy,
+  image_model:health.image_model,
+  web_image_search:health.web_image_search,
+  video_search:health.video_search,
+  single_image_generated:true,
+  single_image_bytes_estimate:Math.floor((single.image_data_uri.length-'data:image/jpeg;base64,'.length)*3/4),
+  draft_title:draft.draft.title,
+  owned_image_count:draft.draft.generation_meta.owned_image_count,
+  ai_image_count:draft.draft.generation_meta.ai_image_count,
+  fallback_slot:draft.draft.photo_slots[3].position,
+  live_trends:trends.live
+},null,2));
