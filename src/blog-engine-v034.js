@@ -78,7 +78,7 @@ function textIssue(s,min=1,max=5000){
   if(text.length>max) return `too_long_${text.length}`;
   if(BAD_FOREIGN.test(text)) return 'foreign_cjk';
   if(BAD_PATTERNS.some(re=>re.test(text))) return 'unsafe_or_awkward_claim';
-  if(countPhrases(text,AIISH)>1) return 'ai_style_repetition';
+  if(AIISH.some(p=>(text.split(p).length-1)>1)) return 'ai_style_repetition';
   if(min>=120&&countPhrases(text,RIGID)>1) return 'too_formal';
   if(min>=120&&friendlyCount(text)>4) return 'too_chatty';
   return null;

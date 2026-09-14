@@ -18,6 +18,8 @@ for (const marker of [
 if (!baseSource.includes("const WRITER_MODEL='@cf/meta/llama-3.3-70b-instruct-fp8-fast'")) throw new Error('missing_writer_model');
 if (!baseSource.includes('max_tokens:760')) throw new Error('writer_token_budget_missing');
 if (!baseSource.includes('maxSim>=0.62')) throw new Error('distinctness_gate_missing');
+if (!baseSource.includes("AIISH.some(p=>(text.split(p).length-1)>1)")) throw new Error('aiish_repetition_gate_not_fixed');
+if (baseSource.includes('countPhrases(text,AIISH)>1')) throw new Error('old_aiish_gate_still_present');
 if (baseSource.includes("return 'friendly_tone_missing'")) throw new Error('per_section_friendly_requirement_still_present');
 
 const source = fs.readFileSync('src/blog-engine-v0343.js','utf8');
