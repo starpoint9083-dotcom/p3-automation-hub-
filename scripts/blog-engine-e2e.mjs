@@ -26,8 +26,7 @@ function safeText(label, value, min = 1) {
   if (typeof value !== 'string' || value.trim().length < min) throw new Error(`${label}_invalid`);
   if (BAD_FOREIGN.test(value)) throw new Error(`${label}_foreign_cjk`);
   for (const re of BAD_PATTERNS) if (re.test(value)) throw new Error(`${label}_unsafe_or_awkward_claim`);
-  const styleHits=AIISH.reduce((n,p)=>n+(value.split(p).length-1),0);
-  if (styleHits>1) throw new Error(`${label}_ai_style_repetition`);
+  if (AIISH.some(p=>(value.split(p).length-1)>1)) throw new Error(`${label}_ai_style_repetition`);
   if (min>=120) {
     const rigidHits=RIGID.reduce((n,p)=>n+(value.split(p).length-1),0);
     if (rigidHits>1) throw new Error(`${label}_too_formal`);
