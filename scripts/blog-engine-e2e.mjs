@@ -2,32 +2,38 @@ const base = String(process.env.BLOG_ENGINE_URL || '').replace(/\/$/, '');
 if (!base) throw new Error('BLOG_ENGINE_URL missing');
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const EXPECTED_VERSION='0.3.4';
-const EXPECTED_GATE='v0.3.4-starpoint-friendly-v13b';
+const EXPECTED_VERSION='0.3.4.1';
+const EXPECTED_GATE='v0.3.4.1-starpoint-friendly-precision';
 const EXPECTED_VOICE='stella-v13b-starpoint-friendly-60-40';
 const BAD_FOREIGN=/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/u;
 const BAD_PATTERNS=[
   /가을[^.!?]{0,35}자외선[^.!?]{0,25}(강해|강하|증가|높아)/u,
   /자외선[^.!?]{0,25}(강해지|증가하|더\s*강)/u,
+  /(아침|저녁)[^.!?]{0,30}자외선[^.!?]{0,20}(강|높)/u,
   /일조량[^.!?]{0,20}(증가|늘어)/u,
-  /시야[^.!?]{0,20}(개선|향상)/u,
+  /시야[^.!?]{0,20}(개선|향상|더\s*좋)/u,
   /(눈|안구)[^.!?]{0,20}(피로|건강)[^.!?]{0,20}(개선|감소|유지|치료)/u,
+  /창가[^.!?]{0,45}변색렌즈[^.!?]{0,30}(잘|효과)/u,
+  /(더\s*좋은\s*효과|효과적으로|큰\s*도움이\s*될\s*수|전문적인\s*상담이\s*필요|왜\s*그런지\s*이유를\s*보세요)/u,
   /(100%|완벽하게|완전히\s*(차단|해결)|걱정\s*끝|필수\s*아이템)/u
 ];
-const AIISH=['중요합니다','추천드립니다','최적의 선택','전문가와 상담','적합한 렌즈를 선택','도움이 될 수 있습니다'];
+const AIISH=['중요합니다','추천드립니다','최적의 선택','전문가와 상담','적합한 렌즈를 선택','도움이 될 수 있습니다','선택하는 것이 중요해요','전문적인 상담이 필요해요','큰 도움이 될 수 있어요'];
 const RIGID=['고객은','고객들은','선택해야 합니다','확인해야 합니다','이러한 이유로','왜냐하면','따라서'];
 const FRIENDLY_ENDING=/(해요|돼요|예요|이에요|거든요|있어요|없어요|않아요|맞아요|달라요|보세요|보셔야 해요|볼 수 있어요)\./u;
+const FRIENDLY_GLOBAL=/(해요|돼요|예요|이에요|거든요|있어요|없어요|않아요|맞아요|달라요|보세요|보셔야 해요|볼 수 있어요)\./gu;
 
 function safeText(label, value, min = 1) {
   if (typeof value !== 'string' || value.trim().length < min) throw new Error(`${label}_invalid`);
   if (BAD_FOREIGN.test(value)) throw new Error(`${label}_foreign_cjk`);
-  for (const re of BAD_PATTERNS) if (re.test(value)) throw new Error(`${label}_unsafe_claim`);
+  for (const re of BAD_PATTERNS) if (re.test(value)) throw new Error(`${label}_unsafe_or_awkward_claim`);
   const styleHits=AIISH.reduce((n,p)=>n+(value.split(p).length-1),0);
   if (styleHits>1) throw new Error(`${label}_ai_style_repetition`);
   if (min>=120) {
     const rigidHits=RIGID.reduce((n,p)=>n+(value.split(p).length-1),0);
-    if (rigidHits>2) throw new Error(`${label}_too_formal`);
+    if (rigidHits>1) throw new Error(`${label}_too_formal`);
     if (!FRIENDLY_ENDING.test(value)) throw new Error(`${label}_friendly_tone_missing`);
+    const friendlyHits=(value.match(FRIENDLY_GLOBAL)||[]).length;
+    if (friendlyHits>4) throw new Error(`${label}_too_chatty`);
   }
 }
 function words(s) {
