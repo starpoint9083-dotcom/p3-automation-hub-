@@ -1,4 +1,4 @@
-export const BLOG_ENGINE_VERSION = '0.3.4';
+export const BLOG_ENGINE_VERSION = '0.3.4.1';
 
 export const STORE_PROFILE = {
   name: '스타포인트안경원',
