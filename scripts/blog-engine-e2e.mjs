@@ -3,15 +3,9 @@ if (!base) throw new Error('BLOG_ENGINE_URL missing');
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const EXPECTED_VERSION='0.3.4.3';
-const EXPECTED_GATE='v0.3.4.3-friendly-leads';
+const EXPECTED_GATE='v0.3.4.3-stella-v13b';
 const EXPECTED_VOICE='stella-v13b-starpoint-friendly-60-40';
 const EXPECTED_RETRY_LIMIT=3;
-const EXPECTED_LEADS=[
-  '처음에는 제품보다 언제 불편한지부터 보는 게 쉬워요.',
-  '좋은 기능도 한계까지 같이 봐야 선택이 편해요.',
-  '결국 내 생활에 맞는지가 가장 먼저 볼 기준이에요.',
-  '마지막은 지금 쓰는 안경의 불편 원인부터 확인하면 돼요.'
-];
 const BAD_FOREIGN=/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/u;
 const BAD_PATTERNS=[
   /가을[^.!?]{0,35}자외선[^.!?]{0,25}(강해|강하|증가|높아)/u,
@@ -83,7 +77,7 @@ async function waitForExpectedHealth() {
   let last;
   for (let attempt = 1; attempt <= 12; attempt += 1) {
     last = await requestJson('/health', { retries: 1, timeoutMs: 15000 });
-    if (last.ok && last.service === 'p3-blog-engine' && last.ai_bound && last.version === EXPECTED_VERSION && last.text_quality_gate === EXPECTED_GATE && last.voice_profile === EXPECTED_VOICE && last.friendly_lead_layer === true && last.full_draft_retry_limit === EXPECTED_RETRY_LIMIT) return last;
+    if (last.ok && last.service === 'p3-blog-engine' && last.ai_bound && last.version === EXPECTED_VERSION && last.text_quality_gate === EXPECTED_GATE && last.voice_profile === EXPECTED_VOICE && last.stella_v13b_locked === true && last.extra_lead_rewrite === false && last.full_draft_retry_limit === EXPECTED_RETRY_LIMIT) return last;
     if (attempt < 12) await sleep(3000);
   }
   throw new Error(`live_health_not_propagated:version_${last?.version || 'missing'}:gate_${last?.text_quality_gate || 'missing'}:voice_${last?.voice_profile || 'missing'}:retry_${last?.full_draft_retry_limit || 'missing'}`);
@@ -96,13 +90,19 @@ const topics = await requestJson('/api/topics?limit=30');
 if (!Array.isArray(topics.topics) || !Array.isArray(topics.fallback_suggestions)) throw new Error('topics_invalid');
 for (const topic of topics.topics) if (topic.relevance_score < topics.min_relevance_score) throw new Error(`quality_gate_failed:${topic.keyword}`);
 
-const draft = await requestJson('/api/draft', { method: 'POST', body: '{}', retries: 1, timeoutMs: 300000 });
+const testTopic={
+  keyword:'누진다초점 렌즈',
+  blog_bridge:'누진다초점 적응과 정밀 시력검사',
+  suggested_title:'누진다초점 렌즈, 제품보다 먼저 확인할 것'
+};
+const draft = await requestJson('/api/draft', { method: 'POST', body: JSON.stringify({topic:testTopic}), retries: 1, timeoutMs: 300000 });
 if (!draft.ok || !draft.topic?.keyword || !draft.draft) throw new Error('draft_invalid');
 if (!draft.ai_used || !draft.structured_output || !draft.text_quality_gate_passed) throw new Error('generation_flags_invalid');
 if (draft.draft.mode !== 'ai-split-writing-starpoint-friendly-v13b') throw new Error(`wrong_generation_mode:${draft.draft.mode}`);
 if (draft.draft.generation_meta?.quality_gate !== EXPECTED_GATE) throw new Error('wrong_quality_gate');
 if (draft.draft.generation_meta?.voice_profile !== EXPECTED_VOICE) throw new Error('wrong_voice_profile');
-if (draft.draft.generation_meta?.friendly_lead_layer !== true) throw new Error('friendly_lead_layer_missing');
+if (draft.draft.generation_meta?.stella_v13b_locked !== true) throw new Error('stella_v13b_lock_missing');
+if (draft.draft.generation_meta?.extra_lead_rewrite !== false) throw new Error('extra_lead_rewrite_not_disabled');
 const fullDraftAttempts=draft.draft.generation_meta?.full_draft_attempts;
 if (!Number.isInteger(fullDraftAttempts) || fullDraftAttempts < 1 || fullDraftAttempts > EXPECTED_RETRY_LIMIT) throw new Error('full_draft_attempts_invalid');
 if (!Number.isInteger(draft.draft.generation_meta?.friendly_ending_count) || draft.draft.generation_meta.friendly_ending_count < 0) throw new Error('friendly_count_invalid');
@@ -113,7 +113,6 @@ if (!Array.isArray(draft.draft.sections) || draft.draft.sections.length !== 4) t
 for (const [index, section] of draft.draft.sections.entries()) {
   safeText(`section_${index + 1}_heading`, section.heading, 4);
   safeText(`section_${index + 1}_body`, section.body, 120);
-  if (!section.body.startsWith(EXPECTED_LEADS[index])) throw new Error(`section_${index + 1}_friendly_lead_missing`);
 }
 for (let i = 0; i < draft.draft.sections.length; i += 1) {
   for (let j = 0; j < i; j += 1) {
@@ -122,9 +121,6 @@ for (let i = 0; i < draft.draft.sections.length; i += 1) {
   }
 }
 if (!Array.isArray(draft.draft.photo_slots) || draft.draft.photo_slots.length < 4) throw new Error('photo_slots_invalid');
-if (!draft.draft.video_plan || !Array.isArray(draft.draft.video_plan.shots) || draft.draft.video_plan.shots.length < 3) throw new Error('video_plan_invalid');
-safeText('video_hook', draft.draft.video_plan.hook, 8);
-safeText('video_caption', draft.draft.video_plan.caption, 4);
 if (!Array.isArray(draft.draft.hashtags) || draft.draft.hashtags.length < 4) throw new Error('hashtags_invalid');
 safeText('cta', draft.draft.cta, 15);
 
@@ -134,7 +130,8 @@ console.log(JSON.stringify({
   version: health.version,
   quality_gate: health.text_quality_gate,
   voice_profile: health.voice_profile,
-  friendly_lead_layer: health.friendly_lead_layer,
+  stella_v13b_locked: health.stella_v13b_locked,
+  extra_lead_rewrite: health.extra_lead_rewrite,
   full_draft_retry_limit: health.full_draft_retry_limit,
   full_draft_attempts: fullDraftAttempts,
   live_trends: trends.live,
@@ -149,7 +146,6 @@ console.log(JSON.stringify({
     intro: draft.draft.intro,
     sections: draft.draft.sections,
     photo_slots: draft.draft.photo_slots,
-    video_plan: draft.draft.video_plan,
     hashtags: draft.draft.hashtags,
     cta: draft.draft.cta,
     generation_meta: draft.draft.generation_meta || null
