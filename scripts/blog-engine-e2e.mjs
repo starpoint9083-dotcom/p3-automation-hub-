@@ -2,7 +2,7 @@ const base=String(process.env.BLOG_ENGINE_URL||'').replace(/\/$/,'');
 if(!base) throw new Error('BLOG_ENGINE_URL missing');
 
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const EXPECTED_VERSION='0.3.5.0';
+const EXPECTED_VERSION='0.3.6.0';
 const EXPECTED_GATE='v0.3.4.3-stella-v13b';
 const EXPECTED_VOICE='stella-v13b-starpoint-friendly-60-40';
 const EXPECTED_IMAGE_MODEL='@cf/black-forest-labs/flux-1-schnell';
@@ -32,6 +32,21 @@ async function requestJson(path,options={}){
   throw lastError;
 }
 
+async function requestText(path,{retries=3,timeoutMs=30000}={}){
+  let lastError;
+  for(let attempt=1;attempt<=retries;attempt++){
+    const controller=new AbortController();
+    const timer=setTimeout(()=>controller.abort(),timeoutMs);
+    try{
+      const response=await fetch(`${base}${path}`,{cache:'no-store',signal:controller.signal});
+      const text=await response.text();
+      if(!response.ok) throw new Error(`${path}:http_${response.status}`);
+      return {text,contentType:response.headers.get('content-type')||''};
+    }catch(error){lastError=error;if(attempt<retries)await sleep(attempt*2000)}finally{clearTimeout(timer)}
+  }
+  throw lastError;
+}
+
 async function waitForHealth(){
   let last;
   for(let i=0;i<12;i++){
@@ -40,6 +55,7 @@ async function waitForHealth(){
       last?.ok&&last?.version===EXPECTED_VERSION&&last?.ai_bound===true&&
       last?.text_quality_gate===EXPECTED_GATE&&last?.voice_profile===EXPECTED_VOICE&&
       last?.stella_v13b_locked===true&&last?.extra_lead_rewrite===false&&
+      last?.mobile_app===true&&last?.app_path==='/'&&
       last?.image_generation===true&&last?.image_policy===EXPECTED_IMAGE_POLICY&&
       last?.image_model===EXPECTED_IMAGE_MODEL&&last?.web_image_search===false&&last?.video_search===false
     ) return last;
@@ -49,8 +65,18 @@ async function waitForHealth(){
 }
 
 const health=await waitForHealth();
+const app=await requestText('/');
+if(!app.contentType.includes('text/html')) throw new Error('mobile_app_content_type_wrong');
+for(const marker of ['스타포인트 블로그 AI','블로그 만들기','오늘 주제 찾기','사진 선택','본문 전체 복사']) if(!app.text.includes(marker)) throw new Error(`mobile_app_marker_missing:${marker}`);
+const manifest=await requestJson('/manifest.webmanifest',{timeoutMs:15000});
+if(manifest?.name!=='스타포인트 블로그 AI'||manifest?.display!=='standalone'||manifest?.start_url!=='/') throw new Error('manifest_invalid');
+const sw=await requestText('/sw.js');
+if(!sw.contentType.includes('javascript')||!sw.text.includes('starpoint-blog-app-v1')) throw new Error('service_worker_invalid');
+
 const trends=await requestJson('/api/trends?limit=10',{timeoutMs:30000});
 if(!Array.isArray(trends.trends)||trends.trends.length<1) throw new Error('trends_invalid');
+const topics=await requestJson('/api/topics?limit=30',{timeoutMs:30000});
+if(!Array.isArray(topics.topics)||!Array.isArray(topics.fallback_suggestions)) throw new Error('topic_recommendation_invalid');
 
 const single=await requestJson('/api/image',{
   method:'POST',
@@ -88,6 +114,10 @@ console.log(JSON.stringify({
   ok:true,
   url:base,
   version:health.version,
+  mobile_app:true,
+  pwa_manifest:true,
+  service_worker:true,
+  topic_recommendation:true,
   stella_v13b_locked:health.stella_v13b_locked,
   extra_lead_rewrite:health.extra_lead_rewrite,
   image_policy:health.image_policy,
