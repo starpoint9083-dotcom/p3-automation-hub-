@@ -39,6 +39,18 @@ const draft = await requestJson('/api/draft', { method: 'POST', body: '{}' });
 if (!draft.ok || !draft.topic?.keyword || !draft.draft) throw new Error('draft_invalid');
 if (!draft.ai_used) throw new Error('ai_draft_not_used');
 
+const preview = {
+  title: draft.draft?.title || null,
+  intro: draft.draft?.intro || draft.draft?.opening || null,
+  sections: Array.isArray(draft.draft?.sections) ? draft.draft.sections.slice(0, 4) : [],
+  photo_slots: Array.isArray(draft.draft?.photo_slots)
+    ? draft.draft.photo_slots.slice(0, 6)
+    : draft.draft?.media_plan?.owned_photo_slots || [],
+  video_plan: draft.draft?.video_plan || draft.draft?.media_plan?.video_search_queries || null,
+  hashtags: Array.isArray(draft.draft?.hashtags) ? draft.draft.hashtags.slice(0, 12) : [],
+  cta: draft.draft?.cta || draft.draft?.closing || null
+};
+
 console.log(JSON.stringify({
   ok: true,
   url: base,
@@ -46,5 +58,6 @@ console.log(JSON.stringify({
   accepted_topics: topics.accepted_count,
   selected_topic: draft.topic.keyword,
   trend_mode: draft.topic.trend_mode,
-  ai_used: draft.ai_used
+  ai_used: draft.ai_used,
+  preview
 }, null, 2));
