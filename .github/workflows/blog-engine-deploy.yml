@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'src/blog-engine.js'
+      - 'src/blog-engine-v03.js'
       - 'src/blog-engine-config.js'
       - 'scripts/blog-engine-preflight.mjs'
       - 'scripts/blog-engine-e2e.mjs'
@@ -59,6 +60,7 @@ jobs:
       - name: Syntax check
         run: |
           node --check src/blog-engine.js
+          node --check src/blog-engine-v03.js
           node --check src/blog-engine-config.js
           node --check scripts/blog-engine-preflight.mjs
           node --check scripts/blog-engine-e2e.mjs
