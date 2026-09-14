@@ -143,18 +143,19 @@ async function section(env,topic,heading,index){
 
 async function build(env,topic){
   if(!env?.AI?.run) throw new Error('workers_ai_not_bound');
-  const p=await makePlan(env,topic),sections=[];
-  let tries=0;
-  for(let i=0;i<4;i++){
-    const s=await section(env,topic,p.plan.section_headings[i],i);
-    tries+=s.attempts;
-    sections.push({heading:p.plan.section_headings[i],body:s.body,photo_after:true});
-  }
+  const p=await makePlan(env,topic);
+  const generated=await Promise.all(
+    p.plan.section_headings.map((heading,index)=>section(env,topic,heading,index))
+  );
+  const sections=generated.map((item,index)=>({
+    heading:p.plan.section_headings[index],body:item.body,photo_after:true
+  }));
+  const tries=generated.reduce((sum,item)=>sum+item.attempts,0);
   const d={
     mode:'ai-structured-multistage',title:p.plan.title,intro:p.plan.intro,sections,
     photo_slots:p.plan.photo_slots,video_plan:{...p.plan.video_plan,duration_sec:30},
     hashtags:p.plan.hashtags,cta:p.plan.cta,
-    generation_meta:{structured_output:true,plan_model:PLAN_MODEL,writer_model:WRITER_MODEL,plan_attempts:p.attempts,section_attempts:tries}
+    generation_meta:{structured_output:true,plan_model:PLAN_MODEL,writer_model:WRITER_MODEL,plan_attempts:p.attempts,section_attempts:tries,parallel_sections:true}
   };
   if(!draftOK(d)) throw new Error('draft_validation_failed');
   return d;
