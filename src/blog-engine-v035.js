@@ -1,4 +1,5 @@
 import workerV0343 from './blog-engine-v0343.js';
+import { serveBlogApp } from './blog-engine-app.js';
 
 const IMAGE_MODEL='@cf/black-forest-labs/flux-1-schnell';
 const IMAGE_POLICY='owned-first-ai-fallback';
@@ -95,6 +96,9 @@ async function singleImage(request,env){
 
 export default{
   async fetch(request,env,ctx){
+    const app=serveBlogApp(request);
+    if(app) return app;
+
     const url=new URL(request.url);
     if(request.method==='POST'&&url.pathname==='/api/draft') return draftWithImages(request,env,ctx);
     if(request.method==='POST'&&url.pathname==='/api/image') return singleImage(request,env);
@@ -102,6 +106,6 @@ export default{
     const response=await workerV0343.fetch(request,env,ctx);
     if(!(request.method==='GET'&&url.pathname==='/health')) return response;
     let data;try{data=await response.clone().json();}catch{return response;}
-    return J({...data,image_generation:true,image_policy:IMAGE_POLICY,image_model:IMAGE_MODEL,web_image_search:false,video_search:false},response.status);
+    return J({...data,mobile_app:true,app_path:'/',image_generation:true,image_policy:IMAGE_POLICY,image_model:IMAGE_MODEL,web_image_search:false,video_search:false},response.status);
   }
 };
