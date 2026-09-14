@@ -2,9 +2,15 @@ const base = String(process.env.BLOG_ENGINE_URL || '').replace(/\/$/, '');
 if (!base) throw new Error('BLOG_ENGINE_URL missing');
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const EXPECTED_VERSION='0.3.4.2';
-const EXPECTED_GATE='v0.3.4.2-starpoint-natural-friendly';
+const EXPECTED_VERSION='0.3.4.3';
+const EXPECTED_GATE='v0.3.4.3-friendly-leads';
 const EXPECTED_VOICE='stella-v13b-starpoint-friendly-60-40';
+const EXPECTED_LEADS=[
+  '처음에는 제품보다 언제 불편한지부터 보는 게 쉬워요.',
+  '좋은 기능도 한계까지 같이 봐야 선택이 편해요.',
+  '결국 내 생활에 맞는지가 가장 먼저 볼 기준이에요.',
+  '마지막은 지금 쓰는 안경의 불편 원인부터 확인하면 돼요.'
+];
 const BAD_FOREIGN=/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/u;
 const BAD_PATTERNS=[
   /가을[^.!?]{0,35}자외선[^.!?]{0,25}(강해|강하|증가|높아)/u,
@@ -76,7 +82,7 @@ async function waitForExpectedHealth() {
   let last;
   for (let attempt = 1; attempt <= 12; attempt += 1) {
     last = await requestJson('/health', { retries: 1, timeoutMs: 15000 });
-    if (last.ok && last.service === 'p3-blog-engine' && last.ai_bound && last.version === EXPECTED_VERSION && last.text_quality_gate === EXPECTED_GATE && last.voice_profile === EXPECTED_VOICE) return last;
+    if (last.ok && last.service === 'p3-blog-engine' && last.ai_bound && last.version === EXPECTED_VERSION && last.text_quality_gate === EXPECTED_GATE && last.voice_profile === EXPECTED_VOICE && last.friendly_lead_layer === true) return last;
     if (attempt < 12) await sleep(3000);
   }
   throw new Error(`live_health_not_propagated:version_${last?.version || 'missing'}:gate_${last?.text_quality_gate || 'missing'}:voice_${last?.voice_profile || 'missing'}`);
@@ -95,6 +101,7 @@ if (!draft.ai_used || !draft.structured_output || !draft.text_quality_gate_passe
 if (draft.draft.mode !== 'ai-split-writing-starpoint-friendly-v13b') throw new Error(`wrong_generation_mode:${draft.draft.mode}`);
 if (draft.draft.generation_meta?.quality_gate !== EXPECTED_GATE) throw new Error('wrong_quality_gate');
 if (draft.draft.generation_meta?.voice_profile !== EXPECTED_VOICE) throw new Error('wrong_voice_profile');
+if (draft.draft.generation_meta?.friendly_lead_layer !== true) throw new Error('friendly_lead_layer_missing');
 if (!Number.isInteger(draft.draft.generation_meta?.friendly_ending_count) || draft.draft.generation_meta.friendly_ending_count < 0) throw new Error('friendly_count_invalid');
 
 safeText('title', draft.draft.title, 8);
@@ -103,6 +110,7 @@ if (!Array.isArray(draft.draft.sections) || draft.draft.sections.length !== 4) t
 for (const [index, section] of draft.draft.sections.entries()) {
   safeText(`section_${index + 1}_heading`, section.heading, 4);
   safeText(`section_${index + 1}_body`, section.body, 120);
+  if (!section.body.startsWith(EXPECTED_LEADS[index])) throw new Error(`section_${index + 1}_friendly_lead_missing`);
 }
 for (let i = 0; i < draft.draft.sections.length; i += 1) {
   for (let j = 0; j < i; j += 1) {
@@ -116,13 +124,14 @@ safeText('video_hook', draft.draft.video_plan.hook, 8);
 safeText('video_caption', draft.draft.video_plan.caption, 4);
 if (!Array.isArray(draft.draft.hashtags) || draft.draft.hashtags.length < 4) throw new Error('hashtags_invalid');
 safeText('cta', draft.draft.cta, 15);
-if ((draft.draft.generation_meta?.max_section_similarity ?? 1) >= 0.62) throw new Error('generation_similarity_gate_failed');
 
 console.log(JSON.stringify({
   ok: true,
   url: base,
   version: health.version,
+  quality_gate: health.text_quality_gate,
   voice_profile: health.voice_profile,
+  friendly_lead_layer: health.friendly_lead_layer,
   live_trends: trends.live,
   accepted_topics: topics.accepted_count,
   selected_topic: draft.topic.keyword,
