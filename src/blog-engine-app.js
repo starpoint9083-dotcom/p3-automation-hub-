@@ -15,8 +15,9 @@ const APP_HTML=`<!doctype html>
 <button id="generate" class="btn primary" type="button">블로그 만들기</button><button id="install" class="btn ghost install" type="button">휴대폰 홈 화면에 앱 추가</button><div id="error" class="error"></div>
 <section id="status" class="card status"><div class="spinner"></div><b>블로그를 만들고 있습니다</b><div id="statusSub" class="ai-note">본문 구성 중</div></section>
 <section id="result" class="card result"><div class="step">완성된 블로그</div><h2 id="outTitle"></h2><div id="outIntro" class="section"></div><div id="outSections"></div><h3>사진</h3><div id="outMedia" class="media-grid"></div><div id="outTags" class="tags"></div><div id="outCta" class="tags"></div><div class="actions"><button id="copy" class="btn primary" type="button">본문 전체 복사</button><button id="newPost" class="btn ghost" type="button">새 글 만들기</button></div></section>
-</div><script>
-(function(){
+</div><script src="/app.js"></script></body></html>`;
+
+const APP_JS=String.raw`(function(){
 var FALLBACK=[
  {keyword:'누진다초점 렌즈',blog_bridge:'누진다초점 적응과 정밀 시력검사',suggested_title:'누진다초점 렌즈, 제품보다 먼저 확인할 것'},
  {keyword:'변색렌즈',blog_bridge:'변색렌즈와 눈부심 관리',suggested_title:'변색렌즈를 고를 때 먼저 확인할 생활 습관'},
@@ -41,17 +42,17 @@ q('#copy').addEventListener('click',async function(){try{await navigator.clipboa
 q('#newPost').addEventListener('click',function(){q('#result').style.display='none';window.scrollTo({top:0,behavior:'smooth'})});
 window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();installPrompt=e;q('#install').style.display='block'});q('#install').addEventListener('click',async function(){if(installPrompt){installPrompt.prompt();await installPrompt.userChoice;installPrompt=null;this.style.display='none'}else alert('크롬 메뉴에서 홈 화면에 추가를 선택해주세요.')});
 if('serviceWorker' in navigator)navigator.serviceWorker.register('/sw.js').catch(function(){});
-})();
-</script></body></html>`;
+})();`;
 
 const MANIFEST={name:'스타포인트 블로그 AI',short_name:'블로그 AI',start_url:'/',display:'standalone',background_color:'#f4f5f7',theme_color:'#111827',lang:'ko',icons:[{src:'/app-icon.svg',sizes:'any',type:'image/svg+xml',purpose:'any maskable'}]};
 const ICON=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#111827"/><circle cx="256" cy="210" r="105" fill="none" stroke="#fff" stroke-width="24"/><path d="M95 214h56M361 214h56M151 214c18 58 55 87 105 87s87-29 105-87" fill="none" stroke="#fff" stroke-width="24" stroke-linecap="round"/><text x="256" y="405" text-anchor="middle" fill="#fff" font-family="sans-serif" font-size="68" font-weight="700">BLOG</text></svg>`;
-const SW=`const C='starpoint-blog-app-v2';self.addEventListener('install',()=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));`;
+const SW=`const C='starpoint-blog-app-v3';self.addEventListener('install',()=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));`;
 
 export function serveBlogApp(request){
   const u=new URL(request.url);
   if(request.method!=='GET') return null;
   if(u.pathname==='/'||u.pathname==='/app') return new Response(APP_HTML,{status:200,headers:APP_HEADERS});
+  if(u.pathname==='/app.js') return new Response(APP_JS,{status:200,headers:{'content-type':'application/javascript; charset=utf-8','cache-control':'no-store'}});
   if(u.pathname==='/manifest.webmanifest') return new Response(JSON.stringify(MANIFEST),{status:200,headers:{'content-type':'application/manifest+json; charset=utf-8','cache-control':'no-cache'}});
   if(u.pathname==='/app-icon.svg') return new Response(ICON,{status:200,headers:{'content-type':'image/svg+xml; charset=utf-8','cache-control':'public, max-age=86400'}});
   if(u.pathname==='/sw.js') return new Response(SW,{status:200,headers:{'content-type':'application/javascript; charset=utf-8','cache-control':'no-store','service-worker-allowed':'/'}});
