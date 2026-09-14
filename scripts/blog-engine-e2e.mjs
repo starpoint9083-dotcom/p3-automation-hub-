@@ -2,7 +2,7 @@ const base=String(process.env.BLOG_ENGINE_URL||'').replace(/\/$/,'');
 if(!base) throw new Error('BLOG_ENGINE_URL missing');
 
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const EXPECTED_VERSION='0.3.6.1';
+const EXPECTED_VERSION='0.3.6.2';
 const EXPECTED_GATE='v0.3.4.3-stella-v13b';
 const EXPECTED_VOICE='stella-v13b-starpoint-friendly-60-40';
 const EXPECTED_IMAGE_MODEL='@cf/black-forest-labs/flux-1-schnell';
@@ -44,14 +44,18 @@ async function waitForHealth(){
 const health=await waitForHealth();
 const app=await requestText('/');
 if(!app.contentType.includes('text/html')) throw new Error('mobile_app_content_type_wrong');
-for(const marker of ['스타포인트 블로그 AI','블로그 만들기','오늘 주제 찾기','사진 선택','본문 전체 복사','기본 추천 3개']) if(!app.text.includes(marker)) throw new Error(`mobile_app_marker_missing:${marker}`);
-const scriptMatch=app.text.match(/<script>([\s\S]*?)<\/script>/i);
-if(!scriptMatch) throw new Error('mobile_app_script_missing');
-try{new Function(scriptMatch[1]);}catch(error){throw new Error(`mobile_app_script_syntax:${error.message}`)}
+for(const marker of ['스타포인트 블로그 AI','블로그 만들기','오늘 주제 찾기','사진 선택','본문 전체 복사','<script src="/app.js"></script>']) if(!app.text.includes(marker)) throw new Error(`mobile_app_marker_missing:${marker}`);
+
+const appJs=await requestText('/app.js');
+if(!appJs.contentType.includes('javascript')) throw new Error('mobile_app_js_content_type_wrong');
+for(const marker of ['기본 추천 3개','/api/recommendations?t=','renderRecommendations(FALLBACK','/api/draft']) if(!appJs.text.includes(marker)) throw new Error(`mobile_app_js_marker_missing:${marker}`);
+try{new Function(appJs.text);}catch(error){throw new Error(`mobile_app_script_syntax:${error.message}`)}
+
 const manifest=await requestJson('/manifest.webmanifest',{timeoutMs:15000});
 if(manifest?.name!=='스타포인트 블로그 AI'||manifest?.display!=='standalone'||manifest?.start_url!=='/') throw new Error('manifest_invalid');
 const sw=await requestText('/sw.js');
-if(!sw.contentType.includes('javascript')||!sw.text.includes('starpoint-blog-app-v2')) throw new Error('service_worker_invalid');
+if(!sw.contentType.includes('javascript')||!sw.text.includes('starpoint-blog-app-v3')) throw new Error('service_worker_invalid');
+
 const recommendations=await requestJson('/api/recommendations',{timeoutMs:45000});
 if(!recommendations?.ok||!Array.isArray(recommendations.recommendations)||recommendations.recommendations.length<3) throw new Error('recommendations_not_resilient');
 for(const item of recommendations.recommendations.slice(0,3)) if(typeof item?.keyword!=='string'||!item.keyword.trim()) throw new Error('recommendation_keyword_missing');
@@ -76,4 +80,4 @@ for(let i=0;i<3;i++) if(draft.draft.photo_slots[i]?.source!=='owned'||draft.draf
 const fallback=draft.draft.photo_slots[3];
 if(fallback?.source!=='ai'||fallback?.generated!==true||typeof fallback?.image_data_uri!=='string'||fallback.image_data_uri.length<1000) throw new Error('automatic_ai_fallback_failed');
 
-console.log(JSON.stringify({ok:true,url:base,version:health.version,mobile_app:true,topic_recommendations:true,recommendation_count:recommendations.recommendations.length,browser_script_syntax:true,pwa_manifest:true,service_worker:true,stella_v13b_locked:health.stella_v13b_locked,image_policy:health.image_policy,image_model:health.image_model,owned_image_count:draft.draft.generation_meta.owned_image_count,ai_image_count:draft.draft.generation_meta.ai_image_count,live_trends:trends.live},null,2));
+console.log(JSON.stringify({ok:true,url:base,version:health.version,mobile_app:true,external_app_js:true,topic_recommendations:true,recommendation_count:recommendations.recommendations.length,browser_script_syntax:true,pwa_manifest:true,service_worker:true,stella_v13b_locked:health.stella_v13b_locked,image_policy:health.image_policy,image_model:health.image_model,owned_image_count:draft.draft.generation_meta.owned_image_count,ai_image_count:draft.draft.generation_meta.ai_image_count,live_trends:trends.live},null,2));
