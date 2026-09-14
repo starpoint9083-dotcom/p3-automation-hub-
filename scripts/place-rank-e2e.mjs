@@ -30,12 +30,12 @@ async function retry(path, validate) {
 
 await retry('/modules/place-rank', async res => {
   const body = await res.json();
-  return body?.ok === true && body?.module === 'place-rank' && body?.service?.includes('스타포인트안경원') && Array.isArray(body?.rows) && body.rows.length >= 2 && body?.policy?.captchaBypass === false;
+  return body?.ok === true && body?.module === 'place-rank' && body?.service?.includes('스타포인트안경원') && Array.isArray(body?.rows) && body.rows.length >= 2 && body?.policy?.captchaBypass === false && body?.policy?.objectiveGeoGrid === true && body?.grid?.configured === true && body?.grid?.grid?.pointCount === 25;
 });
 
 await retry('/place-rank', async res => {
   const html = await res.text();
-  return res.headers.get('content-type')?.includes('text/html') && html.includes('스타포인트안경원') && html.includes('P3 매장 검색순위 모듈');
+  return res.headers.get('content-type')?.includes('text/html') && html.includes('스타포인트안경원') && html.includes('P3 매장 검색순위 V2') && html.includes('수영구 25지점 객관순위');
 });
 
 console.log(`PLACE_RANK_E2E COMPLETE ${base}`);

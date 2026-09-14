@@ -18,7 +18,7 @@ const cases = [
       (row.status === 'ok' && Number.isInteger(row.rank) && row.rank > 0) ||
       (row.status === 'not-found' && row.rank === null)
     );
-    return b.ok && b.module === 'place-rank' && b.service.includes('스타포인트안경원') && rowShapeOk && b.policy?.captchaBypass === false;
+    return b.ok && b.module === 'place-rank' && b.service.includes('스타포인트안경원') && rowShapeOk && b.policy?.captchaBypass === false && b.policy?.objectiveGeoGrid === true && b.grid?.configured === true && b.grid?.grid?.pointCount === 25;
   }],
   ['https://local.test/nope', 404, b => b.error === 'NOT_FOUND']
 ];
@@ -34,7 +34,7 @@ for (const [url, status, validate] of cases) {
 
 const dashboard = await worker.fetch(new Request('https://local.test/place-rank'), env);
 const html = await dashboard.text();
-if (dashboard.status !== 200 || !dashboard.headers.get('content-type')?.includes('text/html') || !html.includes('스타포인트안경원') || !html.includes('P3 매장 검색순위 모듈')) {
+if (dashboard.status !== 200 || !dashboard.headers.get('content-type')?.includes('text/html') || !html.includes('스타포인트안경원') || !html.includes('P3 매장 검색순위 V2') || !html.includes('수영구 25지점 객관순위')) {
   console.error('SELFTEST FAILED place-rank dashboard', dashboard.status, dashboard.headers.get('content-type'));
   process.exit(1);
 }
@@ -44,4 +44,4 @@ if (post.status !== 405) {
   console.error('SELFTEST FAILED method guard', post.status);
   process.exit(1);
 }
-console.log('SELFTEST PASS P3 base supervisor + place-rank API/dashboard + paid-AI guard');
+console.log('SELFTEST PASS P3 base supervisor + place-rank geogrid V2 + paid-AI guard');

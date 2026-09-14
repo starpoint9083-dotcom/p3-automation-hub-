@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   workflow_run:
-    workflows: ["P3 Place Rank Daily"]
+    workflows: ["P3 Place Rank Daily", "P3 Place Rank Grid Daily"]
     types: [completed]
   workflow_dispatch:
 
