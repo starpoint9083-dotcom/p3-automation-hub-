@@ -24,20 +24,22 @@ for(const marker of [
   "const IMAGE_MODEL='@cf/black-forest-labs/flux-1-schnell'","const IMAGE_POLICY='owned-first-ai-fallback'",
   'ownedImageAt','generateImage','enrichPhotoSlots','image_data_uri',"url.pathname==='/api/image'",'web_image_search:false','video_search:false',
   'No brand logos','No brand logos, no trademarked product design',"import { serveBlogApp } from './blog-engine-app.js'",'mobile_app:true',
-  "url.pathname==='/api/recommendations'",'FALLBACK_RECOMMENDATIONS','topic_recommendations:true'
-]) if(!imageSource.includes(marker)) throw new Error(`missing_image_app_or_recommendation_marker:${marker}`);
+  "url.pathname==='/api/recommendations'",'FALLBACK_RECOMMENDATIONS','topic_recommendations:true',
+  "url.pathname==='/api/live-keywords'",'liveKeywords','live_keyword_finder:true',"live_keyword_source:'google_trends_kr'",'naver_live_keywords:false'
+]) if(!imageSource.includes(marker)) throw new Error(`missing_image_app_or_live_keyword_marker:${marker}`);
 
 const appSource=fs.readFileSync('src/blog-engine-app.js','utf8');
 for(const marker of [
-  '스타포인트 블로그 AI','블로그 만들기','오늘 주제 찾기','사진 선택','본문 전체 복사','기본 추천 3개',
+  '스타포인트 블로그 AI','블로그 만들기','실시간 검색어 찾기','사진 선택','본문 전체 복사','기본 추천 3개',
   '<script src="/app.js"></script>',"u.pathname==='/app.js'",'String.raw`(function(){',
   '/manifest.webmanifest','/sw.js','/app-icon.svg','navigator.serviceWorker.register',
-  "fetch('/api/recommendations?t='","fetch('/api/draft'",'owned_images:ownedImages','generate_images:true','starpoint-blog-app-v3'
+  "fetch('/api/live-keywords?limit=10&t='","fetch('/api/draft'",'owned_images:ownedImages','generate_images:true','starpoint-blog-app-v4',
+  '현재 실시간 안경 관련 검색어 0개','대체 주제'
 ]) if(!appSource.includes(marker)) throw new Error(`missing_mobile_app_marker:${marker}`);
 
 const config=fs.readFileSync('src/blog-engine-config.js','utf8');
 for(const marker of [
-  "BLOG_ENGINE_VERSION = '0.3.6.2'","externalImages: 'disabled'","externalVideo: 'disabled'",
+  "BLOG_ENGINE_VERSION = '0.3.6.3'","externalImages: 'disabled'","externalVideo: 'disabled'",
   "fallback: 'workers-ai-image-generation'","imageModel: '@cf/black-forest-labs/flux-1-schnell'"
 ]) if(!config.includes(marker)) throw new Error(`wrong_media_policy_or_version:${marker}`);
 
@@ -47,4 +49,4 @@ if(!wrangler.includes('"main": "src/blog-engine-v035.js"')) throw new Error('wro
 if(!wrangler.includes('"binding": "AI"')) throw new Error('workers_ai_binding_missing');
 if(!wrangler.includes('stella-v13b-mobile-app-owned-first-ai-images-v036')) throw new Error('mobile_app_mode_missing');
 
-console.log('BLOG_ENGINE_V0362_EXTERNAL_JS_PREFLIGHT_OK');
+console.log('BLOG_ENGINE_V0363_LIVE_KEYWORD_FINDER_PREFLIGHT_OK');
