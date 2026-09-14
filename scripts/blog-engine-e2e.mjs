@@ -2,7 +2,7 @@ const base=String(process.env.BLOG_ENGINE_URL||'').replace(/\/$/,'');
 if(!base) throw new Error('BLOG_ENGINE_URL missing');
 
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-const EXPECTED_VERSION='0.3.6.3';
+const EXPECTED_VERSION='0.3.6.4';
 const EXPECTED_GATE='v0.3.4.3-stella-v13b';
 const EXPECTED_VOICE='stella-v13b-starpoint-friendly-60-40';
 const EXPECTED_IMAGE_MODEL='@cf/black-forest-labs/flux-1-schnell';
@@ -35,7 +35,7 @@ async function waitForHealth(){
   let last;
   for(let i=0;i<12;i++){
     last=await requestJson('/health',{retries:1,timeoutMs:15000});
-    if(last?.ok&&last?.version===EXPECTED_VERSION&&last?.ai_bound===true&&last?.text_quality_gate===EXPECTED_GATE&&last?.voice_profile===EXPECTED_VOICE&&last?.stella_v13b_locked===true&&last?.extra_lead_rewrite===false&&last?.mobile_app===true&&last?.app_path==='/'&&last?.topic_recommendations===true&&last?.live_keyword_finder===true&&last?.live_keyword_source==='google_trends_kr'&&last?.naver_live_keywords===false&&last?.image_generation===true&&last?.image_policy===EXPECTED_IMAGE_POLICY&&last?.image_model===EXPECTED_IMAGE_MODEL&&last?.web_image_search===false&&last?.video_search===false) return last;
+    if(last?.ok&&last?.version===EXPECTED_VERSION&&last?.ai_bound===true&&last?.text_quality_gate===EXPECTED_GATE&&last?.voice_profile===EXPECTED_VOICE&&last?.stella_v13b_locked===true&&last?.extra_lead_rewrite===false&&last?.mobile_app===true&&last?.app_path==='/'&&last?.topic_recommendations===true&&last?.live_keyword_finder===true&&last?.live_keyword_source==='google_search_suggestions_kr'&&last?.live_keyword_signal_mode==='current_search_suggestions'&&last?.naver_live_keywords===false&&last?.image_generation===true&&last?.image_policy===EXPECTED_IMAGE_POLICY&&last?.image_model===EXPECTED_IMAGE_MODEL&&last?.web_image_search===false&&last?.video_search===false) return last;
     await sleep(2500);
   }
   throw new Error(`health_not_propagated:${JSON.stringify(last)}`);
@@ -48,26 +48,24 @@ for(const marker of ['스타포인트 블로그 AI','블로그 만들기','실�
 
 const appJs=await requestText('/app.js');
 if(!appJs.contentType.includes('javascript')) throw new Error('mobile_app_js_content_type_wrong');
-for(const marker of ['기본 추천 3개','/api/live-keywords?limit=10&t=','현재 실시간 안경 관련 검색어 0개','renderRecommendations(FALLBACK','/api/draft']) if(!appJs.text.includes(marker)) throw new Error(`mobile_app_js_marker_missing:${marker}`);
+for(const marker of ['기본 추천 3개','/api/live-keywords?limit=10&t=','현재 검색 제안','검색량 순위는 아님','급상승 확인','/api/draft']) if(!appJs.text.includes(marker)) throw new Error(`mobile_app_js_marker_missing:${marker}`);
 try{new Function(appJs.text);}catch(error){throw new Error(`mobile_app_script_syntax:${error.message}`)}
 
 const manifest=await requestJson('/manifest.webmanifest',{timeoutMs:15000});
 if(manifest?.name!=='스타포인트 블로그 AI'||manifest?.display!=='standalone'||manifest?.start_url!=='/') throw new Error('manifest_invalid');
 const sw=await requestText('/sw.js');
-if(!sw.contentType.includes('javascript')||!sw.text.includes('starpoint-blog-app-v4')) throw new Error('service_worker_invalid');
+if(!sw.contentType.includes('javascript')||!sw.text.includes('starpoint-blog-app-v5')) throw new Error('service_worker_invalid');
 
-const liveKeywords=await requestJson('/api/live-keywords?limit=10',{timeoutMs:45000});
-if(!liveKeywords?.ok||liveKeywords?.live_source!=='google_trends_kr'||liveKeywords?.naver_live_keywords!==false) throw new Error('live_keyword_source_invalid');
-if(!Array.isArray(liveKeywords.keywords)||!Array.isArray(liveKeywords.fallback_suggestions)) throw new Error('live_keyword_arrays_invalid');
-if(liveKeywords.keywords.length){
-  for(const item of liveKeywords.keywords){
-    if(item?.live!==true||typeof item?.keyword!=='string'||!item.keyword.trim()) throw new Error('live_keyword_item_invalid');
-  }
-}else if(liveKeywords.fallback_suggestions.length<1){
-  throw new Error('live_keyword_no_fallback');
+const liveKeywords=await requestJson('/api/live-keywords?limit=10',{timeoutMs:60000});
+if(!liveKeywords?.ok||liveKeywords?.live_source!=='google_search_suggestions_kr'||liveKeywords?.naver_live_keywords!==false) throw new Error('live_keyword_source_invalid');
+if(liveKeywords?.signal_mode!=='current_search_suggestions') throw new Error(`live_keyword_signal_mode_invalid:${liveKeywords?.signal_mode}`);
+if(!Array.isArray(liveKeywords.keywords)||liveKeywords.keywords.length<3) throw new Error(`current_optical_signal_count_too_low:${liveKeywords?.keywords?.length||0}:${liveKeywords?.source_error||''}`);
+for(const item of liveKeywords.keywords.slice(0,3)){
+  if(item?.live!==true||item?.current_search_signal!==true||typeof item?.keyword!=='string'||!item.keyword.trim()) throw new Error('current_search_signal_item_invalid');
+  if(typeof item?.signal_score!=='number'||item.signal_score<1||item.signal_score>100) throw new Error('current_search_signal_score_invalid');
 }
 
-const recommendations=await requestJson('/api/recommendations',{timeoutMs:45000});
+const recommendations=await requestJson('/api/recommendations',{timeoutMs:60000});
 if(!recommendations?.ok||!Array.isArray(recommendations.recommendations)||recommendations.recommendations.length<3) throw new Error('recommendations_not_resilient');
 for(const item of recommendations.recommendations.slice(0,3)) if(typeof item?.keyword!=='string'||!item.keyword.trim()) throw new Error('recommendation_keyword_missing');
 
@@ -83,8 +81,11 @@ console.log(JSON.stringify({
   external_app_js:true,
   live_keyword_finder:true,
   live_keyword_source:liveKeywords.live_source,
+  signal_mode:liveKeywords.signal_mode,
   live_keyword_count:liveKeywords.keywords.length,
-  fallback_count:liveKeywords.fallback_suggestions.length,
+  successful_seed_count:liveKeywords.successful_seed_count,
+  top_keyword:liveKeywords.keywords[0]?.keyword,
+  top_signal_score:liveKeywords.keywords[0]?.signal_score,
   naver_live_keywords:liveKeywords.naver_live_keywords,
   topic_recommendations:true,
   recommendation_count:recommendations.recommendations.length,
