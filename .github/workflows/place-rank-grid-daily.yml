@@ -9,6 +9,7 @@ on:
     paths:
       - 'config/place-rank.json'
       - 'scripts/place-rank-grid-scan.mjs'
+      - 'scripts/place-rank-grid-merge.mjs'
       - 'src/place-rank-grid-data.js'
       - 'src/place-rank.js'
       - '.github/workflows/place-rank-grid-daily.yml'
@@ -20,6 +21,7 @@ on:
       - 'src/place-rank-grid-data.js'
       - 'src/place-rank.js'
       - 'scripts/place-rank-grid-scan.mjs'
+      - 'scripts/place-rank-grid-merge.mjs'
       - '.github/workflows/place-rank-grid-daily.yml'
       - 'package.json'
 
@@ -55,7 +57,22 @@ jobs:
     if: github.event_name != 'pull_request'
     needs: validate
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 12
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        include:
+          - id: progressive
+            keyword: 누진다초점안경
+          - id: swimming-goggles
+            keyword: 도수수경
+          - id: polarized
+            keyword: 편광선글라스
+          - id: photochromic
+            keyword: 변색렌즈
+          - id: suyeong-optical
+            keyword: 수영구안경점
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
@@ -83,16 +100,71 @@ jobs:
           echo "CHROME_PATH=$CHROME_PATH" >> "$GITHUB_ENV"
           "$CHROME_PATH" --version
 
-      - name: Scan 5x5 objective Naver Map grid
+      - name: Limit scan to one keyword
+        env:
+          GRID_KEYWORD: ${{ matrix.keyword }}
+        run: |
+          node --input-type=module - <<'NODE'
+          import fs from 'node:fs';
+          const p = 'config/place-rank.json';
+          const doc = JSON.parse(fs.readFileSync(p, 'utf8'));
+          doc.grid.keywords = [process.env.GRID_KEYWORD];
+          doc.grid.concurrency = 1;
+          fs.writeFileSync(p, `${JSON.stringify(doc, null, 2)}\n`);
+          NODE
+
+      - name: Scan 25 points for ${{ matrix.keyword }}
         run: node scripts/place-rank-grid-scan.mjs
 
-      - name: Add geogrid run summary
+      - name: Upload keyword snapshot
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: place-rank-grid-part-${{ matrix.id }}
+          path: data/place-rank-grid-history.json
+          retention-days: 2
+          if-no-files-found: error
+
+      - name: Upload keyword diagnostics
         if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: place-rank-grid-diagnostics-${{ matrix.id }}-${{ github.run_number }}
+          path: artifacts/place-rank-grid/
+          if-no-files-found: ignore
+          retention-days: 14
+
+  merge:
+    if: github.event_name != 'pull_request' && needs.scan.result == 'success'
+    needs: [validate, scan]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout latest main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Download keyword snapshots
+        uses: actions/download-artifact@v4
+        with:
+          pattern: place-rank-grid-part-*
+          path: artifacts/place-rank-grid-parts
+
+      - name: Merge verified 5x5 keyword snapshots
+        run: node scripts/place-rank-grid-merge.mjs
+
+      - name: Add geogrid run summary
         shell: bash
         run: |
           set -euo pipefail
-          if [ -f data/place-rank-grid-history.json ]; then
-            node - <<'NODE' >> "$GITHUB_STEP_SUMMARY"
+          node - <<'NODE' >> "$GITHUB_STEP_SUMMARY"
           const fs = require('fs');
           const doc = JSON.parse(fs.readFileSync('data/place-rank-grid-history.json', 'utf8'));
           const latest = doc.latest;
@@ -108,19 +180,8 @@ jobs:
             console.log(`| ${item.keyword} | ${median} | ${item.top3Pct ?? '-'}% | ${item.top10Pct ?? '-'}% | ${item.top20Pct ?? '-'}% | ${item.visibilityScore ?? '-'} | ${item.storePointRank ?? '-'} |`);
           }
           NODE
-          fi
-
-      - name: Upload geogrid diagnostics
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: place-rank-grid-diagnostics-${{ github.run_number }}
-          path: artifacts/place-rank-grid/
-          if-no-files-found: ignore
-          retention-days: 14
 
       - name: Commit verified geogrid snapshot
-        if: success()
         shell: bash
         run: |
           set -euo pipefail
@@ -132,7 +193,7 @@ jobs:
             exit 0
           fi
           DATE_KST="$(TZ=Asia/Seoul date +%F)"
-          git commit -m "data(place-rank-grid): daily 25-point snapshot ${DATE_KST}"
+          git commit -m "data(place-rank-grid): daily parallel 25-point snapshot ${DATE_KST}"
 
           for attempt in 1 2 3 4 5; do
             if git push origin HEAD:main; then
