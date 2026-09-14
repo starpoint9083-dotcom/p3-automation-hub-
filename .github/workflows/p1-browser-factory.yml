@@ -121,6 +121,18 @@ jobs:
         if: env.P1_RUN_MODE == 'factory' || env.P1_RUN_MODE == 'episode6'
         run: npm install --no-audit --no-fund --no-save puppeteer-core@24.16.0
 
+      - name: Install and verify Korean render fonts
+        if: env.P1_RUN_MODE == 'factory' || env.P1_RUN_MODE == 'episode6'
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq fonts-noto-cjk fonts-nanum
+          fc-cache -f >/dev/null
+          printf 'Korean font fallback: '
+          fc-match 'sans-serif:lang=ko' | head -1
+          fc-match 'sans-serif:lang=ko' | grep -Eiq 'Noto|Nanum' || { echo 'Korean font fallback unavailable' >&2; exit 1; }
+
       - name: Locate Chrome
         if: env.P1_RUN_MODE == 'factory' || env.P1_RUN_MODE == 'episode6'
         shell: bash
