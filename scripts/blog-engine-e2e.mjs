@@ -2,6 +2,8 @@ const base = String(process.env.BLOG_ENGINE_URL || '').replace(/\/$/, '');
 if (!base) throw new Error('BLOG_ENGINE_URL missing');
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
+const EXPECTED_VERSION='0.3.2';
+const EXPECTED_GATE='v0.3.2-safe-plan-split-writing';
 const BAD_FOREIGN=/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/u;
 const BAD_PATTERNS=[
   /가을[^.!?]{0,35}자외선[^.!?]{0,25}(강해|강하|증가|높아)/u,
@@ -55,10 +57,19 @@ async function requestJson(path, options = {}) {
   throw lastError;
 }
 
-const health = await requestJson('/health');
+async function waitForExpectedHealth() {
+  let last;
+  for (let attempt = 1; attempt <= 12; attempt += 1) {
+    last = await requestJson('/health', { retries: 1, timeoutMs: 15000 });
+    if (last.ok && last.service === 'p3-blog-engine' && last.ai_bound && last.version === EXPECTED_VERSION && last.text_quality_gate === EXPECTED_GATE) return last;
+    if (attempt < 12) await sleep(3000);
+  }
+  throw new Error(`live_health_not_propagated:version_${last?.version || 'missing'}:gate_${last?.text_quality_gate || 'missing'}`);
+}
+
+const health = await waitForExpectedHealth();
 if (!health.ok || health.service !== 'p3-blog-engine') throw new Error('health_invalid');
 if (!health.ai_bound) throw new Error('workers_ai_not_bound');
-if (health.version !== '0.3.1') throw new Error(`wrong_live_version:${health.version}`);
 
 const trends = await requestJson('/api/trends?limit=10');
 if (!Array.isArray(trends.trends) || trends.trends.length < 1) throw new Error('trends_invalid');
@@ -75,8 +86,9 @@ if (!draft.ok || !draft.topic?.keyword || !draft.draft) throw new Error('draft_i
 if (!draft.ai_used) throw new Error(`ai_draft_not_used:${draft.error || 'unknown'}`);
 if (!draft.structured_output) throw new Error('structured_output_false');
 if (!draft.text_quality_gate_passed) throw new Error('text_quality_gate_false');
-if (draft.draft.mode !== 'ai-structured-multistage-quality-gated') throw new Error(`wrong_generation_mode:${draft.draft.mode}`);
-if (draft.draft.generation_meta?.quality_gate !== 'v0.3.1-korean-fact-distinct') throw new Error('wrong_quality_gate');
+if (draft.draft.mode !== 'ai-split-writing-safe-plan') throw new Error(`wrong_generation_mode:${draft.draft.mode}`);
+if (draft.draft.generation_meta?.quality_gate !== EXPECTED_GATE) throw new Error('wrong_quality_gate');
+if (draft.draft.generation_meta?.plan_mode !== 'deterministic_safe') throw new Error('wrong_plan_mode');
 
 safeText('title', draft.draft.title, 8);
 safeText('intro', draft.draft.intro, 40);
@@ -113,6 +125,7 @@ const preview = {
 console.log(JSON.stringify({
   ok: true,
   url: base,
+  version: health.version,
   live_trends: trends.live,
   accepted_topics: topics.accepted_count,
   selected_topic: draft.topic.keyword,
