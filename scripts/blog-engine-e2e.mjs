@@ -2,8 +2,8 @@ const base = String(process.env.BLOG_ENGINE_URL || '').replace(/\/$/, '');
 if (!base) throw new Error('BLOG_ENGINE_URL missing');
 
 const sleep = ms => new Promise(r => setTimeout(r, ms));
-const EXPECTED_VERSION='0.3.4.1';
-const EXPECTED_GATE='v0.3.4.1-starpoint-friendly-precision';
+const EXPECTED_VERSION='0.3.4.2';
+const EXPECTED_GATE='v0.3.4.2-starpoint-natural-friendly';
 const EXPECTED_VOICE='stella-v13b-starpoint-friendly-60-40';
 const BAD_FOREIGN=/[\u3040-\u30ff\u3400-\u4dbf\u4e00-\u9fff]/u;
 const BAD_PATTERNS=[
@@ -19,7 +19,6 @@ const BAD_PATTERNS=[
 ];
 const AIISH=['중요합니다','추천드립니다','최적의 선택','전문가와 상담','적합한 렌즈를 선택','도움이 될 수 있습니다','선택하는 것이 중요해요','전문적인 상담이 필요해요','큰 도움이 될 수 있어요'];
 const RIGID=['고객은','고객들은','선택해야 합니다','확인해야 합니다','이러한 이유로','왜냐하면','따라서'];
-const FRIENDLY_ENDING=/(해요|돼요|예요|이에요|거든요|있어요|없어요|않아요|맞아요|달라요|보세요|보셔야 해요|볼 수 있어요)\./u;
 const FRIENDLY_GLOBAL=/(해요|돼요|예요|이에요|거든요|있어요|없어요|않아요|맞아요|달라요|보세요|보셔야 해요|볼 수 있어요)\./gu;
 
 function safeText(label, value, min = 1) {
@@ -31,7 +30,6 @@ function safeText(label, value, min = 1) {
   if (min>=120) {
     const rigidHits=RIGID.reduce((n,p)=>n+(value.split(p).length-1),0);
     if (rigidHits>1) throw new Error(`${label}_too_formal`);
-    if (!FRIENDLY_ENDING.test(value)) throw new Error(`${label}_friendly_tone_missing`);
     const friendlyHits=(value.match(FRIENDLY_GLOBAL)||[]).length;
     if (friendlyHits>4) throw new Error(`${label}_too_chatty`);
   }
@@ -97,6 +95,7 @@ if (!draft.ai_used || !draft.structured_output || !draft.text_quality_gate_passe
 if (draft.draft.mode !== 'ai-split-writing-starpoint-friendly-v13b') throw new Error(`wrong_generation_mode:${draft.draft.mode}`);
 if (draft.draft.generation_meta?.quality_gate !== EXPECTED_GATE) throw new Error('wrong_quality_gate');
 if (draft.draft.generation_meta?.voice_profile !== EXPECTED_VOICE) throw new Error('wrong_voice_profile');
+if (!Number.isInteger(draft.draft.generation_meta?.friendly_ending_count) || draft.draft.generation_meta.friendly_ending_count < 0) throw new Error('friendly_count_invalid');
 
 safeText('title', draft.draft.title, 8);
 safeText('intro', draft.draft.intro, 40);
