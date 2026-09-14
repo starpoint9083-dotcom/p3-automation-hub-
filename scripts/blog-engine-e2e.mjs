@@ -5,6 +5,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const EXPECTED_VERSION='0.3.4.3';
 const EXPECTED_GATE='v0.3.4.3-friendly-leads';
 const EXPECTED_VOICE='stella-v13b-starpoint-friendly-60-40';
+const EXPECTED_RETRY_LIMIT=3;
 const EXPECTED_LEADS=[
   '처음에는 제품보다 언제 불편한지부터 보는 게 쉬워요.',
   '좋은 기능도 한계까지 같이 봐야 선택이 편해요.',
@@ -82,10 +83,10 @@ async function waitForExpectedHealth() {
   let last;
   for (let attempt = 1; attempt <= 12; attempt += 1) {
     last = await requestJson('/health', { retries: 1, timeoutMs: 15000 });
-    if (last.ok && last.service === 'p3-blog-engine' && last.ai_bound && last.version === EXPECTED_VERSION && last.text_quality_gate === EXPECTED_GATE && last.voice_profile === EXPECTED_VOICE && last.friendly_lead_layer === true) return last;
+    if (last.ok && last.service === 'p3-blog-engine' && last.ai_bound && last.version === EXPECTED_VERSION && last.text_quality_gate === EXPECTED_GATE && last.voice_profile === EXPECTED_VOICE && last.friendly_lead_layer === true && last.full_draft_retry_limit === EXPECTED_RETRY_LIMIT) return last;
     if (attempt < 12) await sleep(3000);
   }
-  throw new Error(`live_health_not_propagated:version_${last?.version || 'missing'}:gate_${last?.text_quality_gate || 'missing'}:voice_${last?.voice_profile || 'missing'}`);
+  throw new Error(`live_health_not_propagated:version_${last?.version || 'missing'}:gate_${last?.text_quality_gate || 'missing'}:voice_${last?.voice_profile || 'missing'}:retry_${last?.full_draft_retry_limit || 'missing'}`);
 }
 
 const health = await waitForExpectedHealth();
@@ -95,13 +96,15 @@ const topics = await requestJson('/api/topics?limit=30');
 if (!Array.isArray(topics.topics) || !Array.isArray(topics.fallback_suggestions)) throw new Error('topics_invalid');
 for (const topic of topics.topics) if (topic.relevance_score < topics.min_relevance_score) throw new Error(`quality_gate_failed:${topic.keyword}`);
 
-const draft = await requestJson('/api/draft', { method: 'POST', body: '{}', retries: 2, timeoutMs: 120000 });
+const draft = await requestJson('/api/draft', { method: 'POST', body: '{}', retries: 1, timeoutMs: 300000 });
 if (!draft.ok || !draft.topic?.keyword || !draft.draft) throw new Error('draft_invalid');
 if (!draft.ai_used || !draft.structured_output || !draft.text_quality_gate_passed) throw new Error('generation_flags_invalid');
 if (draft.draft.mode !== 'ai-split-writing-starpoint-friendly-v13b') throw new Error(`wrong_generation_mode:${draft.draft.mode}`);
 if (draft.draft.generation_meta?.quality_gate !== EXPECTED_GATE) throw new Error('wrong_quality_gate');
 if (draft.draft.generation_meta?.voice_profile !== EXPECTED_VOICE) throw new Error('wrong_voice_profile');
 if (draft.draft.generation_meta?.friendly_lead_layer !== true) throw new Error('friendly_lead_layer_missing');
+const fullDraftAttempts=draft.draft.generation_meta?.full_draft_attempts;
+if (!Number.isInteger(fullDraftAttempts) || fullDraftAttempts < 1 || fullDraftAttempts > EXPECTED_RETRY_LIMIT) throw new Error('full_draft_attempts_invalid');
 if (!Number.isInteger(draft.draft.generation_meta?.friendly_ending_count) || draft.draft.generation_meta.friendly_ending_count < 0) throw new Error('friendly_count_invalid');
 
 safeText('title', draft.draft.title, 8);
@@ -132,6 +135,8 @@ console.log(JSON.stringify({
   quality_gate: health.text_quality_gate,
   voice_profile: health.voice_profile,
   friendly_lead_layer: health.friendly_lead_layer,
+  full_draft_retry_limit: health.full_draft_retry_limit,
+  full_draft_attempts: fullDraftAttempts,
   live_trends: trends.live,
   accepted_topics: topics.accepted_count,
   selected_topic: draft.topic.keyword,

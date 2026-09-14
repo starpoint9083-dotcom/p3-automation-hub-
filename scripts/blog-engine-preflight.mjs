@@ -24,6 +24,7 @@ const source = fs.readFileSync('src/blog-engine-v0343.js','utf8');
 for (const marker of [
   "const QUALITY_GATE='v0.3.4.3-friendly-leads'",
   'addFriendlyLead','applyFriendlyLeads','friendly_lead_layer',
+  'FULL_DRAFT_RETRY_LIMIT=3','retryableGenerationFailure','draftWithRetry','full_draft_attempts','full_draft_retry_limit',
   '처음에는 제품보다 언제 불편한지부터 보는 게 쉬워요.',
   '좋은 기능도 한계까지 같이 봐야 선택이 편해요.',
   '결국 내 생활에 맞는지가 가장 먼저 볼 기준이에요.',
