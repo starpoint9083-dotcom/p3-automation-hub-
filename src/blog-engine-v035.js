@@ -87,6 +87,19 @@ function normalizeRecommendation(item){
     source:item.source||'trend'
   };
 }
+function normalizeLiveKeyword(item,index=0){
+  const base=normalizeRecommendation(item);
+  if(!base) return null;
+  return {
+    ...base,
+    rank:Number(item.rank||index+1),
+    traffic:item.traffic||null,
+    published_at:item.published_at||null,
+    reasons:Array.isArray(item.reasons)?item.reasons.slice(0,3):[],
+    source:item.source||'google_trends_kr',
+    live:true
+  };
+}
 async function recommendations(request,env,ctx){
   const url=new URL(request.url);
   try{
@@ -104,18 +117,58 @@ async function recommendations(request,env,ctx){
     return J({ok:true,live:false,recommendations:FALLBACK_RECOMMENDATIONS,source:'safe_optical_fallback',source_error:error?.message||String(error)});
   }
 }
+async function liveKeywords(request,env,ctx){
+  const url=new URL(request.url);
+  const limit=Math.max(3,Math.min(Number(url.searchParams.get('limit'))||10,10));
+  try{
+    const inner=new Request(`${url.origin}/api/topics?limit=50`,{headers:{'cache-control':'no-cache'}});
+    const response=await workerV0343.fetch(inner,env,ctx);
+    const data=await response.json();
+    const keywords=(data?.live&&Array.isArray(data?.topics)?data.topics:[])
+      .map((item,index)=>normalizeLiveKeyword(item,index)).filter(Boolean).slice(0,limit);
+    const fallback=(Array.isArray(data?.fallback_suggestions)&&data.fallback_suggestions.length?data.fallback_suggestions:FALLBACK_RECOMMENDATIONS)
+      .map(normalizeRecommendation).filter(Boolean).slice(0,3);
+    return J({
+      ok:true,
+      live:Boolean(data?.live),
+      live_source:'google_trends_kr',
+      live_source_label:'Google Trends KR',
+      naver_live_keywords:false,
+      keywords,
+      live_keyword_count:keywords.length,
+      fallback_suggestions:keywords.length?[]:fallback,
+      note:keywords.length
+        ?'현재 실시간 트렌드 중 안경원과 연결 근거가 있는 검색어만 표시합니다.'
+        :'현재 실시간 트렌드에서 안경 관련 검색어가 없어 대체 주제를 별도로 표시합니다.'
+    });
+  }catch(error){
+    return J({
+      ok:true,
+      live:false,
+      live_source:'google_trends_kr',
+      live_source_label:'Google Trends KR',
+      naver_live_keywords:false,
+      keywords:[],
+      live_keyword_count:0,
+      fallback_suggestions:FALLBACK_RECOMMENDATIONS,
+      note:'실시간 트렌드 연결이 늦어 대체 주제를 표시합니다.',
+      source_error:error?.message||String(error)
+    });
+  }
+}
 
 export default{
   async fetch(request,env,ctx){
     const app=serveBlogApp(request);
     if(app) return app;
     const url=new URL(request.url);
+    if(request.method==='GET'&&url.pathname==='/api/live-keywords') return liveKeywords(request,env,ctx);
     if(request.method==='GET'&&url.pathname==='/api/recommendations') return recommendations(request,env,ctx);
     if(request.method==='POST'&&url.pathname==='/api/draft') return draftWithImages(request,env,ctx);
     if(request.method==='POST'&&url.pathname==='/api/image') return singleImage(request,env);
     const response=await workerV0343.fetch(request,env,ctx);
     if(!(request.method==='GET'&&url.pathname==='/health')) return response;
     let data;try{data=await response.clone().json();}catch{return response;}
-    return J({...data,mobile_app:true,app_path:'/',topic_recommendations:true,image_generation:true,image_policy:IMAGE_POLICY,image_model:IMAGE_MODEL,web_image_search:false,video_search:false},response.status);
+    return J({...data,mobile_app:true,app_path:'/',topic_recommendations:true,live_keyword_finder:true,live_keyword_source:'google_trends_kr',naver_live_keywords:false,image_generation:true,image_policy:IMAGE_POLICY,image_model:IMAGE_MODEL,web_image_search:false,video_search:false},response.status);
   }
 };
