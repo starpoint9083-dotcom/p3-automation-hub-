@@ -1,10 +1,10 @@
 export const placeRankGridData = {
   "version": "2.1.0",
   "store": "스타포인트안경원",
-  "generatedAt": "2026-09-14T16:35:54.351+09:00",
+  "generatedAt": "2026-09-14T19:50:58.807+09:00",
   "latest": {
     "date": "2026-09-14",
-    "checkedAt": "2026-09-14T16:35:54.351+09:00",
+    "checkedAt": "2026-09-14T19:50:58.807+09:00",
     "source": "naver-map-geogrid-v2-parallel",
     "grid": {
       "size": 5,
@@ -396,7 +396,7 @@ export const placeRankGridData = {
           "longitude": 129.10041863522727
         },
         "locationMatched": true,
-        "networkResponses": 1
+        "networkResponses": 2
       },
       {
         "keyword": "누진다초점안경",
@@ -610,13 +610,13 @@ export const placeRankGridData = {
         "isStore": true,
         "status": "ok",
         "rank": 1,
-        "resultCount": 20,
+        "resultCount": 28,
         "searchCoord": {
           "latitude": 35.16222999440906,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 1
+        "networkResponses": 3
       },
       {
         "keyword": "누진다초점안경",
@@ -630,13 +630,13 @@ export const placeRankGridData = {
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 20,
+        "resultCount": 28,
         "searchCoord": {
           "latitude": 35.16222999440906,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 2
+        "networkResponses": 3
       },
       {
         "keyword": "누진다초점안경",
@@ -730,13 +730,13 @@ export const placeRankGridData = {
         "isStore": false,
         "status": "ok",
         "rank": 5,
-        "resultCount": 20,
+        "resultCount": 28,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 2
+        "networkResponses": 3
       },
       {
         "keyword": "누진다초점안경",
@@ -810,13 +810,13 @@ export const placeRankGridData = {
         "isStore": false,
         "status": "ok",
         "rank": 8,
-        "resultCount": 20,
+        "resultCount": 28,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 2
+        "networkResponses": 3
       },
       {
         "keyword": "누진다초점안경",
@@ -890,13 +890,13 @@ export const placeRankGridData = {
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.1801962179089,
           "longitude": 129.10041863522727
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 2
       },
       {
         "keyword": "도수수경",
@@ -930,13 +930,13 @@ export const placeRankGridData = {
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 20,
+        "resultCount": 28,
         "searchCoord": {
           "latitude": 35.1801962179089,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 2
+        "networkResponses": 3
       },
       {
         "keyword": "도수수경",
@@ -1110,13 +1110,13 @@ export const placeRankGridData = {
         "isStore": true,
         "status": "ok",
         "rank": 1,
-        "resultCount": 20,
+        "resultCount": 28,
         "searchCoord": {
           "latitude": 35.16222999440906,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 1
+        "networkResponses": 3
       },
       {
         "keyword": "도수수경",
@@ -1136,7 +1136,7 @@ export const placeRankGridData = {
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 4
+        "networkResponses": 3
       },
       {
         "keyword": "도수수경",
@@ -1150,13 +1150,13 @@ export const placeRankGridData = {
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 20,
+        "resultCount": 28,
         "searchCoord": {
           "latitude": 35.16222999440906,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 1
+        "networkResponses": 3
       },
       {
         "keyword": "도수수경",
@@ -1190,13 +1190,13 @@ export const placeRankGridData = {
         "isStore": false,
         "status": "ok",
         "rank": 2,
-        "resultCount": 20,
+        "resultCount": 28,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.10041863522727
         },
         "locationMatched": true,
-        "networkResponses": 2
+        "networkResponses": 3
       },
       {
         "keyword": "도수수경",
@@ -1407,13 +1407,13 @@ export const placeRankGridData = {
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 20,
+        "resultCount": 28,
         "searchCoord": {
           "latitude": 35.1801962179089,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 2
+        "networkResponses": 4
       },
       {
         "keyword": "편광선글라스",
@@ -1427,13 +1427,13 @@ export const placeRankGridData = {
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 20,
+        "resultCount": 28,
         "searchCoord": {
           "latitude": 35.1801962179089,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 2
+        "networkResponses": 3
       },
       {
         "keyword": "편광선글라스",
@@ -1447,13 +1447,13 @@ export const placeRankGridData = {
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 20,
+        "resultCount": 28,
         "searchCoord": {
           "latitude": 35.1801962179089,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 2
+        "networkResponses": 3
       },
       {
         "keyword": "편광선글라스",
@@ -1467,13 +1467,13 @@ export const placeRankGridData = {
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.171213106158994,
           "longitude": 129.08943045147424
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1547,13 +1547,13 @@ export const placeRankGridData = {
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 20,
+        "resultCount": 28,
         "searchCoord": {
           "latitude": 35.171213106158994,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 2
+        "networkResponses": 3
       },
       {
         "keyword": "편광선글라스",
@@ -1573,7 +1573,7 @@ export const placeRankGridData = {
           "longitude": 129.08943045147424
         },
         "locationMatched": true,
-        "networkResponses": 4
+        "networkResponses": 3
       },
       {
         "keyword": "편광선글라스",
@@ -1607,13 +1607,13 @@ export const placeRankGridData = {
         "isStore": true,
         "status": "ok",
         "rank": 1,
-        "resultCount": 20,
+        "resultCount": 28,
         "searchCoord": {
           "latitude": 35.16222999440906,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 1
+        "networkResponses": 3
       },
       {
         "keyword": "편광선글라스",
@@ -1627,13 +1627,13 @@ export const placeRankGridData = {
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 20,
+        "resultCount": 28,
         "searchCoord": {
           "latitude": 35.16222999440906,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 1
+        "networkResponses": 3
       },
       {
         "keyword": "편광선글라스",
@@ -1667,13 +1667,13 @@ export const placeRankGridData = {
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 20,
+        "resultCount": 28,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.08943045147424
         },
         "locationMatched": true,
-        "networkResponses": 1
+        "networkResponses": 3
       },
       {
         "keyword": "편광선글라스",
@@ -1693,7 +1693,7 @@ export const placeRankGridData = {
           "longitude": 129.10041863522727
         },
         "locationMatched": true,
-        "networkResponses": 4
+        "networkResponses": 3
       },
       {
         "keyword": "편광선글라스",
@@ -1727,13 +1727,13 @@ export const placeRankGridData = {
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1747,13 +1747,13 @@ export const placeRankGridData = {
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 20,
+        "resultCount": 28,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 2
+        "networkResponses": 4
       },
       {
         "keyword": "편광선글라스",
@@ -1807,13 +1807,13 @@ export const placeRankGridData = {
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 20,
+        "resultCount": 28,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 1
+        "networkResponses": 3
       },
       {
         "keyword": "편광선글라스",
@@ -1833,7 +1833,7 @@ export const placeRankGridData = {
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 4
+        "networkResponses": 3
       },
       {
         "keyword": "편광선글라스",
@@ -1893,7 +1893,7 @@ export const placeRankGridData = {
           "longitude": 129.10041863522727
         },
         "locationMatched": true,
-        "networkResponses": 1
+        "networkResponses": 2
       },
       {
         "keyword": "변색렌즈",
@@ -1947,13 +1947,13 @@ export const placeRankGridData = {
         "isStore": false,
         "status": "ok",
         "rank": 2,
-        "resultCount": 20,
+        "resultCount": 28,
         "searchCoord": {
           "latitude": 35.1801962179089,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 2
+        "networkResponses": 3
       },
       {
         "keyword": "변색렌즈",
@@ -2147,13 +2147,13 @@ export const placeRankGridData = {
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 20,
+        "resultCount": 28,
         "searchCoord": {
           "latitude": 35.16222999440906,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 1
+        "networkResponses": 3
       },
       {
         "keyword": "변색렌즈",
@@ -2173,7 +2173,7 @@ export const placeRankGridData = {
           "longitude": 129.08943045147424
         },
         "locationMatched": true,
-        "networkResponses": 4
+        "networkResponses": 3
       },
       {
         "keyword": "변색렌즈",
@@ -2347,13 +2347,13 @@ export const placeRankGridData = {
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 20,
+        "resultCount": 28,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 2
+        "networkResponses": 3
       },
       {
         "keyword": "수영구안경점",
@@ -2860,7 +2860,7 @@ export const placeRankGridData = {
   "history": [
     {
       "date": "2026-09-14",
-      "checkedAt": "2026-09-14T16:35:54.351+09:00",
+      "checkedAt": "2026-09-14T19:50:58.807+09:00",
       "summaries": [
         {
           "keyword": "누진다초점안경",
