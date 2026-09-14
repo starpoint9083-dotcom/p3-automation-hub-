@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "p3-blog-engine",
-  "main": "src/blog-engine-v034.js",
+  "main": "src/blog-engine-v0343.js",
   "compatibility_date": "2026-09-14",
   "workers_dev": true,
   "observability": { "enabled": true },
@@ -9,6 +9,6 @@
     "binding": "AI"
   },
   "vars": {
-    "BLOG_ENGINE_MODE": "starpoint-friendly-v13b-v034"
+    "BLOG_ENGINE_MODE": "starpoint-friendly-v13b-v0343"
   }
 }
