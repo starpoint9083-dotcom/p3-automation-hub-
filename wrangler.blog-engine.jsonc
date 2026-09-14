@@ -5,7 +5,10 @@
   "compatibility_date": "2026-09-14",
   "workers_dev": true,
   "observability": { "enabled": true },
+  "ai": {
+    "binding": "AI"
+  },
   "vars": {
-    "BLOG_ENGINE_MODE": "trend-first-mvp"
+    "BLOG_ENGINE_MODE": "trend-quality-gated-ai"
   }
 }
