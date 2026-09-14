@@ -9,6 +9,6 @@
     "binding": "AI"
   },
   "vars": {
-    "BLOG_ENGINE_MODE": "structured-plan-plus-split-writing"
+    "BLOG_ENGINE_MODE": "structured-multistage-quality-gated-v031"
   }
 }
