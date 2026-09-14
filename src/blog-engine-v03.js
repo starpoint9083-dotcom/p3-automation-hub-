@@ -2,7 +2,7 @@ import legacyWorker from './blog-engine.js';
 import { MEDIA_POLICY } from './blog-engine-config.js';
 
 const PLAN_MODEL='@cf/meta/llama-3.3-70b-instruct-fp8-fast';
-const WRITER_MODEL='@cf/zai-org/glm-4.7-flash';
+const WRITER_MODEL='@cf/meta/llama-3.3-70b-instruct-fp8-fast';
 const H={'content-type':'application/json; charset=utf-8','cache-control':'no-store','access-control-allow-origin':'*'};
 const SCHEMA={
   type:'object',
@@ -136,7 +136,7 @@ async function section(env,topic,heading,index){
     try{
       const r=await env.AI.run(WRITER_MODEL,{
         messages:[{role:'system',content:'Write one complete practical Korean paragraph for a real local optician blog. Plain text only. Never stop mid-sentence.'},{role:'user',content:prompt}],
-        temperature:n===1?0.35:0.2,max_completion_tokens:900
+        temperature:n===1?0.35:0.2,max_tokens:700
       });
       const body=txt(r).replace(/^```(?:text)?\s*/i,'').replace(/```\s*$/i,'').replace(/^["']|["']$/g,'').trim();
       previous=body;
