@@ -1,7 +1,7 @@
 export const placeRankData = {
   "version": "1.5.0",
   "store": "스타포인트안경원",
-  "generatedAt": "2026-09-14T09:40:56.598+09:00",
+  "generatedAt": "2026-09-14T13:03:08.157+09:00",
   "history": [
     {
       "date": "2026-09-13",
@@ -79,7 +79,7 @@ export const placeRankData = {
     },
     {
       "date": "2026-09-14",
-      "checkedAt": "2026-09-14T09:40:56.598+09:00",
+      "checkedAt": "2026-09-14T13:03:08.157+09:00",
       "source": "naver-map-browser-network-mercator-v3",
       "location": {
         "latitude": 35.162229994409,
@@ -93,7 +93,7 @@ export const placeRankData = {
           "rank": 1,
           "status": "ok",
           "resultCount": 28,
-          "url": "https://map.naver.com/p/search/%EB%88%84%EC%A7%84%EB%8B%A4%EC%B4%88%EC%A0%90%EC%95%88%EA%B2%BD?c=14372616.06269204,4185949.4653669046,15.22,0,0,0,dh",
+          "url": "https://map.naver.com/p/search/%EB%88%84%EC%A7%84%EB%8B%A4%EC%B4%88%EC%A0%90%EC%95%88%EA%B2%BD?c=15.22,0,0,0,dh",
           "searchCoord": {
             "latitude": 35.16222999440906,
             "longitude": 129.1114068189803
@@ -104,7 +104,7 @@ export const placeRankData = {
             {
               "type": "allSearch",
               "count": 60,
-              "url": "https://map.naver.com/p/api/search/allSearch?query=%EB%88%84%EC%A7%84%EB%8B%A4%EC%B4%88%EC%A0%90%EC%95%88%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=855XiFxDGuwwb2v4m-ALR7dJFW1G-R0m9pUrBFD8RD4%3D"
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EB%88%84%EC%A7%84%EB%8B%A4%EC%B4%88%EC%A0%90%EC%95%88%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=N_rsMuxcAibVEAHCfZWlHyKUrK3U0L0aNzcNV6FzgZo%3D"
             },
             {
               "type": "graphql-error",
@@ -123,12 +123,12 @@ export const placeRankData = {
             "안경세상",
             "옵장안경원",
             "안경본데이 부산수영점",
-            "아이디어안경 토곡점",
             "수아이안경",
+            "아이디어안경 토곡점",
             "갤러리안경 망미점",
+            "아이뷰안경 망미점",
             "뉴욕안경콘택트",
             "다비치안경 경성대부경대소방서옆점",
-            "아이뷰안경 망미점",
             "안경진정성 이마트트레이더스 부산연산점",
             "으뜸아이안경 대연점"
           ]
@@ -149,7 +149,7 @@ export const placeRankData = {
             {
               "type": "allSearch",
               "count": 60,
-              "url": "https://map.naver.com/p/api/search/allSearch?query=%EB%8F%84%EC%88%98%EC%88%98%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=hGoPPBr-esj229Yd_1pBOPVqxZQeevEBF-i7bwiTYMA%3D"
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EB%8F%84%EC%88%98%EC%88%98%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=KoM0ZCCzv_UVBmD4_4Oqk2-cRJVGC_CQjw3GRp7-GR8%3D"
             },
             {
               "type": "graphql-error",
@@ -194,7 +194,7 @@ export const placeRankData = {
             {
               "type": "allSearch",
               "count": 60,
-              "url": "https://map.naver.com/p/api/search/allSearch?query=%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=zvaK6FI3gzX6Bt8B0zeRJ4EabFielM6uDs_vP_bwTRU%3D"
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=9_j0pZj4GlbfYRCkMTD9wZrjSdLlo61QRHHwJhprxoY%3D"
             },
             {
               "type": "graphql-error",
@@ -213,11 +213,11 @@ export const placeRankData = {
             "쿠로시오",
             "서울안경",
             "카이루소",
-            "글라스팩토리 렌즈베리 충북진천점",
             "라운드투안경 울산태화점",
+            "글라스팩토리 렌즈베리 충북진천점",
+            "새샘하우스안경원",
             "제우스안경원",
             "썬가드광학직영몰",
-            "새샘하우스안경원",
             "삼천포안경원",
             "대승옵티칼",
             "오엔에이치"
@@ -239,7 +239,7 @@ export const placeRankData = {
             {
               "type": "allSearch",
               "count": 60,
-              "url": "https://map.naver.com/p/api/search/allSearch?query=%EB%B3%80%EC%83%89%EB%A0%8C%EC%A6%88&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=J_Axo1CWAvdxCOVkMAjH-leTmKfFFQUtjaWYA79lrm0%3D"
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EB%B3%80%EC%83%89%EB%A0%8C%EC%A6%88&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=p7lXrC4rwXZ6Srp54tgEfr1LM2b24Xm16fU45jV5Kwc%3D"
             },
             {
               "type": "graphql-error",
@@ -261,11 +261,11 @@ export const placeRankData = {
             "뉴이태리안경원",
             "안경세상",
             "서울메디컬안경",
-            "아이리더안경 기장점",
             "밝은세상안경원 온천점",
+            "아이리더안경 기장점",
             "우리동네안경원",
             "갤러리안경 덕천점",
-            "갤러리안경 하단"
+            "안경본데이 구영점"
           ]
         },
         {
@@ -284,7 +284,7 @@ export const placeRankData = {
             {
               "type": "allSearch",
               "count": 60,
-              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC%EC%95%88%EA%B2%BD%EC%A0%90&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=zEyiZbywy2sARB5AfU_XTsbhz4Aud2MGlzWhxbJkC7c%3D"
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC%EC%95%88%EA%B2%BD%EC%A0%90&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=NF-1PGFuDwS1iUo9UjFa2F3Ktwmdr851Gc5w2-voZ6o%3D"
             }
           ],
           "sample": [
@@ -295,11 +295,11 @@ export const placeRankData = {
             "옵장안경원",
             "오렌즈 부산수영역점",
             "안경나라 위드렌즈 부산광안점",
-            "아이젠트리 수영점",
             "으뜸플러스안경 부산수영점",
+            "아이젠트리 수영점",
             "파프리카안경 수영점",
-            "갤러리안경 망미점",
-            "뉴페이스안경원"
+            "폼하우스안경원 수영점",
+            "갤러리안경 망미점"
           ]
         },
         {
@@ -318,7 +318,7 @@ export const placeRankData = {
             {
               "type": "allSearch",
               "count": 60,
-              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC+%EB%88%84%EC%A7%84%EB%8B%A4%EC%B4%88%EC%A0%90%EC%95%88%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=m5Q2XRT5qI280_L-QmLzrjLMHbRieQCMM9IJzXMZgLs%3D"
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC+%EB%88%84%EC%A7%84%EB%8B%A4%EC%B4%88%EC%A0%90%EC%95%88%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=sYBpyhIKNJntizAKl_hu_9iqTaXCien8dMbQA2EaKlY%3D"
             },
             {
               "type": "graphql-error",
@@ -335,16 +335,16 @@ export const placeRankData = {
           "sample": [
             "옵장안경원",
             "갤러리안경 망미점",
+            "아이뷰안경 망미점",
             "안경본데이 부산수영점",
             "수아이안경",
             "뉴욕안경콘택트",
-            "아이뷰안경 망미점",
             "스타포인트안경원",
             "안경세상",
             "다비치안경 경성대부경대소방서옆점",
             "으뜸아이안경 대연점",
-            "1001안경콘택트 연산로타리점",
-            "으뜸50안경 부산못골점"
+            "으뜸50안경 부산못골점",
+            "1001안경콘택트 연산로타리점"
           ]
         },
         {
@@ -363,7 +363,7 @@ export const placeRankData = {
             {
               "type": "allSearch",
               "count": 6,
-              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC+%EB%8F%84%EC%88%98%EC%88%98%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=xPo4bUrAuwZOkvHPCt_AneKzjOkCHUVkNjwU78aC8Bs%3D"
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC+%EB%8F%84%EC%88%98%EC%88%98%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=HlhLxZSFYAtcY1CdElfHr-vAyPIm-j0nxrL2xv8gWMw%3D"
             },
             {
               "type": "graphql-error",
@@ -395,18 +395,18 @@ export const placeRankData = {
           "rank": 1,
           "status": "ok",
           "resultCount": 1,
-          "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EA%B5%AC%20%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4?c=15.22,0,0,0,dh&placePath=%2Fhome%3Ffrom%3Dmap%26fromPanelNum%3D1%26additionalHeight%3D76%26timestamp%3D202609140040%26locale%3Dko%26svcName%3Dmap_pcv5%26searchText%3D%EC%88%98%EC%98%81%EA%B5%AC%20%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4",
+          "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EA%B5%AC%20%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4?c=15.22,0,0,0,dh",
           "searchCoord": {
             "latitude": 35.16222999440906,
             "longitude": 129.1114068189803
           },
           "locationMatched": true,
-          "networkResponses": 13,
+          "networkResponses": 9,
           "captureSources": [
             {
               "type": "allSearch",
               "count": 3,
-              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC+%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=9w2XTTs-vqqB6rmk20OhsLJfGKJONoOoABg-MfNBQwY%3D"
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC+%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=xFSraB1TKjzMiK-YPUpVmiaZIogfXTHwoh-vzC89fOc%3D"
             },
             {
               "type": "graphql-error",
@@ -424,18 +424,6 @@ export const placeRankData = {
               "type": "graphql",
               "count": 6,
               "url": "https://pcmap-api.place.naver.com/graphql"
-            },
-            {
-              "type": "graphql-error",
-              "count": 0,
-              "url": "https://pcmap-api.place.naver.com/graphql",
-              "error": "Could not load body for this request. This might happen if the request is a preflight request."
-            },
-            {
-              "type": "graphql-error",
-              "count": 0,
-              "url": "https://pcmap-api.place.naver.com/graphql",
-              "error": "Could not load body for this request. This might happen if the request is a preflight request."
             },
             {
               "type": "graphql-error",
@@ -475,7 +463,7 @@ export const placeRankData = {
             {
               "type": "allSearch",
               "count": 6,
-              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC+%EB%B3%80%EC%83%89%EB%A0%8C%EC%A6%88&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=3_YQfiRMX-9zJUzFG1B6hYe23AWJb81C83h2UToOsKA%3D"
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC+%EB%B3%80%EC%83%89%EB%A0%8C%EC%A6%88&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=6M-cW1TmjlyvtnFqntULIpEUpLYkHUJamUo48x34zTc%3D"
             },
             {
               "type": "graphql-error",
@@ -518,14 +506,14 @@ export const placeRankData = {
             {
               "type": "allSearch",
               "count": 60,
-              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EC%97%AD+%EC%95%88%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=YPYd_3BWWgeZzHvaVzAkD5TpYtyLWqlX5DM8idlchmk%3D"
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EC%97%AD+%EC%95%88%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=N1wWk4mpYurMe9dgkxPLYLRE57PXfObuIxwqsXr66pQ%3D"
             }
           ],
           "sample": [
             "다비치안경 수영로타리점",
             "으뜸50안경 수영점",
-            "아이젠트리 수영점",
             "으뜸플러스안경 부산수영점",
+            "아이젠트리 수영점",
             "파프리카안경 수영점",
             "오렌즈 부산수영역점",
             "으뜸안경마트",
@@ -538,10 +526,10 @@ export const placeRankData = {
         },
         {
           "keyword": "광안동 안경",
-          "rank": 12,
+          "rank": 11,
           "status": "ok",
           "resultCount": 20,
-          "url": "https://map.naver.com/p/search/%EA%B4%91%EC%95%88%EB%8F%99%20%EC%95%88%EA%B2%BD?c=14.00,0,0,0,dh",
+          "url": "https://map.naver.com/p/search/%EA%B4%91%EC%95%88%EB%8F%99%20%EC%95%88%EA%B2%BD?c=15.00,0,0,0,dh",
           "searchCoord": {
             "latitude": 35.16222999440906,
             "longitude": 129.1114068189803
@@ -552,7 +540,7 @@ export const placeRankData = {
             {
               "type": "allSearch",
               "count": 60,
-              "url": "https://map.naver.com/p/api/search/allSearch?query=%EA%B4%91%EC%95%88%EB%8F%99+%EC%95%88%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=P3PboGDZ7ymjN2OT_uFJ5WTjeqYECZneE6cAXIeJ7hA%3D"
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EA%B4%91%EC%95%88%EB%8F%99+%EC%95%88%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=cjRC_rGALMTjO6GkNB3Zhr1V4vqNluTaKA7SufH3Wrg%3D"
             }
           ],
           "sample": [
@@ -561,20 +549,20 @@ export const placeRankData = {
             "으뜸50안경 수영점",
             "안경나라 위드렌즈 부산광안점",
             "뉴페이스안경원",
-            "080안경광안점",
             "안경본데이 부산수영점",
             "ING안경원광안홈플러스점",
+            "080안경광안점",
             "수아이안경",
-            "초이스안경 광안점",
             "으뜸안경마트",
-            "스타포인트안경원"
+            "스타포인트안경원",
+            "초이스안경 광안점"
           ]
         }
       ],
       "verification": {
         "strategy": "captured-place-evidence-v1",
         "corrected": 0,
-        "verifiedAt": "2026-09-14T00:40:56.688Z"
+        "verifiedAt": "2026-09-14T04:03:08.223Z"
       }
     }
   ]
