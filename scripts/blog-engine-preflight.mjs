@@ -30,13 +30,14 @@ for(const marker of [
 const appSource=fs.readFileSync('src/blog-engine-app.js','utf8');
 for(const marker of [
   '스타포인트 블로그 AI','블로그 만들기','오늘 주제 찾기','사진 선택','본문 전체 복사','기본 추천 3개',
+  '<script src="/app.js"></script>',"u.pathname==='/app.js'",'String.raw`(function(){',
   '/manifest.webmanifest','/sw.js','/app-icon.svg','navigator.serviceWorker.register',
-  "fetch('/api/recommendations?t='","fetch('/api/draft'",'owned_images:ownedImages','generate_images:true','starpoint-blog-app-v2'
+  "fetch('/api/recommendations?t='","fetch('/api/draft'",'owned_images:ownedImages','generate_images:true','starpoint-blog-app-v3'
 ]) if(!appSource.includes(marker)) throw new Error(`missing_mobile_app_marker:${marker}`);
 
 const config=fs.readFileSync('src/blog-engine-config.js','utf8');
 for(const marker of [
-  "BLOG_ENGINE_VERSION = '0.3.6.1'","externalImages: 'disabled'","externalVideo: 'disabled'",
+  "BLOG_ENGINE_VERSION = '0.3.6.2'","externalImages: 'disabled'","externalVideo: 'disabled'",
   "fallback: 'workers-ai-image-generation'","imageModel: '@cf/black-forest-labs/flux-1-schnell'"
 ]) if(!config.includes(marker)) throw new Error(`wrong_media_policy_or_version:${marker}`);
 
@@ -46,4 +47,4 @@ if(!wrangler.includes('"main": "src/blog-engine-v035.js"')) throw new Error('wro
 if(!wrangler.includes('"binding": "AI"')) throw new Error('workers_ai_binding_missing');
 if(!wrangler.includes('stella-v13b-mobile-app-owned-first-ai-images-v036')) throw new Error('mobile_app_mode_missing');
 
-console.log('BLOG_ENGINE_V0361_RECOMMENDATION_PREFLIGHT_OK');
+console.log('BLOG_ENGINE_V0362_EXTERNAL_JS_PREFLIGHT_OK');
