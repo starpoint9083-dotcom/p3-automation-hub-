@@ -1,4 +1,4 @@
-export const BLOG_ENGINE_VERSION = '0.3.4.3';
+export const BLOG_ENGINE_VERSION = '0.3.5.0';
 
 export const STORE_PROFILE = {
   name: '스타포인트안경원',
@@ -22,8 +22,9 @@ export const CORE_KEYWORDS = [
 
 export const MEDIA_POLICY = {
   preferOwnedAssets: true,
-  externalImages: 'licensed-or-link-only',
-  externalVideo: 'embed-or-link-only',
-  fallback: 'ai-generation-prompt',
-  note: '웹 이미지를 무단 다운로드·재업로드하지 않는다.'
+  externalImages: 'disabled',
+  externalVideo: 'disabled',
+  fallback: 'workers-ai-image-generation',
+  imageModel: '@cf/black-forest-labs/flux-1-schnell',
+  note: '보유사진을 우선 사용하고 없는 슬롯만 Workers AI로 생성한다. 웹 사진 검색과 영상 검색은 하지 않는다.'
 };
