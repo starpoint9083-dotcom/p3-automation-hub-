@@ -11,11 +11,6 @@ function ownedImageAt(owned,index){
   if(owned&&typeof owned==='object') return clean(owned[index]??owned[String(index)]??owned[`slot_${index+1}`]);
   return '';
 }
-function hashSeed(text=''){
-  let h=2166136261;
-  for(const ch of String(text)){h^=ch.codePointAt(0);h=Math.imul(h,16777619);}
-  return (h>>>0)%2147483646+1;
-}
 function imagePrompt(topic,slot,index){
   const scene=clean(slot?.description||`optical store lifestyle scene ${index+1}`);
   const subject=clean(topic?.keyword||'eyeglasses');
@@ -31,7 +26,7 @@ function imagePrompt(topic,slot,index){
 async function generateImage(env,topic,slot,index){
   if(!env?.AI?.run) throw new Error('workers_ai_not_bound');
   const prompt=imagePrompt(topic,slot,index);
-  const result=await env.AI.run(IMAGE_MODEL,{prompt,steps:4,seed:hashSeed(`${topic?.keyword||''}|${slot?.description||''}|${index}`)});
+  const result=await env.AI.run(IMAGE_MODEL,{prompt,steps:4});
   const image=clean(result?.image);
   if(!image) throw new Error(`image_generation_empty_slot_${index+1}`);
   return {
