@@ -14,13 +14,13 @@ const source=zlib.gunzipSync(compressed).toString('utf8');
 const sha=crypto.createHash('sha256').update(source).digest('hex');
 console.log(`P1 source assembled bytes=${Buffer.byteLength(source)} sha256=${sha}`);
 const lines=source.split(/\r?\n/);
-const needles=['/api/plan','/api/queue','/api/projects/','/api/video-plan','/api/lineups','ensureLineupProjects','lineup_items','createProjectPlan','recover-lineup-queues','rebuildMissingGenerationQueue'];
+const needles=['/api/assets','/api/assets/upload','/api/assets/update','/api/assets/status','is_reference','source_type','/api/plan','/api/match','matchAssets'];
 const printed=new Set();
 for(let i=0;i<lines.length;i++){
   if(!needles.some(n=>lines[i].includes(n)))continue;
-  const a=Math.max(0,i-8),b=Math.min(lines.length,i+18),key=`${a}:${b}`;
+  const a=Math.max(0,i-12),b=Math.min(lines.length,i+30),key=`${a}:${b}`;
   if(printed.has(key))continue;
   printed.add(key);
   console.log(`--- CONTEXT ${i+1} ---`);
-  for(let j=a;j<b;j++)console.log(`${j+1}: ${lines[j].slice(0,2000)}`);
+  for(let j=a;j<b;j++)console.log(`${j+1}: ${lines[j].slice(0,3000)}`);
 }
