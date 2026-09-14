@@ -1,7 +1,7 @@
 import fs from 'node:fs';
 
 const required=[
-  'src/blog-engine.js','src/blog-engine-v034.js','src/blog-engine-v0343.js','src/blog-engine-v035.js',
+  'src/blog-engine.js','src/blog-engine-v034.js','src/blog-engine-v0343.js','src/blog-engine-v035.js','src/blog-engine-app.js',
   'src/blog-engine-config.js','wrangler.blog-engine.jsonc'
 ];
 for(const file of required) if(!fs.existsSync(file)) throw new Error(`missing:${file}`);
@@ -28,20 +28,29 @@ for(const marker of [
   "const IMAGE_POLICY='owned-first-ai-fallback'",
   'ownedImageAt','generateImage','enrichPhotoSlots','image_data_uri',
   "url.pathname==='/api/image'",'web_image_search:false','video_search:false',
-  'No brand logos','No brand logos, no trademarked product design'
-]) if(!imageSource.includes(marker)) throw new Error(`missing_image_marker:${marker}`);
+  'No brand logos','No brand logos, no trademarked product design',
+  "import { serveBlogApp } from './blog-engine-app.js'",'mobile_app:true'
+]) if(!imageSource.includes(marker)) throw new Error(`missing_image_or_app_marker:${marker}`);
+
+const appSource=fs.readFileSync('src/blog-engine-app.js','utf8');
+for(const marker of [
+  'STARPOINT OPTICAL','블로그 만들기','오늘 주제 찾기','사진 선택','본문 전체 복사',
+  '/manifest.webmanifest','/sw.js','/app-icon.svg','navigator.serviceWorker.register',
+  "fetch('/api/topics?limit=30'","fetch('/api/draft'",'owned_images:ownedImages','generate_images:true'
+]) if(!appSource.includes(marker)) throw new Error(`missing_mobile_app_marker:${marker}`);
 
 const config=fs.readFileSync('src/blog-engine-config.js','utf8');
 for(const marker of [
-  "BLOG_ENGINE_VERSION = '0.3.5.0'",
+  "BLOG_ENGINE_VERSION = '0.3.6.0'",
   "externalImages: 'disabled'","externalVideo: 'disabled'",
   "fallback: 'workers-ai-image-generation'",
   "imageModel: '@cf/black-forest-labs/flux-1-schnell'"
-]) if(!config.includes(marker)) throw new Error(`wrong_media_policy:${marker}`);
+]) if(!config.includes(marker)) throw new Error(`wrong_media_policy_or_version:${marker}`);
 
 const wrangler=fs.readFileSync('wrangler.blog-engine.jsonc','utf8');
 if(!wrangler.includes('"name": "p3-blog-engine"')) throw new Error('wrong_worker_name');
 if(!wrangler.includes('"main": "src/blog-engine-v035.js"')) throw new Error('wrong_worker_entry');
 if(!wrangler.includes('"binding": "AI"')) throw new Error('workers_ai_binding_missing');
+if(!wrangler.includes('stella-v13b-mobile-app-owned-first-ai-images-v036')) throw new Error('mobile_app_mode_missing');
 
-console.log('BLOG_ENGINE_V035_IMAGE_PREFLIGHT_OK');
+console.log('BLOG_ENGINE_V036_MOBILE_APP_PREFLIGHT_OK');
