@@ -107,8 +107,16 @@ try{
   await saveSummary();
 
   const queue=await api('/api/queue?status=waiting',{timeout:60000});
-  const mine=(queue?.queue||[]).filter(x=>String(x.project_id)===projectId);
+  let mine=(queue?.queue||[]).filter(x=>String(x.project_id)===projectId);
+  if(!mine.length && (plan?.scenes||[]).some(x=>x.missing)){
+    console.log('Episode 6 queue rows are outside the /api/queue 200-row window; resolving exact project queues from read-only export.');
+    const backup=await api('/api/export',{timeout:4*60*1000});
+    mine=(backup?.generation_queue||[]).filter(x=>String(x.project_id)===projectId&&String(x.status)==='waiting');
+  }
+  const expectedMissing=(plan?.scenes||[]).filter(x=>x.missing).length;
+  if(mine.length!==expectedMissing)throw new Error(`Episode 6 queue resolution mismatch: expected=${expectedMissing} found=${mine.length}`);
   console.log(`Episode 6 missing scenes: ${mine.length}`);
+  mine.sort((a,b)=>Number(a.scene_no||0)-Number(b.scene_no||0));
   for(let i=0;i<mine.length;i++){
     let last;
     for(let attempt=1;attempt<=3;attempt++){
