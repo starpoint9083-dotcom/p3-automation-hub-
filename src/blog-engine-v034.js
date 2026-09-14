@@ -2,7 +2,7 @@ import legacyWorker from './blog-engine.js';
 import { BLOG_ENGINE_VERSION, MEDIA_POLICY } from './blog-engine-config.js';
 
 const WRITER_MODEL='@cf/meta/llama-3.3-70b-instruct-fp8-fast';
-const QUALITY_GATE='v0.3.4.1-starpoint-friendly-precision';
+const QUALITY_GATE='v0.3.4.2-starpoint-natural-friendly';
 const H={'content-type':'application/json; charset=utf-8','cache-control':'no-store','access-control-allow-origin':'*'};
 const J=(data,status=200)=>new Response(JSON.stringify(data,null,2),{status,headers:H});
 const norm=v=>String(v||'').toLowerCase().replace(/\s+/g,' ').trim();
@@ -21,7 +21,6 @@ const BAD_PATTERNS=[
 ];
 const AIISH=['중요합니다','추천드립니다','최적의 선택','전문가와 상담','적합한 렌즈를 선택','도움이 될 수 있습니다','선택하는 것이 중요해요','전문적인 상담이 필요해요','큰 도움이 될 수 있어요'];
 const RIGID=['고객은','고객들은','선택해야 합니다','확인해야 합니다','이러한 이유로','왜냐하면','따라서'];
-const FRIENDLY_ENDING=/(해요|돼요|예요|이에요|거든요|있어요|없어요|않아요|맞아요|달라요|보세요|보셔야 해요|볼 수 있어요)\./u;
 const FRIENDLY_GLOBAL=/(해요|돼요|예요|이에요|거든요|있어요|없어요|않아요|맞아요|달라요|보세요|보셔야 해요|볼 수 있어요)\./gu;
 const VOICE_RULES=[
   '기본 톤은 전문성 60, 친근함 40이다.',
@@ -30,7 +29,8 @@ const VOICE_RULES=[
   '주의할 점이나 한계를 숨기지 않는다.',
   '마지막에는 왜 그런지 이유나 근거를 붙인다.',
   '짧고 단단한 생활 언어를 쓰되 딱딱한 설명문처럼 쓰지 않는다.',
-  '친근함은 말끝 전체를 ~해요로 바꾸는 방식이 아니다. 한 문단에 부드러운 존댓말 1~3개만 자연스럽게 섞고 나머지는 차분한 설명체로 쓴다.',
+  '친근함은 말끝 전체를 ~해요로 바꾸는 방식이 아니다. 필요할 때만 부드러운 존댓말을 섞고 나머지는 차분한 설명체로 쓴다.',
+  '문단마다 친근한 말끝을 억지로 넣지 않는다. 자연스러움이 우선이다.',
   '너무 가볍거나 장난스럽게 쓰지 않는다. 경험 많은 안경사가 편하게 설명하는 느낌을 유지한다.',
   '고객은, 고객들은 같은 표현을 반복하지 말고 이런 분, 운전을 자주 하신다면, 실제 생활에서는 같은 표현을 쓴다.',
   '“왜냐하면”, “따라서”, “중요합니다”, “추천드립니다”, “최적의 선택”, “전문가와 상담하세요” 같은 AI식 상투 표현을 반복하지 않는다.',
@@ -80,7 +80,6 @@ function textIssue(s,min=1,max=5000){
   if(BAD_PATTERNS.some(re=>re.test(text))) return 'unsafe_or_awkward_claim';
   if(countPhrases(text,AIISH)>1) return 'ai_style_repetition';
   if(min>=120&&countPhrases(text,RIGID)>1) return 'too_formal';
-  if(min>=120&&!FRIENDLY_ENDING.test(text)) return 'friendly_tone_missing';
   if(min>=120&&friendlyCount(text)>4) return 'too_chatty';
   return null;
 }
@@ -100,7 +99,7 @@ function buildSafePlan(topic){
     title:topic.suggested_title||`${topic.keyword}, 제품보다 먼저 확인할 것`,
     intro:safeIntro(topic),
     section_plans:[
-      {heading:'먼저, 언제 불편한지부터 볼게요',angle:'결론을 먼저 말하고 실제 생활 속 불편 장면을 친근한 존댓말로 보여준다.',key_points:['야외·실내 이동 등 실제 사용 장면','제품보다 불편 상황을 먼저 확인']},
+      {heading:'먼저, 언제 불편한지부터 볼게요',angle:'결론을 먼저 말하고 실제 생활 속 불편 장면을 자연스러운 존댓말로 보여준다.',key_points:['야외·실내 이동 등 실제 사용 장면','제품보다 불편 상황을 먼저 확인']},
       {heading:'좋은 기능도 한계는 같이 봐야 해요',angle:'렌즈 기능의 장점과 한계를 숨기지 않고 편하게 설명한 뒤 이유를 붙인다.',key_points:isPhoto?['실외에서의 변색 특성','차량 안에서는 제품별 반응 차이 확인']:['기능이 도움 되는 사용 환경','도수·제품·환경에 따른 차이']},
       {heading:'내 생활에 맞는지는 여기서 갈려요',angle:'선택 기준을 결론부터 제시하고 일상적인 예시로 설명한다.',key_points:['주 사용 장소와 시간','색상·도수·착용 습관 등 개인 조건']},
       {heading:'마지막은 시력검사에서 같이 확인해요',angle:'검사와 상담에서 무엇을 확인하는지 부담 없이 현실적인 이유와 함께 설명한다.',key_points:['현재 도수와 기존 안경 불편 원인','생활 패턴을 반영한 렌즈 선택']}
@@ -136,7 +135,7 @@ async function section(env,topic,sectionPlan,index,avoidText=''){
       '첫 1~2문장 안에서 이 문단의 결론을 말한다.',
       '그 뒤 실제 생활 장면이나 손님이 느끼는 상황을 하나 넣는다.',
       '한계나 주의점을 숨기지 말고, 마지막에는 왜 그런지 자연스럽게 설명한다.',
-      '부드러운 존댓말은 한 문단에 1~3개 정도만 섞는다. 모든 문장을 ~해요로 끝내지 않는다.',
+      '부드러운 존댓말은 필요할 때 0~3개 정도만 섞는다. 모든 문장을 ~해요로 끝내지 않고, 억지로 친근한 말끝을 넣지도 않는다.',
       '“왜냐하면”, “따라서”, “중요해요”, “필요해요”를 연결어처럼 반복하지 않는다.',
       '시간대별 자외선 강도, 창가에서의 변색 정도, 더 좋은 시야·효과 같은 근거 없는 표현은 만들지 않는다.',
       '매장 홍보 문구, 마크다운, JSON은 넣지 않는다. 일본어·중국어 문자를 섞지 않는다.',
@@ -146,7 +145,7 @@ async function section(env,topic,sectionPlan,index,avoidText=''){
     ].join('\n');
     try{
       const r=await env.AI.run(WRITER_MODEL,{messages:[
-        {role:'system',content:'Write like an experienced Korean optician speaking warmly but precisely to a customer. Tone balance: 60% professional, 40% friendly. Do not make every sentence end in 해요. Use only 1 to 3 friendly honorific endings per paragraph and keep the rest calm and natural. Lead with the conclusion, then a real-life scene, then caution, then the reason. Never invent UV timing, indoor/window behavior, medical effects, better vision, or guaranteed glare benefits. Never sound childish, salesy, or generic AI. Plain Korean text only.'},
+        {role:'system',content:'Write like an experienced Korean optician speaking warmly but precisely to a customer. Tone balance: 60% professional, 40% friendly. Friendly endings are optional: use 0 to 3 only when natural, and never force them into every paragraph. Keep the rest calm and natural. Lead with the conclusion, then a real-life scene, then caution, then the reason. Never invent UV timing, indoor/window behavior, medical effects, better vision, or guaranteed glare benefits. Never sound childish, salesy, or generic AI. Plain Korean text only.'},
         {role:'user',content:prompt}
       ],temperature:attempt===1?0.24:0.08,max_tokens:760});
       const body=cleanText(txt(r));previous=body;lastLength=body.length;lastIssue=textIssue(body,120,1400)||'none';
@@ -167,7 +166,8 @@ async function build(env,topic){
   }
   const sections=generated.map((x,i)=>({heading:plan.section_plans[i].heading,body:x.body,photo_after:true}));
   const maxSim=maxSimilarity(sections);
-  const draft={mode:'ai-split-writing-starpoint-friendly-v13b',title:plan.title,intro:plan.intro,sections,photo_slots:plan.photo_slots,video_plan:plan.video_plan,hashtags:plan.hashtags,cta:plan.cta,generation_meta:{structured_output:true,text_quality_gate_passed:true,quality_gate:QUALITY_GATE,voice_profile:'stella-v13b-starpoint-friendly-60-40',writer_model:WRITER_MODEL,plan_mode:'deterministic_safe',section_attempts:generated.reduce((s,x)=>s+x.attempts,0),parallel_sections:true,distinct_repairs:repairs,section_lengths:generated.map(x=>x.length),max_section_similarity:Number(maxSim.toFixed(3))}};
+  const friendlyTotal=friendlyCount(plan.intro)+generated.reduce((n,x)=>n+friendlyCount(x.body),0);
+  const draft={mode:'ai-split-writing-starpoint-friendly-v13b',title:plan.title,intro:plan.intro,sections,photo_slots:plan.photo_slots,video_plan:plan.video_plan,hashtags:plan.hashtags,cta:plan.cta,generation_meta:{structured_output:true,text_quality_gate_passed:true,quality_gate:QUALITY_GATE,voice_profile:'stella-v13b-starpoint-friendly-60-40',writer_model:WRITER_MODEL,plan_mode:'deterministic_safe',section_attempts:generated.reduce((s,x)=>s+x.attempts,0),parallel_sections:true,distinct_repairs:repairs,section_lengths:generated.map(x=>x.length),max_section_similarity:Number(maxSim.toFixed(3)),friendly_ending_count:friendlyTotal}};
   if(!draft.sections.every(s=>safeText(s.heading,4,120)&&safeText(s.body,120,1400))) throw new Error('draft_section_quality_failed');
   if(maxSim>=0.62) throw new Error(`draft_repetition_failed_${maxSim.toFixed(3)}`);
   return draft;
