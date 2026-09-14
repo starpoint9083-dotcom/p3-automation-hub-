@@ -39,6 +39,7 @@ const draft = await requestJson('/api/draft', { method: 'POST', body: '{}' });
 if (!draft.ok || !draft.topic?.keyword || !draft.draft) throw new Error('draft_invalid');
 if (!draft.ai_used) throw new Error('ai_draft_not_used');
 
+const rawText = typeof draft.draft?.raw === 'string' ? draft.draft.raw : '';
 const preview = {
   title: draft.draft?.title || null,
   intro: draft.draft?.intro || draft.draft?.opening || null,
@@ -48,7 +49,8 @@ const preview = {
     : draft.draft?.media_plan?.owned_photo_slots || [],
   video_plan: draft.draft?.video_plan || draft.draft?.media_plan?.video_search_queries || null,
   hashtags: Array.isArray(draft.draft?.hashtags) ? draft.draft.hashtags.slice(0, 12) : [],
-  cta: draft.draft?.cta || draft.draft?.closing || null
+  cta: draft.draft?.cta || draft.draft?.closing || null,
+  raw_preview: rawText ? rawText.slice(0, 12000) : null
 };
 
 console.log(JSON.stringify({
@@ -59,5 +61,6 @@ console.log(JSON.stringify({
   selected_topic: draft.topic.keyword,
   trend_mode: draft.topic.trend_mode,
   ai_used: draft.ai_used,
+  structured_output: Boolean(preview.title || preview.sections.length),
   preview
 }, null, 2));
