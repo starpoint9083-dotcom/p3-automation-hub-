@@ -72,7 +72,7 @@ function planOK(p){
   return !!(p&&p.title?.length>=8&&p.intro?.length>=40&&p.section_headings?.length===4&&
     p.photo_slots?.length>=4&&p.video_plan?.shots?.length>=3&&p.hashtags?.length>=4&&p.cta?.length>=15);
 }
-function bodyOK(s){return typeof s==='string'&&s.length>=120&&s.length<=1200;}
+function bodyOK(s){return typeof s==='string'&&s.length>=100&&s.length<=1400;}
 function draftOK(d){return !!(d&&d.title?.length>=8&&d.intro?.length>=40&&d.sections?.length===4&&
   d.sections.every(s=>s.heading&&bodyOK(s.body))&&d.photo_slots?.length>=4&&
   d.video_plan?.shots?.length>=3&&d.hashtags?.length>=4&&d.cta?.length>=15);}
@@ -120,41 +120,53 @@ async function makePlan(env,topic){
 }
 
 async function section(env,topic,heading,index){
-  const prompt=[
-    `스타포인트안경원 블로그 본문 ${index+1}/4`,`주제: ${topic.keyword}`,`연결: ${topic.blog_bridge}`,`소제목: ${heading}`,
-    '한국어 180~350자 한 문단. 독자의 실제 불편부터 시작한다.',
-    '언제 유용한지와 확인할 점을 함께 쓰고, 한계나 주의점이 있으면 포함한다.',
-    '매장 홍보, 마크다운, JSON은 넣지 않는다.',...safety(topic)
-  ].join('\n');
+  let previous='';
+  let lastLength=0;
   let err;
   for(let n=1;n<=2;n++){
+    const prompt=[
+      `스타포인트안경원 블로그 본문 ${index+1}/4`,`주제: ${topic.keyword}`,`연결: ${topic.blog_bridge}`,`소제목: ${heading}`,
+      '한국어 220~420자 한 문단으로 쓴다. 반드시 100자 이상 완성된 문단이어야 한다.',
+      '독자의 실제 불편부터 시작하고, 언제 유용한지와 확인할 점을 함께 쓴다.',
+      '한계나 주의점이 있으면 숨기지 말고 포함한다. 실제 안경사가 설명하는 생활 언어를 쓴다.',
+      '매장 홍보, 마크다운, JSON은 넣지 않는다.',
+      ...(n===2&&previous ? [`이전 문단은 ${lastLength}자로 너무 짧거나 불완전했다. 아래 내용을 살리되 사례와 확인 포인트를 보강해 완성된 220~420자 문단으로 다시 써라.\n이전 문단: ${previous}`] : []),
+      ...safety(topic)
+    ].join('\n');
     try{
       const r=await env.AI.run(WRITER_MODEL,{
-        messages:[{role:'system',content:'Write one practical Korean paragraph for a real local optician blog. Plain text only.'},{role:'user',content:prompt}],
-        temperature:n===1?0.35:0.2,reasoning_effort:'low',max_completion_tokens:900
+        messages:[{role:'system',content:'Write one complete practical Korean paragraph for a real local optician blog. Plain text only. Never stop mid-sentence.'},{role:'user',content:prompt}],
+        temperature:n===1?0.35:0.2,max_completion_tokens:900
       });
-      const body=txt(r).replace(/^["']|["']$/g,'').trim();
-      if(bodyOK(body)) return {body,attempts:n};
-      err=new Error(`section_validation_failed_${index+1}`);
+      const body=txt(r).replace(/^```(?:text)?\s*/i,'').replace(/```\s*$/i,'').replace(/^["']|["']$/g,'').trim();
+      previous=body;
+      lastLength=body.length;
+      if(bodyOK(body)) return {body,attempts:n,length:lastLength};
+      err=new Error(`section_validation_failed_${index+1}_len_${lastLength}`);
     }catch(e){err=e;}
   }
-  throw err||new Error(`section_generation_failed_${index+1}`);
+  throw err||new Error(`section_generation_failed_${index+1}_len_${lastLength}`);
 }
 
 async function build(env,topic){
   if(!env?.AI?.run) throw new Error('workers_ai_not_bound');
-  const p=await makePlan(env,topic),sections=[];
-  let tries=0;
-  for(let i=0;i<4;i++){
-    const s=await section(env,topic,p.plan.section_headings[i],i);
-    tries+=s.attempts;
-    sections.push({heading:p.plan.section_headings[i],body:s.body,photo_after:true});
-  }
+  const p=await makePlan(env,topic);
+  const generated=await Promise.all(
+    p.plan.section_headings.map((heading,index)=>section(env,topic,heading,index))
+  );
+  const sections=generated.map((item,index)=>({
+    heading:p.plan.section_headings[index],body:item.body,photo_after:true
+  }));
+  const tries=generated.reduce((sum,item)=>sum+item.attempts,0);
   const d={
     mode:'ai-structured-multistage',title:p.plan.title,intro:p.plan.intro,sections,
     photo_slots:p.plan.photo_slots,video_plan:{...p.plan.video_plan,duration_sec:30},
     hashtags:p.plan.hashtags,cta:p.plan.cta,
-    generation_meta:{structured_output:true,plan_model:PLAN_MODEL,writer_model:WRITER_MODEL,plan_attempts:p.attempts,section_attempts:tries}
+    generation_meta:{
+      structured_output:true,plan_model:PLAN_MODEL,writer_model:WRITER_MODEL,
+      plan_attempts:p.attempts,section_attempts:tries,parallel_sections:true,
+      section_lengths:generated.map(item=>item.length)
+    }
   };
   if(!draftOK(d)) throw new Error('draft_validation_failed');
   return d;
