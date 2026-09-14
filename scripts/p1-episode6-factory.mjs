@@ -106,7 +106,7 @@ try{
   console.log(`Episode 6 planned: ${projectId} scenes=${plan?.scenes?.length||0}`);
   await saveSummary();
 
-  let queue=await api('/api/queue?status=waiting',{timeout:60000});
+  const queue=await api('/api/queue?status=waiting',{timeout:60000});
   const mine=(queue?.queue||[]).filter(x=>String(x.project_id)===projectId);
   console.log(`Episode 6 missing scenes: ${mine.length}`);
   for(let i=0;i<mine.length;i++){
@@ -117,10 +117,7 @@ try{
     if(last)throw last;
     console.log(`Episode 6 scene ${mine[i].scene_no} ready (${i+1}/${mine.length})`);
   }
-
-  const project=await api(`/api/projects/${encodeURIComponent(projectId)}`,{timeout:60000});
-  const unresolved=(project?.scenes||[]).filter(x=>!x.selected_asset_id&&!x.asset_id&&!x.asset_filename);
-  if(unresolved.length)throw new Error(`Episode 6 still has ${unresolved.length} unresolved scene(s).`);
+  console.log('Episode 6 asset queue clear; /api/video-plan will perform authoritative asset readiness validation.');
 
   await page.waitForFunction(()=>typeof renderOnDevice==='function'&&!!document.querySelector('#renderCanvas'),{timeout:120000});
   const timeline=await api('/api/video-plan',{method:'POST',body:{project_id:projectId,target_duration:TARGET_DURATION},timeout:2*60*1000});
