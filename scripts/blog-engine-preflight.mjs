@@ -6,11 +6,12 @@ for (const file of required) {
 }
 
 const source = fs.readFileSync('src/blog-engine-v03.js','utf8');
-for (const marker of ['/api/draft','response_format','json_schema','PLAN_MODEL','WRITER_MODEL','section_attempts','Promise.all','parallel_sections']) {
+for (const marker of ['/api/draft','response_format','json_schema','PLAN_MODEL','WRITER_MODEL','section_attempts','Promise.all','parallel_sections','section_lengths']) {
   if (!source.includes(marker)) throw new Error(`missing_v03_marker:${marker}`);
 }
-if (!source.includes("@cf/meta/llama-3.3-70b-instruct-fp8-fast")) throw new Error('missing_structured_plan_model');
-if (!source.includes("@cf/zai-org/glm-4.7-flash")) throw new Error('missing_writer_model');
+if (!source.includes("const PLAN_MODEL='@cf/meta/llama-3.3-70b-instruct-fp8-fast'")) throw new Error('missing_structured_plan_model');
+if (!source.includes("const WRITER_MODEL='@cf/meta/llama-3.3-70b-instruct-fp8-fast'")) throw new Error('missing_nonreasoning_writer_model');
+if (!source.includes('max_tokens:700')) throw new Error('writer_token_budget_missing');
 
 const wrangler = fs.readFileSync('wrangler.blog-engine.jsonc','utf8');
 if (!wrangler.includes('"name": "p3-blog-engine"')) throw new Error('wrong_worker_name');
