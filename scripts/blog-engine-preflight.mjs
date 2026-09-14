@@ -15,36 +15,29 @@ for(const marker of [
 if(baseSource.includes('countPhrases(text,AIISH)>1')) throw new Error('old_aiish_gate_still_present');
 
 const lockSource=fs.readFileSync('src/blog-engine-v0343.js','utf8');
-for(const marker of [
-  "const QUALITY_GATE='v0.3.4.3-stella-v13b'",
-  'stella_v13b_locked:true','extra_lead_rewrite:false','FULL_DRAFT_RETRY_LIMIT=3'
-]) if(!lockSource.includes(marker)) throw new Error(`missing_stella_lock:${marker}`);
-for(const forbidden of ['addFriendlyLead','applyFriendlyLeads','friendly_lead_layer'])
-  if(lockSource.includes(forbidden)) throw new Error(`extra_rewrite_still_present:${forbidden}`);
+for(const marker of ["const QUALITY_GATE='v0.3.4.3-stella-v13b'",'stella_v13b_locked:true','extra_lead_rewrite:false','FULL_DRAFT_RETRY_LIMIT=3'])
+  if(!lockSource.includes(marker)) throw new Error(`missing_stella_lock:${marker}`);
+for(const forbidden of ['addFriendlyLead','applyFriendlyLeads','friendly_lead_layer']) if(lockSource.includes(forbidden)) throw new Error(`extra_rewrite_still_present:${forbidden}`);
 
 const imageSource=fs.readFileSync('src/blog-engine-v035.js','utf8');
 for(const marker of [
-  "const IMAGE_MODEL='@cf/black-forest-labs/flux-1-schnell'",
-  "const IMAGE_POLICY='owned-first-ai-fallback'",
-  'ownedImageAt','generateImage','enrichPhotoSlots','image_data_uri',
-  "url.pathname==='/api/image'",'web_image_search:false','video_search:false',
-  'No brand logos','No brand logos, no trademarked product design',
-  "import { serveBlogApp } from './blog-engine-app.js'",'mobile_app:true'
-]) if(!imageSource.includes(marker)) throw new Error(`missing_image_or_app_marker:${marker}`);
+  "const IMAGE_MODEL='@cf/black-forest-labs/flux-1-schnell'","const IMAGE_POLICY='owned-first-ai-fallback'",
+  'ownedImageAt','generateImage','enrichPhotoSlots','image_data_uri',"url.pathname==='/api/image'",'web_image_search:false','video_search:false',
+  'No brand logos','No brand logos, no trademarked product design',"import { serveBlogApp } from './blog-engine-app.js'",'mobile_app:true',
+  "url.pathname==='/api/recommendations'",'FALLBACK_RECOMMENDATIONS','topic_recommendations:true'
+]) if(!imageSource.includes(marker)) throw new Error(`missing_image_app_or_recommendation_marker:${marker}`);
 
 const appSource=fs.readFileSync('src/blog-engine-app.js','utf8');
 for(const marker of [
-  'STARPOINT OPTICAL','블로그 만들기','오늘 주제 찾기','사진 선택','본문 전체 복사',
+  '스타포인트 블로그 AI','블로그 만들기','오늘 주제 찾기','사진 선택','본문 전체 복사','기본 추천 3개',
   '/manifest.webmanifest','/sw.js','/app-icon.svg','navigator.serviceWorker.register',
-  "fetch('/api/topics?limit=30'","fetch('/api/draft'",'owned_images:ownedImages','generate_images:true'
+  "fetch('/api/recommendations?t='","fetch('/api/draft'",'owned_images:ownedImages','generate_images:true','starpoint-blog-app-v2'
 ]) if(!appSource.includes(marker)) throw new Error(`missing_mobile_app_marker:${marker}`);
 
 const config=fs.readFileSync('src/blog-engine-config.js','utf8');
 for(const marker of [
-  "BLOG_ENGINE_VERSION = '0.3.6.0'",
-  "externalImages: 'disabled'","externalVideo: 'disabled'",
-  "fallback: 'workers-ai-image-generation'",
-  "imageModel: '@cf/black-forest-labs/flux-1-schnell'"
+  "BLOG_ENGINE_VERSION = '0.3.6.1'","externalImages: 'disabled'","externalVideo: 'disabled'",
+  "fallback: 'workers-ai-image-generation'","imageModel: '@cf/black-forest-labs/flux-1-schnell'"
 ]) if(!config.includes(marker)) throw new Error(`wrong_media_policy_or_version:${marker}`);
 
 const wrangler=fs.readFileSync('wrangler.blog-engine.jsonc','utf8');
@@ -53,4 +46,4 @@ if(!wrangler.includes('"main": "src/blog-engine-v035.js"')) throw new Error('wro
 if(!wrangler.includes('"binding": "AI"')) throw new Error('workers_ai_binding_missing');
 if(!wrangler.includes('stella-v13b-mobile-app-owned-first-ai-images-v036')) throw new Error('mobile_app_mode_missing');
 
-console.log('BLOG_ENGINE_V036_MOBILE_APP_PREFLIGHT_OK');
+console.log('BLOG_ENGINE_V0361_RECOMMENDATION_PREFLIGHT_OK');
