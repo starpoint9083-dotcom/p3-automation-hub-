@@ -11,6 +11,7 @@ on:
       - 'src/blog-engine-v034.js'
       - 'src/blog-engine-v0343.js'
       - 'src/blog-engine-v035.js'
+      - 'src/blog-engine-app.js'
       - 'src/blog-engine-config.js'
       - 'scripts/blog-engine-preflight.mjs'
       - 'scripts/blog-engine-e2e.mjs'
@@ -71,6 +72,7 @@ jobs:
           node --check src/blog-engine-v034.js
           node --check src/blog-engine-v0343.js
           node --check src/blog-engine-v035.js
+          node --check src/blog-engine-app.js
           node --check src/blog-engine-config.js
           node --check scripts/blog-engine-preflight.mjs
           node --check scripts/blog-engine-e2e.mjs
