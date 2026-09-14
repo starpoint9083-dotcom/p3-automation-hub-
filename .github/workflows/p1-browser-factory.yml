@@ -8,7 +8,7 @@ on:
         required: false
         default: '60'
       run_mode:
-        description: 'factory, episode6, or inspect-assets'
+        description: 'factory, episode6, inspect-assets, or inspect-source'
         required: false
         default: 'factory'
   push:
@@ -22,6 +22,7 @@ on:
       - 'scripts/preflight.mjs'
       - 'scripts/p1-browser-factory.mjs'
       - 'scripts/p1-episode6-factory.mjs'
+      - 'scripts/p1-source-inspect.mjs'
       - 'scripts/p1-live-queue-inspector.mjs'
       - 'scripts/p1-reference-asset-inspector.mjs'
       - 'scripts/p1-process-waiting-queues.mjs'
@@ -94,7 +95,7 @@ jobs:
             mode="$(sed -n 's/^mode=//p' ops/p1-factory-live-test.trigger | tail -1)"
             [ -n "$mode" ] || mode="factory"
           fi
-          case "$mode" in factory|episode6|inspect-assets) ;; *) echo "Unsupported run mode: $mode" >&2; exit 1;; esac
+          case "$mode" in factory|episode6|inspect-assets|inspect-source) ;; *) echo "Unsupported run mode: $mode" >&2; exit 1;; esac
           echo "P1_RUN_MODE=$mode" >> "$GITHUB_ENV"
           echo "P1 run mode: $mode"
 
@@ -107,6 +108,10 @@ jobs:
             exit 1
           fi
           echo "GitHub OIDC identity is available for P1 session exchange."
+
+      - name: Inspect P1 source routes
+        if: env.P1_RUN_MODE == 'inspect-source'
+        run: node scripts/p1-source-inspect.mjs
 
       - name: Inspect P1 Stella/reference assets
         if: env.P1_RUN_MODE == 'inspect-assets'
@@ -154,15 +159,15 @@ jobs:
         run: node scripts/p1-episode6-factory.mjs
 
       - name: Download rendered P1 preview
-        if: always() && env.P1_RUN_MODE != 'inspect-assets'
+        if: always() && (env.P1_RUN_MODE == 'factory' || env.P1_RUN_MODE == 'episode6')
         run: node scripts/p1-download-preview.mjs
 
       - name: P1 zero-cost quality gate
-        if: always() && env.P1_RUN_MODE != 'inspect-assets'
+        if: always() && (env.P1_RUN_MODE == 'factory' || env.P1_RUN_MODE == 'episode6')
         run: npm run p1:quality
 
       - name: Upload factory summary, preview, and quality gate
-        if: always() && env.P1_RUN_MODE != 'inspect-assets'
+        if: always() && (env.P1_RUN_MODE == 'factory' || env.P1_RUN_MODE == 'episode6')
         uses: actions/upload-artifact@v4
         with:
           name: p1-factory-summary-${{ github.run_number }}
