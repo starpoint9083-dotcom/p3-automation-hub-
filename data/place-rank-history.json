@@ -1,7 +1,7 @@
 {
-  "version": "1.3.0",
+  "version": "1.5.0",
   "store": "스타포인트안경원",
-  "generatedAt": "2026-09-14T05:25:43.467+09:00",
+  "generatedAt": "2026-09-14T09:40:56.598+09:00",
   "history": [
     {
       "date": "2026-09-13",
@@ -79,8 +79,8 @@
     },
     {
       "date": "2026-09-14",
-      "checkedAt": "2026-09-14T05:25:43.467+09:00",
-      "source": "naver-map-browser-network-centered",
+      "checkedAt": "2026-09-14T09:40:56.598+09:00",
+      "source": "naver-map-browser-network-mercator-v3",
       "location": {
         "latitude": 35.162229994409,
         "longitude": 129.11140681898,
@@ -90,38 +90,13 @@
       "results": [
         {
           "keyword": "누진다초점안경",
-          "rank": null,
-          "status": "not-found",
-          "resultCount": 46,
-          "url": "https://map.naver.com/p/search/%EB%88%84%EC%A7%84%EB%8B%A4%EC%B4%88%EC%A0%90%EC%95%88%EA%B2%BD?c=15.00,0,0,0,dh",
-          "searchCoord": null,
-          "locationMatched": true,
-          "networkResponses": 0,
-          "captureSources": [],
-          "sample": [
-            "로그인",
-            "내정보 보기",
-            "(임직원혜택)",
-            "프로필 사진 변경",
-            "로그아웃",
-            "@naver.com",
-            "네이버ID",
-            "보안설정",
-            "내인증서",
-            "네이버 멤버쉽",
-            "내 페이포인트",
-            "내 블로그"
-          ]
-        },
-        {
-          "keyword": "도수수경",
           "rank": 1,
           "status": "ok",
-          "resultCount": 50,
-          "url": "https://map.naver.com/p/search/%EB%8F%84%EC%88%98%EC%88%98%EA%B2%BD?c=15.00,0,0,0,dh",
+          "resultCount": 28,
+          "url": "https://map.naver.com/p/search/%EB%88%84%EC%A7%84%EB%8B%A4%EC%B4%88%EC%A0%90%EC%95%88%EA%B2%BD?c=14372616.06269204,4185949.4653669046,15.22,0,0,0,dh",
           "searchCoord": {
-            "latitude": 35.162230000000804,
-            "longitude": 129.11140674606264
+            "latitude": 35.16222999440906,
+            "longitude": 129.1114068189803
           },
           "locationMatched": true,
           "networkResponses": 3,
@@ -129,7 +104,52 @@
             {
               "type": "allSearch",
               "count": 60,
-              "url": "https://map.naver.com/p/api/search/allSearch?query=%EB%8F%84%EC%88%98%EC%88%98%EA%B2%BD&type=all&searchCoord=129.11140674606264%3B35.162230000000804&boundary=&sscode=svc.mapv5.search&token=uJZXsS91A4v06xcnQb1_WZd95jCOHgd5-TaunDOkrB8%3D"
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EB%88%84%EC%A7%84%EB%8B%A4%EC%B4%88%EC%A0%90%EC%95%88%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=855XiFxDGuwwb2v4m-ALR7dJFW1G-R0m9pUrBFD8RD4%3D"
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql",
+              "count": 16,
+              "url": "https://pcmap-api.place.naver.com/graphql"
+            }
+          ],
+          "sample": [
+            "스타포인트안경원",
+            "안경세상",
+            "옵장안경원",
+            "안경본데이 부산수영점",
+            "아이디어안경 토곡점",
+            "수아이안경",
+            "갤러리안경 망미점",
+            "뉴욕안경콘택트",
+            "다비치안경 경성대부경대소방서옆점",
+            "아이뷰안경 망미점",
+            "안경진정성 이마트트레이더스 부산연산점",
+            "으뜸아이안경 대연점"
+          ]
+        },
+        {
+          "keyword": "도수수경",
+          "rank": 1,
+          "status": "ok",
+          "resultCount": 28,
+          "url": "https://map.naver.com/p/search/%EB%8F%84%EC%88%98%EC%88%98%EA%B2%BD?c=15.00,0,0,0,dh",
+          "searchCoord": {
+            "latitude": 35.16222999440906,
+            "longitude": 129.1114068189803
+          },
+          "locationMatched": true,
+          "networkResponses": 3,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 60,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EB%8F%84%EC%88%98%EC%88%98%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=hGoPPBr-esj229Yd_1pBOPVqxZQeevEBF-i7bwiTYMA%3D"
             },
             {
               "type": "graphql-error",
@@ -160,41 +180,13 @@
         },
         {
           "keyword": "편광선글라스",
-          "rank": null,
-          "status": "not-found",
-          "resultCount": 46,
-          "url": "https://map.naver.com/p/search/%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4?c=15.00,0,0,0,dh",
-          "searchCoord": {
-            "latitude": 35.162230000000804,
-            "longitude": 129.11140674606264
-          },
-          "locationMatched": true,
-          "networkResponses": 1,
-          "captureSources": [],
-          "sample": [
-            "로그인",
-            "내정보 보기",
-            "(임직원혜택)",
-            "프로필 사진 변경",
-            "로그아웃",
-            "@naver.com",
-            "네이버ID",
-            "보안설정",
-            "내인증서",
-            "네이버 멤버쉽",
-            "내 페이포인트",
-            "내 블로그"
-          ]
-        },
-        {
-          "keyword": "변색렌즈",
           "rank": 1,
           "status": "ok",
-          "resultCount": 50,
-          "url": "https://map.naver.com/p/search/%EB%B3%80%EC%83%89%EB%A0%8C%EC%A6%88?c=15.00,0,0,0,dh",
+          "resultCount": 28,
+          "url": "https://map.naver.com/p/search/%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4?c=15.00,0,0,0,dh",
           "searchCoord": {
-            "latitude": 35.162230000000804,
-            "longitude": 129.11140674606264
+            "latitude": 35.16222999440906,
+            "longitude": 129.1114068189803
           },
           "locationMatched": true,
           "networkResponses": 3,
@@ -202,7 +194,52 @@
             {
               "type": "allSearch",
               "count": 60,
-              "url": "https://map.naver.com/p/api/search/allSearch?query=%EB%B3%80%EC%83%89%EB%A0%8C%EC%A6%88&type=all&searchCoord=129.11140674606264%3B35.162230000000804&boundary=&sscode=svc.mapv5.search&token=umg6e2559Fr9Qo1aWqSQw2gllEyjQbhUKmRmKSDF0pY%3D"
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=zvaK6FI3gzX6Bt8B0zeRJ4EabFielM6uDs_vP_bwTRU%3D"
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql",
+              "count": 16,
+              "url": "https://pcmap-api.place.naver.com/graphql"
+            }
+          ],
+          "sample": [
+            "스타포인트안경원",
+            "쿠로시오",
+            "서울안경",
+            "카이루소",
+            "글라스팩토리 렌즈베리 충북진천점",
+            "라운드투안경 울산태화점",
+            "제우스안경원",
+            "썬가드광학직영몰",
+            "새샘하우스안경원",
+            "삼천포안경원",
+            "대승옵티칼",
+            "오엔에이치"
+          ]
+        },
+        {
+          "keyword": "변색렌즈",
+          "rank": 1,
+          "status": "ok",
+          "resultCount": 28,
+          "url": "https://map.naver.com/p/search/%EB%B3%80%EC%83%89%EB%A0%8C%EC%A6%88?c=15.00,0,0,0,dh",
+          "searchCoord": {
+            "latitude": 35.16222999440906,
+            "longitude": 129.1114068189803
+          },
+          "locationMatched": true,
+          "networkResponses": 3,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 60,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EB%B3%80%EC%83%89%EB%A0%8C%EC%A6%88&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=J_Axo1CWAvdxCOVkMAjH-leTmKfFFQUtjaWYA79lrm0%3D"
             },
             {
               "type": "graphql-error",
@@ -235,11 +272,11 @@
           "keyword": "수영구안경점",
           "rank": null,
           "status": "not-found",
-          "resultCount": 50,
-          "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EA%B5%AC%EC%95%88%EA%B2%BD%EC%A0%90?c=15.00,0,0,0,dh",
+          "resultCount": 20,
+          "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EA%B5%AC%EC%95%88%EA%B2%BD%EC%A0%90?c=13.00,0,0,0,dh",
           "searchCoord": {
-            "latitude": 35.162230000000804,
-            "longitude": 129.11140674606264
+            "latitude": 35.16222999440906,
+            "longitude": 129.1114068189803
           },
           "locationMatched": true,
           "networkResponses": 1,
@@ -247,7 +284,7 @@
             {
               "type": "allSearch",
               "count": 60,
-              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC%EC%95%88%EA%B2%BD%EC%A0%90&type=all&searchCoord=129.11140674606264%3B35.162230000000804&boundary=&sscode=svc.mapv5.search&token=vlBGKSQOZlQXsMJ_KITDtlZhHXeIbV4nU35fJ3dKXs8%3D"
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC%EC%95%88%EA%B2%BD%EC%A0%90&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=zEyiZbywy2sARB5AfU_XTsbhz4Aud2MGlzWhxbJkC7c%3D"
             }
           ],
           "sample": [
@@ -269,11 +306,11 @@
           "keyword": "수영구 누진다초점안경",
           "rank": 7,
           "status": "ok",
-          "resultCount": 50,
+          "resultCount": 28,
           "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EA%B5%AC%20%EB%88%84%EC%A7%84%EB%8B%A4%EC%B4%88%EC%A0%90%EC%95%88%EA%B2%BD?c=15.00,0,0,0,dh",
           "searchCoord": {
-            "latitude": 35.162230000000804,
-            "longitude": 129.11140674606264
+            "latitude": 35.16222999440906,
+            "longitude": 129.1114068189803
           },
           "locationMatched": true,
           "networkResponses": 3,
@@ -281,7 +318,7 @@
             {
               "type": "allSearch",
               "count": 60,
-              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC+%EB%88%84%EC%A7%84%EB%8B%A4%EC%B4%88%EC%A0%90%EC%95%88%EA%B2%BD&type=all&searchCoord=129.11140674606264%3B35.162230000000804&boundary=&sscode=svc.mapv5.search&token=JA5NjOY_Bp6JLIJZ8lmRqOstMmbynQxTYiYCq7-QgxQ%3D"
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC+%EB%88%84%EC%A7%84%EB%8B%A4%EC%B4%88%EC%A0%90%EC%95%88%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=m5Q2XRT5qI280_L-QmLzrjLMHbRieQCMM9IJzXMZgLs%3D"
             },
             {
               "type": "graphql-error",
@@ -312,69 +349,13 @@
         },
         {
           "keyword": "수영구 도수수경",
-          "rank": null,
-          "status": "not-found",
-          "resultCount": 46,
-          "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EA%B5%AC%20%EB%8F%84%EC%88%98%EC%88%98%EA%B2%BD?c=15.00,0,0,0,dh",
-          "searchCoord": {
-            "latitude": 35.162230000000804,
-            "longitude": 129.11140674606264
-          },
-          "locationMatched": true,
-          "networkResponses": 1,
-          "captureSources": [],
-          "sample": [
-            "로그인",
-            "내정보 보기",
-            "(임직원혜택)",
-            "프로필 사진 변경",
-            "로그아웃",
-            "@naver.com",
-            "네이버ID",
-            "보안설정",
-            "내인증서",
-            "네이버 멤버쉽",
-            "내 페이포인트",
-            "내 블로그"
-          ]
-        },
-        {
-          "keyword": "수영구 편광선글라스",
-          "rank": null,
-          "status": "not-found",
-          "resultCount": 46,
-          "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EA%B5%AC%20%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4?c=15.00,0,0,0,dh",
-          "searchCoord": {
-            "latitude": 35.162230000000804,
-            "longitude": 129.11140674606264
-          },
-          "locationMatched": true,
-          "networkResponses": 1,
-          "captureSources": [],
-          "sample": [
-            "로그인",
-            "내정보 보기",
-            "(임직원혜택)",
-            "프로필 사진 변경",
-            "로그아웃",
-            "@naver.com",
-            "네이버ID",
-            "보안설정",
-            "내인증서",
-            "네이버 멤버쉽",
-            "내 페이포인트",
-            "내 블로그"
-          ]
-        },
-        {
-          "keyword": "수영구 변색렌즈",
           "rank": 1,
           "status": "ok",
-          "resultCount": 50,
-          "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EA%B5%AC%20%EB%B3%80%EC%83%89%EB%A0%8C%EC%A6%88?c=15.00,0,0,0,dh",
+          "resultCount": 10,
+          "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EA%B5%AC%20%EB%8F%84%EC%88%98%EC%88%98%EA%B2%BD?c=15.00,0,0,0,dh",
           "searchCoord": {
-            "latitude": 35.162230000000804,
-            "longitude": 129.11140674606264
+            "latitude": 35.16222999440906,
+            "longitude": 129.1114068189803
           },
           "locationMatched": true,
           "networkResponses": 3,
@@ -382,7 +363,119 @@
             {
               "type": "allSearch",
               "count": 6,
-              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC+%EB%B3%80%EC%83%89%EB%A0%8C%EC%A6%88&type=all&searchCoord=129.11140674606264%3B35.162230000000804&boundary=&sscode=svc.mapv5.search&token=WrlwON9Id0-cbx3DQ7CEl2pflJ9T-KnMqTCaJlWpb_o%3D"
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC+%EB%8F%84%EC%88%98%EC%88%98%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=xPo4bUrAuwZOkvHPCt_AneKzjOkCHUVkNjwU78aC8Bs%3D"
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql",
+              "count": 16,
+              "url": "https://pcmap-api.place.naver.com/graphql"
+            }
+          ],
+          "sample": [
+            "스타포인트안경원",
+            "더으뜸안경 경성대점",
+            "거리순",
+            "관련도순",
+            "반경1km",
+            "반경2km",
+            "반경3km",
+            "반경4km",
+            "반경5km",
+            "반경10km"
+          ]
+        },
+        {
+          "keyword": "수영구 편광선글라스",
+          "rank": 1,
+          "status": "ok",
+          "resultCount": 1,
+          "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EA%B5%AC%20%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4?c=15.22,0,0,0,dh&placePath=%2Fhome%3Ffrom%3Dmap%26fromPanelNum%3D1%26additionalHeight%3D76%26timestamp%3D202609140040%26locale%3Dko%26svcName%3Dmap_pcv5%26searchText%3D%EC%88%98%EC%98%81%EA%B5%AC%20%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4",
+          "searchCoord": {
+            "latitude": 35.16222999440906,
+            "longitude": 129.1114068189803
+          },
+          "locationMatched": true,
+          "networkResponses": 13,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 3,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC+%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=9w2XTTs-vqqB6rmk20OhsLJfGKJONoOoABg-MfNBQwY%3D"
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql",
+              "count": 6,
+              "url": "https://pcmap-api.place.naver.com/graphql"
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql",
+              "count": 20,
+              "url": "https://pcmap-api.place.naver.com/graphql"
+            }
+          ],
+          "sample": [
+            "스타포인트안경원"
+          ]
+        },
+        {
+          "keyword": "수영구 변색렌즈",
+          "rank": 1,
+          "status": "ok",
+          "resultCount": 10,
+          "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EA%B5%AC%20%EB%B3%80%EC%83%89%EB%A0%8C%EC%A6%88?c=15.00,0,0,0,dh",
+          "searchCoord": {
+            "latitude": 35.16222999440906,
+            "longitude": 129.1114068189803
+          },
+          "locationMatched": true,
+          "networkResponses": 3,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 6,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC+%EB%B3%80%EC%83%89%EB%A0%8C%EC%A6%88&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=3_YQfiRMX-9zJUzFG1B6hYe23AWJb81C83h2UToOsKA%3D"
             },
             {
               "type": "graphql-error",
@@ -406,48 +499,18 @@
             "반경3km",
             "반경4km",
             "반경5km",
-            "반경10km",
-            "로그인",
-            "내정보 보기"
+            "반경10km"
           ]
         },
         {
           "keyword": "수영역 안경",
-          "rank": null,
-          "status": "not-found",
-          "resultCount": 46,
+          "rank": 14,
+          "status": "ok",
+          "resultCount": 20,
           "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EC%97%AD%20%EC%95%88%EA%B2%BD?c=15.00,0,0,0,dh",
           "searchCoord": {
-            "latitude": 35.162230000000804,
-            "longitude": 129.11140674606264
-          },
-          "locationMatched": true,
-          "networkResponses": 1,
-          "captureSources": [],
-          "sample": [
-            "로그인",
-            "내정보 보기",
-            "(임직원혜택)",
-            "프로필 사진 변경",
-            "로그아웃",
-            "@naver.com",
-            "네이버ID",
-            "보안설정",
-            "내인증서",
-            "네이버 멤버쉽",
-            "내 페이포인트",
-            "내 블로그"
-          ]
-        },
-        {
-          "keyword": "광안동 안경",
-          "rank": 12,
-          "status": "ok",
-          "resultCount": 50,
-          "url": "https://map.naver.com/p/search/%EA%B4%91%EC%95%88%EB%8F%99%20%EC%95%88%EA%B2%BD?c=15.00,0,0,0,dh",
-          "searchCoord": {
-            "latitude": 35.162230000000804,
-            "longitude": 129.11140674606264
+            "latitude": 35.16222999440906,
+            "longitude": 129.1114068189803
           },
           "locationMatched": true,
           "networkResponses": 1,
@@ -455,7 +518,41 @@
             {
               "type": "allSearch",
               "count": 60,
-              "url": "https://map.naver.com/p/api/search/allSearch?query=%EA%B4%91%EC%95%88%EB%8F%99+%EC%95%88%EA%B2%BD&type=all&searchCoord=129.11140674606264%3B35.162230000000804&boundary=&sscode=svc.mapv5.search&token=b4doEOFu0TZ0LFPfQon9Vg4ENOgW7YdhIb6rL_fb6l0%3D"
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EC%97%AD+%EC%95%88%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=YPYd_3BWWgeZzHvaVzAkD5TpYtyLWqlX5DM8idlchmk%3D"
+            }
+          ],
+          "sample": [
+            "다비치안경 수영로타리점",
+            "으뜸50안경 수영점",
+            "아이젠트리 수영점",
+            "으뜸플러스안경 부산수영점",
+            "파프리카안경 수영점",
+            "오렌즈 부산수영역점",
+            "으뜸안경마트",
+            "오스카안경",
+            "시선안경 부산수영점",
+            "신세계안경",
+            "안경본데이 부산수영점",
+            "ING안경원광안홈플러스점"
+          ]
+        },
+        {
+          "keyword": "광안동 안경",
+          "rank": 12,
+          "status": "ok",
+          "resultCount": 20,
+          "url": "https://map.naver.com/p/search/%EA%B4%91%EC%95%88%EB%8F%99%20%EC%95%88%EA%B2%BD?c=14.00,0,0,0,dh",
+          "searchCoord": {
+            "latitude": 35.16222999440906,
+            "longitude": 129.1114068189803
+          },
+          "locationMatched": true,
+          "networkResponses": 1,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 60,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EA%B4%91%EC%95%88%EB%8F%99+%EC%95%88%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=P3PboGDZ7ymjN2OT_uFJ5WTjeqYECZneE6cAXIeJ7hA%3D"
             }
           ],
           "sample": [
@@ -473,7 +570,12 @@
             "스타포인트안경원"
           ]
         }
-      ]
+      ],
+      "verification": {
+        "strategy": "captured-place-evidence-v1",
+        "corrected": 0,
+        "verifiedAt": "2026-09-14T00:40:56.688Z"
+      }
     }
   ]
 }
