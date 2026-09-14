@@ -8,7 +8,7 @@ on:
         required: false
         default: '60'
       run_mode:
-        description: 'factory or inspect-assets'
+        description: 'factory, episode6, or inspect-assets'
         required: false
         default: 'factory'
   push:
@@ -21,6 +21,7 @@ on:
       - 'package.json'
       - 'scripts/preflight.mjs'
       - 'scripts/p1-browser-factory.mjs'
+      - 'scripts/p1-episode6-factory.mjs'
       - 'scripts/p1-live-queue-inspector.mjs'
       - 'scripts/p1-reference-asset-inspector.mjs'
       - 'scripts/p1-process-waiting-queues.mjs'
@@ -93,7 +94,7 @@ jobs:
             mode="$(sed -n 's/^mode=//p' ops/p1-factory-live-test.trigger | tail -1)"
             [ -n "$mode" ] || mode="factory"
           fi
-          case "$mode" in factory|inspect-assets) ;; *) echo "Unsupported run mode: $mode" >&2; exit 1;; esac
+          case "$mode" in factory|episode6|inspect-assets) ;; *) echo "Unsupported run mode: $mode" >&2; exit 1;; esac
           echo "P1_RUN_MODE=$mode" >> "$GITHUB_ENV"
           echo "P1 run mode: $mode"
 
@@ -112,11 +113,11 @@ jobs:
         run: node scripts/p1-reference-asset-inspector.mjs
 
       - name: Install browser controller
-        if: env.P1_RUN_MODE == 'factory'
+        if: env.P1_RUN_MODE == 'factory' || env.P1_RUN_MODE == 'episode6'
         run: npm install --no-audit --no-fund --no-save puppeteer-core@24.16.0
 
       - name: Locate Chrome
-        if: env.P1_RUN_MODE == 'factory'
+        if: env.P1_RUN_MODE == 'factory' || env.P1_RUN_MODE == 'episode6'
         shell: bash
         run: |
           set -euo pipefail
@@ -129,7 +130,7 @@ jobs:
           "$CHROME_PATH" --version
 
       - name: Use existing Suno music asset in P1
-        if: env.P1_RUN_MODE == 'factory'
+        if: env.P1_RUN_MODE == 'factory' || env.P1_RUN_MODE == 'episode6'
         run: node scripts/p1-use-suno-preview.mjs
 
       - name: Inspect P1 live queue state
@@ -148,16 +149,20 @@ jobs:
         if: env.P1_RUN_MODE == 'factory'
         run: node scripts/p1-browser-factory.mjs
 
+      - name: Run P1 episode 6 direct factory
+        if: env.P1_RUN_MODE == 'episode6'
+        run: node scripts/p1-episode6-factory.mjs
+
       - name: Download rendered P1 preview
-        if: always() && env.P1_RUN_MODE == 'factory'
+        if: always() && env.P1_RUN_MODE != 'inspect-assets'
         run: node scripts/p1-download-preview.mjs
 
       - name: P1 zero-cost quality gate
-        if: always() && env.P1_RUN_MODE == 'factory'
+        if: always() && env.P1_RUN_MODE != 'inspect-assets'
         run: npm run p1:quality
 
       - name: Upload factory summary, preview, and quality gate
-        if: always() && env.P1_RUN_MODE == 'factory'
+        if: always() && env.P1_RUN_MODE != 'inspect-assets'
         uses: actions/upload-artifact@v4
         with:
           name: p1-factory-summary-${{ github.run_number }}
