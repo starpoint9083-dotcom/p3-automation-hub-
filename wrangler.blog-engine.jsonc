@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "p3-blog-engine",
-  "main": "src/blog-engine.js",
+  "main": "src/blog-engine-v03.js",
   "compatibility_date": "2026-09-14",
   "workers_dev": true,
   "observability": { "enabled": true },
@@ -9,6 +9,6 @@
     "binding": "AI"
   },
   "vars": {
-    "BLOG_ENGINE_MODE": "trend-quality-gated-ai"
+    "BLOG_ENGINE_MODE": "structured-plan-plus-split-writing"
   }
 }
