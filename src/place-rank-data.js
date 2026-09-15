@@ -1,7 +1,7 @@
 export const placeRankData = {
   "version": "1.5.0",
   "store": "스타포인트안경원",
-  "generatedAt": "2026-09-14T19:38:55.893+09:00",
+  "generatedAt": "2026-09-15T19:05:11.188+09:00",
   "history": [
     {
       "date": "2026-09-13",
@@ -575,6 +575,500 @@ export const placeRankData = {
         "strategy": "captured-place-evidence-v1",
         "corrected": 0,
         "verifiedAt": "2026-09-14T10:38:56.038Z"
+      }
+    },
+    {
+      "date": "2026-09-15",
+      "checkedAt": "2026-09-15T19:05:11.188+09:00",
+      "source": "naver-map-browser-network-mercator-v3",
+      "location": {
+        "latitude": 35.162229994409,
+        "longitude": 129.11140681898,
+        "accuracyMeters": 40,
+        "basis": "부산광역시 수영구 광일로 23-1"
+      },
+      "results": [
+        {
+          "keyword": "누진다초점안경",
+          "rank": 1,
+          "status": "ok",
+          "resultCount": 28,
+          "url": "https://map.naver.com/p/search/%EB%88%84%EC%A7%84%EB%8B%A4%EC%B4%88%EC%A0%90%EC%95%88%EA%B2%BD?c=15.22,0,0,0,dh",
+          "searchCoord": {
+            "latitude": 35.16222999440906,
+            "longitude": 129.1114068189803
+          },
+          "locationMatched": true,
+          "networkResponses": 3,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 60,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EB%88%84%EC%A7%84%EB%8B%A4%EC%B4%88%EC%A0%90%EC%95%88%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=S6dhOWVO74KVmB3arPQnO0eJ3myJy-iSYySfdlUJdL8%3D"
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql",
+              "count": 16,
+              "url": "https://pcmap-api.place.naver.com/graphql"
+            }
+          ],
+          "sample": [
+            "스타포인트안경원",
+            "안경세상",
+            "옵장안경원",
+            "안경본데이 부산수영점",
+            "수아이안경",
+            "갤러리안경 망미점",
+            "아이뷰안경 망미점",
+            "아이디어안경 토곡점",
+            "다비치안경 경성대부경대소방서옆점",
+            "뉴욕안경콘택트",
+            "안경진정성 이마트트레이더스 부산연산점",
+            "으뜸아이안경 대연점"
+          ]
+        },
+        {
+          "keyword": "도수수경",
+          "rank": 1,
+          "status": "ok",
+          "resultCount": 28,
+          "url": "https://map.naver.com/p/search/%EB%8F%84%EC%88%98%EC%88%98%EA%B2%BD?c=15.00,0,0,0,dh",
+          "searchCoord": {
+            "latitude": 35.16222999440906,
+            "longitude": 129.1114068189803
+          },
+          "locationMatched": true,
+          "networkResponses": 3,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 60,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EB%8F%84%EC%88%98%EC%88%98%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=l0qWRE-yUErU_kO6JqYhg3RITnHegmnPq471qXyZQ9s%3D"
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql",
+              "count": 16,
+              "url": "https://pcmap-api.place.naver.com/graphql"
+            }
+          ],
+          "sample": [
+            "스타포인트안경원",
+            "더으뜸안경 경성대점",
+            "렌즈타운 으뜸1안경",
+            "갤러리안경 렌즈베리 서면도서관점",
+            "으뜸50안경 부산하단점",
+            "으뜸50안경 위드렌즈 부산화명점",
+            "이삭안경 창원상남점",
+            "더존안경 주촌점",
+            "안경진정성 이마트창원점",
+            "모리안경원",
+            "도수수경스킨스쿠버",
+            "안경하세요"
+          ]
+        },
+        {
+          "keyword": "편광선글라스",
+          "rank": 1,
+          "status": "ok",
+          "resultCount": 28,
+          "url": "https://map.naver.com/p/search/%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4?c=15.00,0,0,0,dh",
+          "searchCoord": {
+            "latitude": 35.16222999440906,
+            "longitude": 129.1114068189803
+          },
+          "locationMatched": true,
+          "networkResponses": 3,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 60,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=egszN0T-zV-p-FaeAslbtxitfYMjev7K7U7eTy7kTbg%3D"
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql",
+              "count": 16,
+              "url": "https://pcmap-api.place.naver.com/graphql"
+            }
+          ],
+          "sample": [
+            "스타포인트안경원",
+            "쿠로시오",
+            "서울안경",
+            "카이루소",
+            "라운드투안경 울산태화점",
+            "글라스팩토리 렌즈베리 충북진천점",
+            "제우스안경원",
+            "새샘하우스안경원",
+            "썬가드광학직영몰",
+            "대승옵티칼",
+            "삼천포안경원",
+            "오엔에이치"
+          ]
+        },
+        {
+          "keyword": "변색렌즈",
+          "rank": 1,
+          "status": "ok",
+          "resultCount": 28,
+          "url": "https://map.naver.com/p/search/%EB%B3%80%EC%83%89%EB%A0%8C%EC%A6%88?c=15.00,0,0,0,dh",
+          "searchCoord": {
+            "latitude": 35.16222999440906,
+            "longitude": 129.1114068189803
+          },
+          "locationMatched": true,
+          "networkResponses": 3,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 60,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EB%B3%80%EC%83%89%EB%A0%8C%EC%A6%88&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=NFLqBVnLJIa7fGqyhsJSiCg2i0Lj0ovxAJ4CWqtphjk%3D"
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql",
+              "count": 16,
+              "url": "https://pcmap-api.place.naver.com/graphql"
+            }
+          ],
+          "sample": [
+            "스타포인트안경원",
+            "아이뷰안경 망미점",
+            "아이젠트리 덕천점",
+            "덕천 제일안경원 위드렌즈",
+            "뉴이태리안경원",
+            "안경세상",
+            "서울메디컬안경",
+            "밝은세상안경원 온천점",
+            "갤러리안경 덕천점",
+            "우리동네안경원",
+            "아이리더안경 기장점",
+            "안경본데이 구영점"
+          ]
+        },
+        {
+          "keyword": "수영구안경점",
+          "rank": null,
+          "status": "not-found",
+          "resultCount": 20,
+          "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EA%B5%AC%EC%95%88%EA%B2%BD%EC%A0%90?c=13.00,0,0,0,dh",
+          "searchCoord": {
+            "latitude": 35.16222999440906,
+            "longitude": 129.1114068189803
+          },
+          "locationMatched": true,
+          "networkResponses": 1,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 60,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC%EC%95%88%EA%B2%BD%EC%A0%90&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=nfzRPZ4-HZZGjrEH8DOfMb6a1hT48XT8xvSiX-atxRg%3D"
+            }
+          ],
+          "sample": [
+            "으뜸플러스안경 부산광안역점",
+            "다비치안경 수영로타리점",
+            "오렌즈 부산광안리점",
+            "으뜸50안경 수영점",
+            "오렌즈 부산수영역점",
+            "옵장안경원",
+            "안경나라 위드렌즈 부산광안점",
+            "아이젠트리 수영점",
+            "으뜸플러스안경 부산수영점",
+            "파프리카안경 수영점",
+            "폼하우스안경원 수영점",
+            "갤러리안경 망미점"
+          ]
+        },
+        {
+          "keyword": "수영구 누진다초점안경",
+          "rank": 7,
+          "status": "ok",
+          "resultCount": 28,
+          "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EA%B5%AC%20%EB%88%84%EC%A7%84%EB%8B%A4%EC%B4%88%EC%A0%90%EC%95%88%EA%B2%BD?c=15.00,0,0,0,dh",
+          "searchCoord": {
+            "latitude": 35.16222999440906,
+            "longitude": 129.1114068189803
+          },
+          "locationMatched": true,
+          "networkResponses": 3,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 60,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC+%EB%88%84%EC%A7%84%EB%8B%A4%EC%B4%88%EC%A0%90%EC%95%88%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=5P8rJUK3jHWv2R9VzPj4H1Fo_FWimbszvYPQrGLRMPI%3D"
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql",
+              "count": 16,
+              "url": "https://pcmap-api.place.naver.com/graphql"
+            }
+          ],
+          "sample": [
+            "옵장안경원",
+            "갤러리안경 망미점",
+            "아이뷰안경 망미점",
+            "안경본데이 부산수영점",
+            "수아이안경",
+            "뉴욕안경콘택트",
+            "스타포인트안경원",
+            "안경세상",
+            "다비치안경 경성대부경대소방서옆점",
+            "으뜸아이안경 대연점",
+            "으뜸50안경 부산못골점",
+            "1001안경콘택트 연산로타리점"
+          ]
+        },
+        {
+          "keyword": "수영구 도수수경",
+          "rank": 1,
+          "status": "ok",
+          "resultCount": 10,
+          "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EA%B5%AC%20%EB%8F%84%EC%88%98%EC%88%98%EA%B2%BD?c=15.00,0,0,0,dh",
+          "searchCoord": {
+            "latitude": 35.16222999440906,
+            "longitude": 129.1114068189803
+          },
+          "locationMatched": true,
+          "networkResponses": 3,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 6,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC+%EB%8F%84%EC%88%98%EC%88%98%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=O42gn_gjVq9mZisoWDtV-cxFsFFZ7rdi2RX8D2KLrdI%3D"
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql",
+              "count": 16,
+              "url": "https://pcmap-api.place.naver.com/graphql"
+            }
+          ],
+          "sample": [
+            "스타포인트안경원",
+            "더으뜸안경 경성대점",
+            "거리순",
+            "관련도순",
+            "반경1km",
+            "반경2km",
+            "반경3km",
+            "반경4km",
+            "반경5km",
+            "반경10km"
+          ]
+        },
+        {
+          "keyword": "수영구 편광선글라스",
+          "rank": 1,
+          "status": "ok",
+          "resultCount": 1,
+          "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EA%B5%AC%20%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4?c=15.22,0,0,0,dh&placePath=%2Fhome%3Ffrom%3Dmap%26fromPanelNum%3D1%26additionalHeight%3D76%26timestamp%3D202609151004%26locale%3Dko%26svcName%3Dmap_pcv5%26searchText%3D%EC%88%98%EC%98%81%EA%B5%AC%20%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4",
+          "searchCoord": {
+            "latitude": 35.16222999440906,
+            "longitude": 129.1114068189803
+          },
+          "locationMatched": true,
+          "networkResponses": 11,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 3,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC+%ED%8E%B8%EA%B4%91%EC%84%A0%EA%B8%80%EB%9D%BC%EC%8A%A4&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=OBISUdJ8oSDUehqyxmtUasVpVu8UHXsvAPi256gpiqA%3D"
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql",
+              "count": 6,
+              "url": "https://pcmap-api.place.naver.com/graphql"
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql",
+              "count": 20,
+              "url": "https://pcmap-api.place.naver.com/graphql"
+            }
+          ],
+          "sample": [
+            "스타포인트안경원"
+          ]
+        },
+        {
+          "keyword": "수영구 변색렌즈",
+          "rank": 1,
+          "status": "ok",
+          "resultCount": 10,
+          "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EA%B5%AC%20%EB%B3%80%EC%83%89%EB%A0%8C%EC%A6%88?c=15.00,0,0,0,dh",
+          "searchCoord": {
+            "latitude": 35.16222999440906,
+            "longitude": 129.1114068189803
+          },
+          "locationMatched": true,
+          "networkResponses": 3,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 6,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EA%B5%AC+%EB%B3%80%EC%83%89%EB%A0%8C%EC%A6%88&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=hDNPUeGnc9bpTbupqpS7L5vl1YeOkqSbsiRiEkkVRsY%3D"
+            },
+            {
+              "type": "graphql-error",
+              "count": 0,
+              "url": "https://pcmap-api.place.naver.com/graphql",
+              "error": "Could not load body for this request. This might happen if the request is a preflight request."
+            },
+            {
+              "type": "graphql",
+              "count": 16,
+              "url": "https://pcmap-api.place.naver.com/graphql"
+            }
+          ],
+          "sample": [
+            "스타포인트안경원",
+            "아이뷰안경 망미점",
+            "거리순",
+            "관련도순",
+            "반경1km",
+            "반경2km",
+            "반경3km",
+            "반경4km",
+            "반경5km",
+            "반경10km"
+          ]
+        },
+        {
+          "keyword": "수영역 안경",
+          "rank": 14,
+          "status": "ok",
+          "resultCount": 20,
+          "url": "https://map.naver.com/p/search/%EC%88%98%EC%98%81%EC%97%AD%20%EC%95%88%EA%B2%BD?c=15.00,0,0,0,dh",
+          "searchCoord": {
+            "latitude": 35.16222999440906,
+            "longitude": 129.1114068189803
+          },
+          "locationMatched": true,
+          "networkResponses": 1,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 60,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EC%88%98%EC%98%81%EC%97%AD+%EC%95%88%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=eLlEQdNx_14YKQL43JukZ7hqwkEAsFP2vngo7qTNFlg%3D"
+            }
+          ],
+          "sample": [
+            "다비치안경 수영로타리점",
+            "으뜸50안경 수영점",
+            "아이젠트리 수영점",
+            "으뜸플러스안경 부산수영점",
+            "파프리카안경 수영점",
+            "오렌즈 부산수영역점",
+            "으뜸안경마트",
+            "오스카안경",
+            "시선안경 부산수영점",
+            "신세계안경",
+            "안경본데이 부산수영점",
+            "ING안경원광안홈플러스점"
+          ]
+        },
+        {
+          "keyword": "광안동 안경",
+          "rank": 12,
+          "status": "ok",
+          "resultCount": 20,
+          "url": "https://map.naver.com/p/search/%EA%B4%91%EC%95%88%EB%8F%99%20%EC%95%88%EA%B2%BD?c=15.00,0,0,0,dh",
+          "searchCoord": {
+            "latitude": 35.16222999440906,
+            "longitude": 129.1114068189803
+          },
+          "locationMatched": true,
+          "networkResponses": 1,
+          "captureSources": [
+            {
+              "type": "allSearch",
+              "count": 60,
+              "url": "https://map.naver.com/p/api/search/allSearch?query=%EA%B4%91%EC%95%88%EB%8F%99+%EC%95%88%EA%B2%BD&type=all&searchCoord=129.1114068189803%3B35.16222999440906&boundary=&sscode=svc.mapv5.search&token=dgTrOMlgxvr0qIBlbdvZGBTL17ELs2NaQyL7y1LQQN0%3D"
+            }
+          ],
+          "sample": [
+            "으뜸플러스안경 부산광안역점",
+            "다비치안경 수영로타리점",
+            "으뜸50안경 수영점",
+            "안경나라 위드렌즈 부산광안점",
+            "뉴페이스안경원",
+            "080안경광안점",
+            "안경본데이 부산수영점",
+            "ING안경원광안홈플러스점",
+            "수아이안경",
+            "으뜸안경마트",
+            "초이스안경 광안점",
+            "스타포인트안경원"
+          ]
+        }
+      ],
+      "verification": {
+        "strategy": "captured-place-evidence-v1",
+        "corrected": 0,
+        "verifiedAt": "2026-09-15T10:05:11.292Z"
       }
     }
   ]
