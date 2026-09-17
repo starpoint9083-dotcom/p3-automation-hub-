@@ -1,0 +1,10 @@
+import {CLIENT_JS as V5} from './client-v5.js';
+
+const OLD_RISK_ROW=`function riskRow(r){const color=r.band==='RED'?'red':r.band==='YELLOW'?'yellow':'green',label=r.band==='RED'?'위험':r.band==='YELLOW'?'관심':'안정';return '<div class="row"><div class="rowhead"><b>'+esc(r.student?.name||'학생')+' · '+esc(r.student?.grade||'')+'</b><span class="pill '+color+'">'+label+'</span></div><div class="sub">위험점수 '+Number(r.score||0)+' · 신뢰도 '+esc(r.confidence||'LOW')+'<br>'+esc((r.reasons||[])[0]||'뚜렷한 위험 신호 없음')+'</div></div>'}`;
+const NEW_RISK_ROW=`function riskRow(r){const color=r.band==='RED'?'red':r.band==='YELLOW'?'yellow':'green',label=r.band==='RED'?'위험':r.band==='YELLOW'?'관심':'안정',s=r.student||{};return '<div class="row"><div class="rowhead"><b>'+esc(s.name||'학생')+' · '+esc(s.grade||'')+'</b><span class="pill '+color+'">'+label+'</span></div><div class="sub">위험점수 '+Number(r.score||0)+' · 신뢰도 '+esc(r.confidence||'LOW')+'<br>'+esc((r.reasons||[])[0]||'뚜렷한 위험 신호 없음')+'</div><div style="display:flex;justify-content:flex-end;margin-top:10px"><button class="ghost" type="button" data-delete-student="'+esc(s.id||'')+'" data-student-name="'+esc(s.name||'학생')+'">학생 삭제</button></div></div>'}`;
+
+export const CLIENT_JS=V5
+  .replace(OLD_RISK_ROW,NEW_RISK_ROW)
+  .replace("async function loadRisks(){",`async function deleteStudentFromCard(button){const id=button?.dataset?.deleteStudent||'',name=button?.dataset?.studentName||'학생';if(!id)return;if(!confirm(name+' 학생을 삭제할까요?\\n출결·상담·성장 기록도 함께 삭제됩니다.'))return;button.disabled=true;button.textContent='삭제 중…';try{await api('/api/students/'+encodeURIComponent(id),{method:'DELETE'});toast(name+' 학생을 삭제했습니다.');await Promise.all([loadRisks(),loadBrief()])}catch(e){toast(friendly(e));button.disabled=false;button.textContent='학생 삭제'}}\nasync function loadRisks(){`)
+  .replace("function bind(){",`function bind(){\n document.addEventListener('click',e=>{const b=e.target.closest?.('[data-delete-student]');if(b)deleteStudentFromCard(b)});`)
+  .replace("$('sEnrolled').value=seoulDate();bind();",`$('sEnrolled').value=seoulDate();if($('refreshStudents'))$('refreshStudents').textContent='위험신호 다시 계산';bind();`);
