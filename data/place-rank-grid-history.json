@@ -1,10 +1,10 @@
 {
   "version": "2.1.0",
   "store": "스타포인트안경원",
-  "generatedAt": "2026-09-16T19:07:35.663+09:00",
+  "generatedAt": "2026-10-22T19:22:39.272+09:00",
   "latest": {
-    "date": "2026-09-16",
-    "checkedAt": "2026-09-16T19:07:35.663+09:00",
+    "date": "2026-10-22",
+    "checkedAt": "2026-10-22T19:22:39.272+09:00",
     "source": "naver-map-geogrid-v2-parallel",
     "grid": {
       "size": 5,
@@ -280,14 +280,14 @@
         "keyword": "누진다초점안경",
         "validPoints": 25,
         "totalPoints": 25,
-        "foundPoints": 24,
+        "foundPoints": 23,
         "medianRankCapped": 8,
-        "top3Pct": 12,
-        "top10Pct": 76,
-        "top20Pct": 96,
-        "visibilityScore": 60.8,
+        "top3Pct": 16,
+        "top10Pct": 68,
+        "top20Pct": 92,
+        "visibilityScore": 59.2,
         "bestRank": 1,
-        "worstFoundRank": 18,
+        "worstFoundRank": 19,
         "storePointRank": 1,
         "blockedPoints": 0,
         "unverifiedPoints": 0
@@ -301,7 +301,7 @@
         "top3Pct": 88,
         "top10Pct": 100,
         "top20Pct": 100,
-        "visibilityScore": 96.2,
+        "visibilityScore": 96,
         "bestRank": 1,
         "worstFoundRank": 4,
         "storePointRank": 1,
@@ -310,9 +310,9 @@
       },
       {
         "keyword": "편광선글라스",
-        "validPoints": 23,
+        "validPoints": 25,
         "totalPoints": 25,
-        "foundPoints": 23,
+        "foundPoints": 25,
         "medianRankCapped": 1,
         "top3Pct": 100,
         "top10Pct": 100,
@@ -322,7 +322,7 @@
         "worstFoundRank": 1,
         "storePointRank": 1,
         "blockedPoints": 0,
-        "unverifiedPoints": 2
+        "unverifiedPoints": 0
       },
       {
         "keyword": "변색렌즈",
@@ -389,14 +389,14 @@
         "eastMeters": -1000,
         "isStore": false,
         "status": "ok",
-        "rank": 12,
-        "resultCount": 28,
+        "rank": 15,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.1801962179089,
           "longitude": 129.10041863522727
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "누진다초점안경",
@@ -409,14 +409,14 @@
         "eastMeters": 0,
         "isStore": false,
         "status": "ok",
-        "rank": 10,
-        "resultCount": 28,
+        "rank": 13,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.1801962179089,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "누진다초점안경",
@@ -430,13 +430,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 9,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.1801962179089,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "누진다초점안경",
@@ -449,14 +449,14 @@
         "eastMeters": 2000,
         "isStore": false,
         "status": "ok",
-        "rank": 10,
-        "resultCount": 28,
+        "rank": 9,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.1801962179089,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "누진다초점안경",
@@ -468,15 +468,15 @@
         "northMeters": 1000,
         "eastMeters": -2000,
         "isStore": false,
-        "status": "ok",
-        "rank": 18,
-        "resultCount": 28,
+        "status": "not-found",
+        "rank": null,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.171213106158994,
           "longitude": 129.08943045147424
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "누진다초점안경",
@@ -489,14 +489,14 @@
         "eastMeters": -1000,
         "isStore": false,
         "status": "ok",
-        "rank": 9,
-        "resultCount": 28,
+        "rank": 11,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.171213106158994,
           "longitude": 129.10041863522727
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "누진다초점안경",
@@ -509,14 +509,14 @@
         "eastMeters": 0,
         "isStore": false,
         "status": "ok",
-        "rank": 8,
-        "resultCount": 28,
+        "rank": 3,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.171213106158994,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "누진다초점안경",
@@ -530,13 +530,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 8,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.171213106158994,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "누진다초점안경",
@@ -550,13 +550,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 10,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.171213106158994,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "누진다초점안경",
@@ -570,13 +570,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 15,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.16222999440906,
           "longitude": 129.08943045147424
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "누진다초점안경",
@@ -589,7 +589,7 @@
         "eastMeters": -1000,
         "isStore": false,
         "status": "ok",
-        "rank": 1,
+        "rank": 2,
         "resultCount": 20,
         "searchCoord": {
           "latitude": 35.16222999440906,
@@ -610,13 +610,13 @@
         "isStore": true,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.16222999440906,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "누진다초점안경",
@@ -629,14 +629,14 @@
         "eastMeters": 1000,
         "isStore": false,
         "status": "ok",
-        "rank": 1,
-        "resultCount": 28,
+        "rank": 2,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.16222999440906,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "누진다초점안경",
@@ -649,14 +649,14 @@
         "eastMeters": 2000,
         "isStore": false,
         "status": "ok",
-        "rank": 6,
-        "resultCount": 28,
+        "rank": 5,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.16222999440906,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "누진다초점안경",
@@ -669,14 +669,14 @@
         "eastMeters": -2000,
         "isStore": false,
         "status": "ok",
-        "rank": 11,
-        "resultCount": 28,
+        "rank": 12,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.08943045147424
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "누진다초점안경",
@@ -690,13 +690,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 7,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.10041863522727
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "누진다초점안경",
@@ -710,13 +710,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 6,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "누진다초점안경",
@@ -730,13 +730,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 5,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "누진다초점안경",
@@ -749,14 +749,14 @@
         "eastMeters": 2000,
         "isStore": false,
         "status": "ok",
-        "rank": 6,
-        "resultCount": 28,
+        "rank": 5,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "누진다초점안경",
@@ -769,14 +769,14 @@
         "eastMeters": -2000,
         "isStore": false,
         "status": "ok",
-        "rank": 18,
-        "resultCount": 28,
+        "rank": 19,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.08943045147424
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "누진다초점안경",
@@ -789,14 +789,14 @@
         "eastMeters": -1000,
         "isStore": false,
         "status": "ok",
-        "rank": 9,
-        "resultCount": 28,
+        "rank": 10,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.10041863522727
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "누진다초점안경",
@@ -810,13 +810,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 8,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "누진다초점안경",
@@ -829,14 +829,14 @@
         "eastMeters": 1000,
         "isStore": false,
         "status": "ok",
-        "rank": 5,
-        "resultCount": 28,
+        "rank": 6,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "누진다초점안경",
@@ -849,14 +849,14 @@
         "eastMeters": 2000,
         "isStore": false,
         "status": "ok",
-        "rank": 7,
-        "resultCount": 28,
+        "rank": 6,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -869,7 +869,7 @@
         "eastMeters": -2000,
         "isStore": false,
         "status": "ok",
-        "rank": 2,
+        "rank": 3,
         "resultCount": 20,
         "searchCoord": {
           "latitude": 35.1801962179089,
@@ -910,13 +910,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.1801962179089,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -930,13 +930,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.1801962179089,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -950,13 +950,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.1801962179089,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -970,13 +970,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 3,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.171213106158994,
           "longitude": 129.08943045147424
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -990,13 +990,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.171213106158994,
           "longitude": 129.10041863522727
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -1010,13 +1010,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.171213106158994,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -1030,13 +1030,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.171213106158994,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -1050,13 +1050,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.171213106158994,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -1076,7 +1076,7 @@
           "longitude": 129.08943045147424
         },
         "locationMatched": true,
-        "networkResponses": 2
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -1090,13 +1090,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.16222999440906,
           "longitude": 129.10041863522727
         },
         "locationMatched": true,
-        "networkResponses": 4
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -1110,13 +1110,13 @@
         "isStore": true,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.16222999440906,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -1130,13 +1130,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.16222999440906,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -1150,13 +1150,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.16222999440906,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -1170,13 +1170,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 4,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.08943045147424
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -1190,13 +1190,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 2,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.10041863522727
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -1210,13 +1210,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 2,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -1230,13 +1230,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 2,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -1250,13 +1250,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -1270,13 +1270,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 4,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.08943045147424
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -1290,13 +1290,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 2,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.10041863522727
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -1310,13 +1310,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 2,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -1330,13 +1330,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 2,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "도수수경",
@@ -1350,13 +1350,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 2,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1368,12 +1368,15 @@
         "northMeters": 2000,
         "eastMeters": -2000,
         "isStore": false,
-        "status": "unverified",
-        "rank": null,
-        "resultCount": 0,
-        "searchCoord": null,
-        "locationMatched": false,
-        "networkResponses": 0
+        "status": "ok",
+        "rank": 1,
+        "resultCount": 20,
+        "searchCoord": {
+          "latitude": 35.1801962179089,
+          "longitude": 129.08943045147424
+        },
+        "locationMatched": true,
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1407,13 +1410,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.1801962179089,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1425,9 +1428,9 @@
         "northMeters": 2000,
         "eastMeters": 1000,
         "isStore": false,
-        "status": "unverified",
-        "rank": null,
-        "resultCount": 0,
+        "status": "ok",
+        "rank": 1,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.1801962179089,
           "longitude": 129.12239500273327
@@ -1447,13 +1450,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.1801962179089,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1487,13 +1490,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.171213106158994,
           "longitude": 129.10041863522727
         },
         "locationMatched": true,
-        "networkResponses": 4
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1513,7 +1516,7 @@
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 2
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1527,13 +1530,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.171213106158994,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1553,7 +1556,7 @@
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 2
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1567,13 +1570,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.16222999440906,
           "longitude": 129.08943045147424
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1607,13 +1610,13 @@
         "isStore": true,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.16222999440906,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1627,13 +1630,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.16222999440906,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1647,13 +1650,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.16222999440906,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1667,13 +1670,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.08943045147424
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1687,13 +1690,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.10041863522727
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1707,13 +1710,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1727,13 +1730,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1747,13 +1750,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1767,13 +1770,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.08943045147424
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1787,13 +1790,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.10041863522727
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1807,13 +1810,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1827,13 +1830,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "편광선글라스",
@@ -1847,13 +1850,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "변색렌즈",
@@ -1904,13 +1907,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 2,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.1801962179089,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "변색렌즈",
@@ -1924,13 +1927,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 2,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.1801962179089,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "변색렌즈",
@@ -1944,13 +1947,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 2,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.1801962179089,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "변색렌즈",
@@ -1964,13 +1967,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 2,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.171213106158994,
           "longitude": 129.08943045147424
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "변색렌즈",
@@ -1984,13 +1987,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 2,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.171213106158994,
           "longitude": 129.10041863522727
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "변색렌즈",
@@ -2003,14 +2006,14 @@
         "eastMeters": 0,
         "isStore": false,
         "status": "ok",
-        "rank": 2,
-        "resultCount": 28,
+        "rank": 1,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.171213106158994,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "변색렌즈",
@@ -2023,14 +2026,14 @@
         "eastMeters": 1000,
         "isStore": false,
         "status": "ok",
-        "rank": 1,
-        "resultCount": 28,
+        "rank": 2,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.171213106158994,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "변색렌즈",
@@ -2044,13 +2047,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.171213106158994,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "변색렌즈",
@@ -2064,13 +2067,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.16222999440906,
           "longitude": 129.08943045147424
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "변색렌즈",
@@ -2124,13 +2127,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.16222999440906,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 4
+        "networkResponses": 1
       },
       {
         "keyword": "변색렌즈",
@@ -2144,13 +2147,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.16222999440906,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "변색렌즈",
@@ -2164,13 +2167,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.08943045147424
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "변색렌즈",
@@ -2184,13 +2187,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.10041863522727
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "변색렌즈",
@@ -2204,13 +2207,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "변색렌즈",
@@ -2224,13 +2227,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "변색렌즈",
@@ -2244,13 +2247,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "변색렌즈",
@@ -2264,13 +2267,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.08943045147424
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "변색렌즈",
@@ -2284,13 +2287,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.10041863522727
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "변색렌즈",
@@ -2304,13 +2307,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.1114068189803
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "변색렌즈",
@@ -2324,13 +2327,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.12239500273327
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "변색렌즈",
@@ -2344,13 +2347,13 @@
         "isStore": false,
         "status": "ok",
         "rank": 1,
-        "resultCount": 28,
+        "resultCount": 20,
         "searchCoord": {
           "latitude": 35.14426377090927,
           "longitude": 129.13338318648624
         },
         "locationMatched": true,
-        "networkResponses": 3
+        "networkResponses": 1
       },
       {
         "keyword": "수영구안경점",
@@ -3078,6 +3081,92 @@
           "storePointRank": 1,
           "blockedPoints": 0,
           "unverifiedPoints": 2
+        },
+        {
+          "keyword": "변색렌즈",
+          "validPoints": 24,
+          "totalPoints": 25,
+          "foundPoints": 24,
+          "medianRankCapped": 1,
+          "top3Pct": 100,
+          "top10Pct": 100,
+          "top20Pct": 100,
+          "visibilityScore": 98.5,
+          "bestRank": 1,
+          "worstFoundRank": 2,
+          "storePointRank": 1,
+          "blockedPoints": 0,
+          "unverifiedPoints": 1
+        },
+        {
+          "keyword": "수영구안경점",
+          "validPoints": 25,
+          "totalPoints": 25,
+          "foundPoints": 0,
+          "medianRankCapped": 21,
+          "top3Pct": 0,
+          "top10Pct": 0,
+          "top20Pct": 0,
+          "visibilityScore": 0,
+          "bestRank": null,
+          "worstFoundRank": null,
+          "storePointRank": null,
+          "blockedPoints": 0,
+          "unverifiedPoints": 0
+        }
+      ]
+    },
+    {
+      "date": "2026-10-22",
+      "checkedAt": "2026-10-22T19:22:39.272+09:00",
+      "summaries": [
+        {
+          "keyword": "누진다초점안경",
+          "validPoints": 25,
+          "totalPoints": 25,
+          "foundPoints": 23,
+          "medianRankCapped": 8,
+          "top3Pct": 16,
+          "top10Pct": 68,
+          "top20Pct": 92,
+          "visibilityScore": 59.2,
+          "bestRank": 1,
+          "worstFoundRank": 19,
+          "storePointRank": 1,
+          "blockedPoints": 0,
+          "unverifiedPoints": 0
+        },
+        {
+          "keyword": "도수수경",
+          "validPoints": 25,
+          "totalPoints": 25,
+          "foundPoints": 25,
+          "medianRankCapped": 1,
+          "top3Pct": 88,
+          "top10Pct": 100,
+          "top20Pct": 100,
+          "visibilityScore": 96,
+          "bestRank": 1,
+          "worstFoundRank": 4,
+          "storePointRank": 1,
+          "blockedPoints": 0,
+          "unverifiedPoints": 0
+        },
+        {
+          "keyword": "편광선글라스",
+          "validPoints": 25,
+          "totalPoints": 25,
+          "foundPoints": 25,
+          "medianRankCapped": 1,
+          "top3Pct": 100,
+          "top10Pct": 100,
+          "top20Pct": 100,
+          "visibilityScore": 100,
+          "bestRank": 1,
+          "worstFoundRank": 1,
+          "storePointRank": 1,
+          "blockedPoints": 0,
+          "unverifiedPoints": 0
         },
         {
           "keyword": "변색렌즈",
