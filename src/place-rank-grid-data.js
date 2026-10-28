@@ -1,10 +1,10 @@
 export const placeRankGridData = {
   "version": "2.1.0",
   "store": "스타포인트안경원",
-  "generatedAt": "2026-10-27T19:44:41.242+09:00",
+  "generatedAt": "2026-10-28T20:29:17.546+09:00",
   "latest": {
-    "date": "2026-10-27",
-    "checkedAt": "2026-10-27T19:44:41.242+09:00",
+    "date": "2026-10-28",
+    "checkedAt": "2026-10-28T20:29:17.546+09:00",
     "source": "naver-map-geogrid-v2-parallel",
     "grid": {
       "size": 5,
@@ -281,11 +281,11 @@ export const placeRankGridData = {
         "validPoints": 25,
         "totalPoints": 25,
         "foundPoints": 24,
-        "medianRankCapped": 6,
+        "medianRankCapped": 7,
         "top3Pct": 16,
-        "top10Pct": 80,
+        "top10Pct": 76,
         "top20Pct": 96,
-        "visibilityScore": 67,
+        "visibilityScore": 65.6,
         "bestRank": 1,
         "worstFoundRank": 17,
         "storePointRank": 1,
@@ -310,9 +310,9 @@ export const placeRankGridData = {
       },
       {
         "keyword": "편광선글라스",
-        "validPoints": 25,
+        "validPoints": 24,
         "totalPoints": 25,
-        "foundPoints": 25,
+        "foundPoints": 24,
         "medianRankCapped": 1,
         "top3Pct": 100,
         "top10Pct": 100,
@@ -322,23 +322,23 @@ export const placeRankGridData = {
         "worstFoundRank": 1,
         "storePointRank": 1,
         "blockedPoints": 0,
-        "unverifiedPoints": 0
+        "unverifiedPoints": 1
       },
       {
         "keyword": "변색렌즈",
-        "validPoints": 24,
+        "validPoints": 25,
         "totalPoints": 25,
-        "foundPoints": 24,
+        "foundPoints": 25,
         "medianRankCapped": 1,
         "top3Pct": 100,
         "top10Pct": 100,
         "top20Pct": 100,
-        "visibilityScore": 98.8,
+        "visibilityScore": 98.6,
         "bestRank": 1,
         "worstFoundRank": 2,
         "storePointRank": 1,
         "blockedPoints": 0,
-        "unverifiedPoints": 1
+        "unverifiedPoints": 0
       },
       {
         "keyword": "수영구안경점",
@@ -409,7 +409,7 @@ export const placeRankGridData = {
         "eastMeters": 0,
         "isStore": false,
         "status": "ok",
-        "rank": 10,
+        "rank": 11,
         "resultCount": 20,
         "searchCoord": {
           "latitude": 35.1801962179089,
@@ -549,7 +549,7 @@ export const placeRankGridData = {
         "eastMeters": 2000,
         "isStore": false,
         "status": "ok",
-        "rank": 6,
+        "rank": 7,
         "resultCount": 20,
         "searchCoord": {
           "latitude": 35.171213106158994,
@@ -689,7 +689,7 @@ export const placeRankGridData = {
         "eastMeters": -1000,
         "isStore": false,
         "status": "ok",
-        "rank": 4,
+        "rank": 5,
         "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
@@ -749,7 +749,7 @@ export const placeRankGridData = {
         "eastMeters": 2000,
         "isStore": false,
         "status": "ok",
-        "rank": 4,
+        "rank": 5,
         "resultCount": 20,
         "searchCoord": {
           "latitude": 35.153246882659175,
@@ -809,7 +809,7 @@ export const placeRankGridData = {
         "eastMeters": 0,
         "isStore": false,
         "status": "ok",
-        "rank": 6,
+        "rank": 7,
         "resultCount": 20,
         "searchCoord": {
           "latitude": 35.14426377090927,
@@ -829,7 +829,7 @@ export const placeRankGridData = {
         "eastMeters": 1000,
         "isStore": false,
         "status": "ok",
-        "rank": 4,
+        "rank": 6,
         "resultCount": 20,
         "searchCoord": {
           "latitude": 35.14426377090927,
@@ -1368,15 +1368,12 @@ export const placeRankGridData = {
         "northMeters": 2000,
         "eastMeters": -2000,
         "isStore": false,
-        "status": "ok",
-        "rank": 1,
-        "resultCount": 20,
-        "searchCoord": {
-          "latitude": 35.1801962179089,
-          "longitude": 129.08943045147424
-        },
-        "locationMatched": true,
-        "networkResponses": 1
+        "status": "unverified",
+        "rank": null,
+        "resultCount": 0,
+        "searchCoord": null,
+        "locationMatched": false,
+        "networkResponses": 0
       },
       {
         "keyword": "편광선글라스",
@@ -1868,12 +1865,15 @@ export const placeRankGridData = {
         "northMeters": 2000,
         "eastMeters": -2000,
         "isStore": false,
-        "status": "unverified",
-        "rank": null,
-        "resultCount": 0,
-        "searchCoord": null,
-        "locationMatched": false,
-        "networkResponses": 0
+        "status": "ok",
+        "rank": 2,
+        "resultCount": 20,
+        "searchCoord": {
+          "latitude": 35.1801962179089,
+          "longitude": 129.08943045147424
+        },
+        "locationMatched": true,
+        "networkResponses": 1
       },
       {
         "keyword": "변색렌즈",
@@ -3613,6 +3613,92 @@ export const placeRankGridData = {
           "storePointRank": 1,
           "blockedPoints": 0,
           "unverifiedPoints": 1
+        },
+        {
+          "keyword": "수영구안경점",
+          "validPoints": 25,
+          "totalPoints": 25,
+          "foundPoints": 0,
+          "medianRankCapped": 21,
+          "top3Pct": 0,
+          "top10Pct": 0,
+          "top20Pct": 0,
+          "visibilityScore": 0,
+          "bestRank": null,
+          "worstFoundRank": null,
+          "storePointRank": null,
+          "blockedPoints": 0,
+          "unverifiedPoints": 0
+        }
+      ]
+    },
+    {
+      "date": "2026-10-28",
+      "checkedAt": "2026-10-28T20:29:17.546+09:00",
+      "summaries": [
+        {
+          "keyword": "누진다초점안경",
+          "validPoints": 25,
+          "totalPoints": 25,
+          "foundPoints": 24,
+          "medianRankCapped": 7,
+          "top3Pct": 16,
+          "top10Pct": 76,
+          "top20Pct": 96,
+          "visibilityScore": 65.6,
+          "bestRank": 1,
+          "worstFoundRank": 17,
+          "storePointRank": 1,
+          "blockedPoints": 0,
+          "unverifiedPoints": 0
+        },
+        {
+          "keyword": "도수수경",
+          "validPoints": 25,
+          "totalPoints": 25,
+          "foundPoints": 25,
+          "medianRankCapped": 1,
+          "top3Pct": 88,
+          "top10Pct": 100,
+          "top20Pct": 100,
+          "visibilityScore": 96.4,
+          "bestRank": 1,
+          "worstFoundRank": 4,
+          "storePointRank": 1,
+          "blockedPoints": 0,
+          "unverifiedPoints": 0
+        },
+        {
+          "keyword": "편광선글라스",
+          "validPoints": 24,
+          "totalPoints": 25,
+          "foundPoints": 24,
+          "medianRankCapped": 1,
+          "top3Pct": 100,
+          "top10Pct": 100,
+          "top20Pct": 100,
+          "visibilityScore": 100,
+          "bestRank": 1,
+          "worstFoundRank": 1,
+          "storePointRank": 1,
+          "blockedPoints": 0,
+          "unverifiedPoints": 1
+        },
+        {
+          "keyword": "변색렌즈",
+          "validPoints": 25,
+          "totalPoints": 25,
+          "foundPoints": 25,
+          "medianRankCapped": 1,
+          "top3Pct": 100,
+          "top10Pct": 100,
+          "top20Pct": 100,
+          "visibilityScore": 98.6,
+          "bestRank": 1,
+          "worstFoundRank": 2,
+          "storePointRank": 1,
+          "blockedPoints": 0,
+          "unverifiedPoints": 0
         },
         {
           "keyword": "수영구안경점",
